@@ -2,14 +2,19 @@
 
 Materiais de produto, entregas e canvas da equipe **InnovaPair**.
 
-## Tarefas
+## Candidatos de tema (Tarefa 01)
 
-| # | Título | Pasta |
+| Candidato | Área | Pasta |
 | --- | --- | --- |
-| 01 | Problema, Usuário e Proposta de Valor | [`tarefas/01-problema-usuario-proposta-valor`](./tarefas/01-problema-usuario-proposta-valor) |
+| AgendaCerta | Saúde | [`candidatos/agendacerta`](./candidatos/agendacerta) |
+| CostaViva | Mudanças Climáticas | [`candidatos/costaviva`](./candidatos/costaviva) |
 
-Novas tarefas entram em `docs/tarefas/0X-nome-curto/` seguindo o mesmo padrão:
+Comparativo: [`candidatos/README.md`](./candidatos/README.md)
+
+## Convenção
+Cada candidato fica em `docs/candidatos/<produto>/` com:
 - `README.md` (índice)
 - `entrega.md` (versão curta)
-- `completa.md` (quando fizer sentido)
-- `canvas/` ou `assets/` (visuais)
+- `completa.md` (versão completa)
+- `canvas/` (visuais)
+- `dados/` (quando houver seed / GeoJSON)
