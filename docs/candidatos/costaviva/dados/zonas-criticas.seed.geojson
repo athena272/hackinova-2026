@@ -1,0 +1,85 @@
+{
+  "type": "FeatureCollection",
+  "name": "costaviva-zonas-criticas-seed",
+  "description": "Zonas críticas iniciais para o MVP CostaViva. NÃO são sensores em tempo real — pontos ilustrativos baseados em literatura (UFS/G1). Coordenadas aproximadas para demo.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "saco-piaui",
+        "nome": "Praia do Saco — margem Rio Piauí",
+        "municipio": "Estância",
+        "tipo": "erosao_fluvial_estuarina",
+        "severidade": "alta",
+        "taxa_resumo": "~130 m de avanço em 10 anos (literatura UFS)",
+        "taxa_m_ano_min": -14.8,
+        "taxa_m_ano_max": 13.6,
+        "observacao": "Trechos com erosão extrema e também acresção.",
+        "fonte": "UFS Ciência / Dissertação RI-UFS",
+        "fonte_url": "https://ciencia.ufs.br/conteudo/75224-pesquisa-aponta-que-erosao-fez-rio-avancar-130m-em-10-anos-na-praia-do-saco",
+        "ano_referencia": 2024
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-37.456, -11.443]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "coroa-do-meio",
+        "nome": "Coroa do Meio — desembocadura Rio Sergipe",
+        "municipio": "Aracaju",
+        "tipo": "erosao_costeira_estuarina",
+        "severidade": "alta",
+        "taxa_resumo": "Histórico de erosão do pontal e pressão urbana no estuário",
+        "observacao": "Área urbanizada com histórico de contenção e perda de manguezal/pontal.",
+        "fonte": "UFS — dinâmica costeira do estuário do Rio Sergipe",
+        "fonte_url": "https://www.ufs.br/conteudo/69613-pesquisadores-da-ufs-investigam-dinamica-costeira-do-estuario-do-rio-sergipe",
+        "ano_referencia": 2023
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-37.045, -10.978]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "barra-atalaia-nova",
+        "nome": "Barra dos Coqueiros — Atalaia Nova / margem Rio Sergipe",
+        "municipio": "Barra dos Coqueiros",
+        "tipo": "variabilidade_linha_costa",
+        "severidade": "media",
+        "taxa_resumo": "Alta variabilidade; estudo 1988–2019 com predominância de acresção no trecho analisado",
+        "observacao": "Incluir para mostrar nuance: nem todo trecho é erosão contínua.",
+        "fonte": "Scientia Plena 2024",
+        "fonte_url": "https://www.scientiaplena.org.br/sp/article/view/8032",
+        "ano_referencia": 2024
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-37.032, -10.908]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "contexto-68km",
+        "nome": "Contexto estadual — 68 km com erosão intensa/moderada",
+        "municipio": "Sergipe (agregado)",
+        "tipo": "contexto_estadual",
+        "severidade": "alta",
+        "taxa_resumo": "68 km dos 147 km do litoral com erosão intensa ou moderada (estudo UFS citado pelo G1)",
+        "observacao": "Ponto simbólico para contexto no mapa; não representa um único hotspot.",
+        "fonte": "G1 Sergipe (dez/2024)",
+        "fonte_url": "https://g1.globo.com/se/sergipe/noticia/2024/12/21/casas-destruidas-e-avanco-do-rio-e-do-mar-os-reflexos-da-erosao-que-atinge-68-km-da-costa-de-sergipe.ghtml",
+        "ano_referencia": 2024
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-37.07, -11.0]
+      }
+    }
+  ]
+}
