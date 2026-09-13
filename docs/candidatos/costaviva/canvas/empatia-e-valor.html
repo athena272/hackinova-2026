@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>InnovaPair — Mapa de Empatia | CostaViva</title>
+  <style>
+    :root {
+      --ink: #12263a;
+      --muted: #5b6b7c;
+      --line: #d7e0ea;
+      --bg: #f3f7fb;
+      --card: #ffffff;
+      --teal: #0f766e;
+      --teal-soft: #d9f3ef;
+      --coral: #c2410c;
+      --coral-soft: #ffedd5;
+      --sky: #0369a1;
+      --sky-soft: #e0f2fe;
+      --violet: #0e7490;
+      --violet-soft: #cffafe;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #e8f7f4 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, #e0f2fe 0%, transparent 35%),
+        var(--bg);
+      padding: 28px;
+    }
+
+    .slide {
+      max-width: 1280px;
+      margin: 0 auto 40px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 28px 32px 32px;
+      box-shadow: 0 10px 30px rgba(18, 38, 58, 0.06);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 22px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .meta strong { color: var(--ink); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 1.1fr;
+      grid-template-rows: auto auto auto;
+      gap: 14px;
+    }
+
+    .cell {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 16px 14px;
+      background: #fff;
+      min-height: 150px;
+    }
+
+    .cell h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .cell ul {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .cell li + li { margin-top: 6px; }
+
+    .think { background: var(--violet-soft); border-color: #a5f3fc; }
+    .think h2 { color: var(--violet); }
+
+    .see { background: var(--sky-soft); border-color: #bae6fd; }
+    .see h2 { color: var(--sky); }
+
+    .hear { background: #ecfdf5; border-color: #a7f3d0; }
+    .hear h2 { color: #047857; }
+
+    .say { background: #fff7ed; border-color: #fed7aa; }
+    .say h2 { color: #c2410c; }
+
+    .pains { background: var(--coral-soft); border-color: #fdba74; }
+    .pains h2 { color: var(--coral); }
+
+    .gains { background: var(--teal-soft); border-color: #99f6e4; }
+    .gains h2 { color: var(--teal); }
+
+    .persona {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef7f5 100%);
+      border: 2px dashed #9db7c9;
+      min-height: 320px;
+    }
+
+    .avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #0f766e, #0369a1);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .persona h2 {
+      font-size: 22px;
+      text-transform: none;
+      letter-spacing: 0;
+      margin: 0 0 6px;
+      color: var(--ink);
+    }
+
+    .persona p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 220px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--teal);
+      background: white;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+
+    .bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.2fr;
+      gap: 14px;
+    }
+
+    .value-grid .wide { grid-column: 1 / -1; }
+
+    .block {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .block h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--teal);
+    }
+
+    .block p, .block li {
+      font-size: 14px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .block ul { margin: 0; padding-left: 18px; }
+    .block li + li { margin-top: 6px; }
+
+    .highlight {
+      background: linear-gradient(135deg, #ecfeff, #f0fdf4);
+      border-color: #99f6e4;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .slide { box-shadow: none; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="header">
+      <div>
+        <p class="eyebrow">Hackinova 2026 · Tarefa 01</p>
+        <h1>Mapa de Empatia — Usuário Principal</h1>
+      </div>
+      <div class="meta">
+        <strong>InnovaPair</strong><br />
+        Produto: CostaViva<br />
+        Mudanças Climáticas · Sergipe
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="cell think" style="grid-column:1; grid-row:1;">
+        <h2>Pensa &amp; Sente</h2>
+        <ul>
+          <li>“Onde o mar chegou, ele não recuou mais.”</li>
+          <li>Medo de perder casa ou renda após ressacas.</li>
+          <li>Frustração com resposta lenta ou genérica.</li>
+        </ul>
+      </div>
+
+      <div class="persona">
+        <div class="avatar">C</div>
+        <h2>Carla, 38</h2>
+        <p>Moradora/comerciante de orla em área crítica. Usa celular e WhatsApp no dia a dia.</p>
+        <div class="badge">Usuário principal</div>
+      </div>
+
+      <div class="cell see" style="grid-column:3; grid-row:1;">
+        <h2>Vê</h2>
+        <ul>
+          <li>Faixa de areia sumindo e estruturas danificadas.</li>
+          <li>Casas comprometidas ou desocupadas.</li>
+          <li>Notícias pontuais e vistorias esporádicas.</li>
+        </ul>
+      </div>
+
+      <div class="cell hear" style="grid-column:1; grid-row:2;">
+        <h2>Ouve</h2>
+        <ul>
+          <li>Alertas genéricos de risco.</li>
+          <li>“Não pode construir contenção / reformar.”</li>
+          <li>Relatos de vizinhos sobre avanço do rio/mar.</li>
+        </ul>
+      </div>
+
+      <div class="cell say" style="grid-column:3; grid-row:2;">
+        <h2>Fala &amp; Faz</h2>
+        <ul>
+          <li>Tira fotos no celular após ressacas.</li>
+          <li>Cobra prefeitura e associações locais.</li>
+          <li>Improvisa proteções quando possível.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="cell pains">
+        <h2>Dores</h2>
+        <ul>
+          <li>Evidência fragmentada (WhatsApp/notícia)</li>
+          <li>Sem canal simples geolocalizado</li>
+          <li>Sensação de que “ninguém está vendo”</li>
+        </ul>
+      </div>
+      <div class="cell gains">
+        <h2>Ganhos</h2>
+        <ul>
+          <li>Relato com foto + GPS em minutos</li>
+          <li>Ver o ponto no mapa de risco</li>
+          <li>Recorrência visível para a gestão</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer-note">JTBD: “Quando a orla muda após ressaca/maré, quero registrar e visualizar o risco com evidência geolocalizada para apoiar alerta ou vistoria.”</p>
+  </section>
+
+  <section class="slide">
+    <div class="header">
+      <div>
+        <p class="eyebrow">Hackinova 2026 · Tarefa 01</p>
+        <h1>Canvas — Problema → Valor → Solução</h1>
+      </div>
+      <div class="meta">
+        <strong>InnovaPair</strong><br />
+        CostaViva · Mapa + relatos + dashboard
+      </div>
+    </div>
+
+    <div class="value-grid">
+      <div class="block">
+        <h2>Problema</h2>
+        <p>Erosão costeira/fluvial no litoral sergipano com evidência tardia e fragmentada para cidadãos e órgãos públicos.</p>
+      </div>
+      <div class="block">
+        <h2>Evidência (síntese)</h2>
+        <ul>
+          <li>68 km do litoral com erosão (G1/UFS)</li>
+          <li>~130 m em 10 anos na Praia do Saco</li>
+          <li>Costa não é uniforme (há acresção)</li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>Alternativas atuais</h2>
+        <ul>
+          <li>CoastSnap (totens/pesquisa)</li>
+          <li>Monitoramento UFS</li>
+          <li>SMS/CEMADEN / vistoria</li>
+        </ul>
+      </div>
+
+      <div class="block highlight wide">
+        <h2>Proposta de valor</h2>
+        <p><strong>Cidadão:</strong> relato visual geolocalizado em minutos.<br />
+        <strong>Gestão:</strong> mapa de calor de relatos + zonas críticas da literatura para priorizar ação.</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="block">
+        <h2>Solução inicial</h2>
+        <ul>
+          <li>Mapa Leaflet (zonas seed + relatos)</li>
+          <li>Formulário foto + GPS</li>
+          <li>Dashboard temporal simples</li>
+          <li>Next.js + Supabase + Vercel</li>
+          <li>IA: priorização por densidade/recência</li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>Fora de escopo (agora)</h2>
+        <ul>
+          <li>Hardware em canais de drenagem</li>
+          <li>Pipeline satelital ao vivo</li>
+          <li>Substituir Defesa Civil/Semac</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer-note">InnovaPair · Innovation Hub × OPIN · CostaViva complementa CoastSnap — não o substitui.</p>
+  </section>
+</body>
+</html>
