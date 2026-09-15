@@ -1,4 +1,4 @@
-# Hackinova 2026 — Tarefa 01
+# Hackinova 2026 - Tarefa 01
 ## Problema, Usuário e Proposta de Valor
 
 **Equipe:** InnovaPair  
@@ -9,7 +9,7 @@
 
 ## 1. Definição clara do problema
 
-Em Aracaju, uma parcela significativa das consultas e exames especializados agendados pelo SUS **não é realizada** porque o paciente não comparece — frequentemente **sem cancelar com antecedência**.
+Em Aracaju, uma parcela significativa das consultas e exames especializados agendados pelo SUS **não é realizada** porque o paciente não comparece - frequentemente **sem cancelar com antecedência**.
 
 Isso gera três consequências simultâneas:
 
@@ -30,7 +30,7 @@ O problema não é apenas “faltam médicos”. Há também **baixa confirmaç�
 
 | Evidência | O que mostra | Fonte |
 |---|---|---|
-| Absenteísmo **acima de 50%** em especialidades como oftalmologia e neurologia (1º quadrimestre/2025) | O não comparecimento continua crítico mesmo com alta demanda | SMS / prestação de contas 2025 — [Imprensa24h](https://imprensa24h.com.br/saude-de-aracaju-apresenta-avancos-e-desafios-na-prestacao-de-contas-do-1o-quadrimestre-de-2025/) · [Sergipe Em Debate](https://sergipeemdebate.com.br/saude-de-aracaju-apresenta-avancos-e-desafios-na-prestacao-de-contas-do-1o-quadrimestre-de-2025/) |
+| Absenteísmo **acima de 50%** em especialidades como oftalmologia e neurologia (1º quadrimestre/2025) | O não comparecimento continua crítico mesmo com alta demanda | SMS / prestação de contas 2025 - [Imprensa24h](https://imprensa24h.com.br/saude-de-aracaju-apresenta-avancos-e-desafios-na-prestacao-de-contas-do-1o-quadrimestre-de-2025/) · [Sergipe Em Debate](https://sergipeemdebate.com.br/saude-de-aracaju-apresenta-avancos-e-desafios-na-prestacao-de-contas-do-1o-quadrimestre-de-2025/) |
 | Neurologia: **~58%** de faltas; Endocrinologia: **~56%** | Especialidades sensíveis têm desperdício sistemático de agenda | [Prefeitura de Aracaju](https://www.aracaju.se.gov.br/noticias/101694/prefeitura_atua_para_reduzir_o_nao_comparecimento_a_consultas_medicas_e_exames.html) |
 | Ultrassonografia de abdome: **~71%** de absenteísmo; outros exames >55% | O problema também afeta exames diagnósticos | Mesma fonte acima |
 | CEMAR: média de **~55,5%** de faltosos (consultas + exames) em um semestre | Centro de especialidades com mais da metade das agendas desperdiçadas | [Prefeitura de Aracaju](https://www.aracaju.se.gov.br/noticias/96455/mais_de_55_dos_pacientes_faltaram_ao_atendimento_no_cemar_entre_janeiro_e-junho.html) |
@@ -54,7 +54,7 @@ Para esta etapa, tratamos o absenteísmo como **problema estrutural recorrente**
 
 ## 3. Perfil do usuário principal
 
-### Persona principal — **Ana, 42 anos**
+### Persona principal - **Ana, 42 anos**
 
 | Campo | Descrição |
 |---|---|
@@ -172,7 +172,7 @@ Precisa reduzir vagas ociosas, tornar a fila mais real e melhorar o aproveitamen
 ## 8. Descrição inicial da solução
 
 > **Nome provisório do produto:** *AgendaCerta* (pode mudar)  
-> **Posicionamento:** camada inteligente de confirmação e reaproveitamento de vagas do SUS — não substitui a regulação municipal; potencializa o que já existe.
+> **Posicionamento:** camada inteligente de confirmação e reaproveitamento de vagas do SUS - não substitui a regulação municipal; potencializa o que já existe.
 
 ### O que é (versão inicial)
 Uma solução digital (WhatsApp-first) que:
@@ -236,5 +236,5 @@ Uma solução digital (WhatsApp-first) que:
 ---
 
 **Equipe InnovaPair**  
-Hackinova 2026 — Innovation Hub × OPIN  
+Hackinova 2026 - Innovation Hub × OPIN  
 *Aprenda. Construa. Conecte. Transforme.*

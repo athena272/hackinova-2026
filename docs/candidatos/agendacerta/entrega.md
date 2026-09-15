@@ -1,4 +1,4 @@
-# Hackinova 2026 — Tarefa 01 (Entrega)
+# Hackinova 2026 - Tarefa 01 (Entrega)
 ## Problema, Usuário e Proposta de Valor
 
 **Equipe:** InnovaPair  
@@ -9,7 +9,7 @@
 ---
 
 ### 1. Problema
-Em Aracaju, parte relevante das consultas e exames especializados do SUS **não acontece** porque o paciente falta — muitas vezes **sem cancelar**. Isso gera vagas ociosas, filas “fantasma” e atraso no cuidado de quem precisa.
+Em Aracaju, parte relevante das consultas e exames especializados do SUS **não acontece** porque o paciente falta - muitas vezes **sem cancelar**. Isso gera vagas ociosas, filas “fantasma” e atraso no cuidado de quem precisa.
 
 **Em uma frase:** o sistema marca a vaga, mas não confirma, não prevê e não redistribui o não comparecimento com eficiência.
 
@@ -18,16 +18,16 @@ Em Aracaju, parte relevante das consultas e exames especializados do SUS **não 
 - Neurologia **~58%** e endocrinologia **~56%** de faltas; ultrassonografia de abdome **~71%**.
 - CEMAR: média de **~55,5%** de faltosos (consultas + exames) em um semestre.
 - SMS aponta telefone desatualizado e baixa efetividade do contato manual.
-- Em **2026**, a gestão segue priorizando redução de filas/espera — o gargalo de acesso permanece relevante.
+- Em **2026**, a gestão segue priorizando redução de filas/espera - o gargalo de acesso permanece relevante.
 
 > Dados de magnitude mais detalhados: 2025 e anteriores. Persistência do problema: prioridade pública em 2026.
 
 **Fontes principais:** Prefeitura de Aracaju / SMS (notícias oficiais e RDQ).
 
 ### 3. Usuário principal
-**Ana, 42** — usuária do SUS em Aracaju, jornada pouco flexível, usa WhatsApp no dia a dia, baixa adesão a apps institucionais.  
+**Ana, 42** - usuária do SUS em Aracaju, jornada pouco flexível, usa WhatsApp no dia a dia, baixa adesão a apps institucionais.  
 **Dor:** esquecer/confirmar/remarcar é difícil; teme perder a vaga após meses de espera.  
-**Usuário secundário:** regulação/SMS — precisa reduzir ociosidade e tornar a fila mais real.
+**Usuário secundário:** regulação/SMS - precisa reduzir ociosidade e tornar a fila mais real.
 
 ### 4. Mapa de Empatia (síntese)
 | | |
@@ -51,11 +51,11 @@ Ligações manuais, Portal/App Mais Saúde Cidadão, UBS/0800, overbooking empí
 **Limitação comum:** reativo, manual ou dependente de canais com baixa adesão.
 
 ### 7. Proposta de valor
-**Para o paciente:** lembretes e confirmação no WhatsApp, com remarcação simples — menos falta evitável.  
+**Para o paciente:** lembretes e confirmação no WhatsApp, com remarcação simples - menos falta evitável.  
 **Para a gestão:** agendas mais previsíveis, menos vaga ociosa e fila mais real.
 
 ### 8. Solução inicial (não finalizada)
-**AgendaCerta** — camada WhatsApp-first de:
+**AgendaCerta** - camada WhatsApp-first de:
 1. lembrete automático;
 2. confirmação SIM / NÃO / REMARCAR;
 3. status da vaga para a rede;
