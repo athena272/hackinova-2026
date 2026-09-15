@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>InnovaPair — Mapa de Empatia | AgendaCerta</title>
+  <title>InnovaPair - Mapa de Empatia | AgendaCerta</title>
   <style>
     :root {
       --ink: #12263a;
@@ -17,8 +17,8 @@
       --coral-soft: #ffedd5;
       --sky: #0369a1;
       --sky-soft: #e0f2fe;
-      --violet: #5b21b6;
-      --violet-soft: #ede9fe;
+      --cyan: #0e7490;
+      --cyan-soft: #cffafe;
     }
 
     * { box-sizing: border-box; }
@@ -28,7 +28,7 @@
       color: var(--ink);
       background:
         radial-gradient(circle at 10% 0%, #e8f7f4 0%, transparent 40%),
-        radial-gradient(circle at 90% 10%, #e8f1ff 0%, transparent 35%),
+        radial-gradient(circle at 90% 10%, #e0f2fe 0%, transparent 35%),
         var(--bg);
       padding: 28px;
     }
@@ -80,7 +80,6 @@
     .grid {
       display: grid;
       grid-template-columns: 1.1fr 0.9fr 1.1fr;
-      grid-template-rows: auto auto auto;
       gap: 14px;
     }
 
@@ -102,15 +101,14 @@
     .cell ul {
       margin: 0;
       padding-left: 18px;
-      color: var(--ink);
       font-size: 14px;
       line-height: 1.45;
     }
 
     .cell li + li { margin-top: 6px; }
 
-    .think { background: var(--violet-soft); border-color: #ddd6fe; }
-    .think h2 { color: var(--violet); }
+    .think { background: var(--cyan-soft); border-color: #a5f3fc; }
+    .think h2 { color: var(--cyan); }
 
     .see { background: var(--sky-soft); border-color: #bae6fd; }
     .see h2 { color: var(--sky); }
@@ -135,10 +133,10 @@
       justify-content: center;
       align-items: center;
       text-align: center;
-      background:
-        linear-gradient(180deg, #f8fbff 0%, #eef7f5 100%);
+      background: linear-gradient(180deg, #f8fbff 0%, #eef7f5 100%);
       border: 2px dashed #9db7c9;
       min-height: 320px;
+      border-radius: 14px;
     }
 
     .avatar {
@@ -194,16 +192,13 @@
       color: var(--muted);
     }
 
-    /* Value canvas */
     .value-grid {
       display: grid;
       grid-template-columns: 1.2fr 1fr 1.2fr;
       gap: 14px;
     }
 
-    .value-grid .wide {
-      grid-column: 1 / -1;
-    }
+    .value-grid .wide { grid-column: 1 / -1; }
 
     .block {
       border: 1px solid var(--line);
@@ -248,12 +243,11 @@
   </style>
 </head>
 <body>
-  <!-- SLIDE 1: Empathy Map -->
   <section class="slide">
     <div class="header">
       <div>
         <p class="eyebrow">Hackinova 2026 · Tarefa 01</p>
-        <h1>Mapa de Empatia — Usuário Principal</h1>
+        <h1>Mapa de Empatia - Usuário Principal</h1>
       </div>
       <div class="meta">
         <strong>InnovaPair</strong><br />
@@ -284,7 +278,7 @@
         <ul>
           <li>Filas longas para especialidades e exames.</li>
           <li>Canais institucionais pouco claros ou pouco usados.</li>
-          <li>Mutirões e programas emergenciais na cidade.</li>
+          <li>Mutirões e programas emergenciais pontuais.</li>
         </ul>
       </div>
 
@@ -329,16 +323,15 @@
     <p class="footer-note">JTBD: “Quando tenho consulta/exame marcado no SUS, quero confirmar ou remarcar facilmente para não perder a vaga nem prejudicar a fila.”</p>
   </section>
 
-  <!-- SLIDE 2: Value / Solution Canvas -->
   <section class="slide">
     <div class="header">
       <div>
         <p class="eyebrow">Hackinova 2026 · Tarefa 01</p>
-        <h1>Canvas — Problema → Valor → Solução</h1>
+        <h1>Canvas - Problema → Valor → Solução</h1>
       </div>
       <div class="meta">
         <strong>InnovaPair</strong><br />
-        AgendaCerta · WhatsApp-first + IA
+        AgendaCerta · WhatsApp-first + painel
       </div>
     </div>
 
@@ -358,7 +351,7 @@
       <div class="block">
         <h2>Alternativas atuais</h2>
         <ul>
-          <li>Ligação manual</li>
+          <li>Ligação manual / MonitorAju</li>
           <li>Portal/App institucional</li>
           <li>UBS / 0800 / overbooking</li>
         </ul>
@@ -366,7 +359,7 @@
 
       <div class="block highlight wide">
         <h2>Proposta de valor</h2>
-        <p><strong>Paciente:</strong> lembrete + confirmação no WhatsApp + remarcação simples.<br />
+        <p><strong>Paciente:</strong> lembrete + confirmação no WhatsApp + remarcação em 1 toque.<br />
         <strong>Gestão:</strong> agenda previsível, menos ociosidade e fila mais real.</p>
       </div>
     </div>
@@ -375,7 +368,7 @@
       <div class="block">
         <h2>Solução inicial</h2>
         <ul>
-          <li>Lembretes automáticos</li>
+          <li>Lembretes automáticos no WhatsApp</li>
           <li>Confirmação SIM / NÃO / REMARCAR</li>
           <li>Status da vaga para a rede</li>
           <li>Score de risco de falta (IA)</li>
@@ -392,7 +385,7 @@
       </div>
     </div>
 
-    <p class="footer-note">InnovaPair · Innovation Hub × OPIN · Tarefa 01 — foco em problema, usuário e valor (solução ainda inicial).</p>
+    <p class="footer-note">InnovaPair · Innovation Hub × OPIN · AgendaCerta complementa a marcação do SUS - não a substitui.</p>
   </section>
 </body>
 </html>
