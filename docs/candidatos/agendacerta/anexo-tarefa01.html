@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InnovaPair - AgendaCerta · Anexo Tarefa 01</title>
+    <style>
+      :root {
+        --ink: #12263a;
+        --muted: #5b6b7c;
+        --line: #d7e0ea;
+        --bg: #f3f7fb;
+        --card: #ffffff;
+        --teal: #0f766e;
+        --teal-soft: #d9f3ef;
+        --coral: #c2410c;
+        --coral-soft: #ffedd5;
+        --sky: #0369a1;
+        --sky-soft: #e0f2fe;
+        --cyan: #0e7490;
+        --cyan-soft: #cffafe;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, #e8f7f4 0%, transparent 40%),
+          radial-gradient(circle at 90% 10%, #e0f2fe 0%, transparent 35%),
+          var(--bg);
+        padding: 16px;
+      }
+
+      .slide {
+        width: 1120px;
+        height: 760px;
+        margin: 0 auto 24px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px 26px 16px;
+        box-shadow: 0 10px 30px rgba(18, 38, 58, 0.06);
+        page-break-after: always;
+        break-after: page;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--teal);
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.1;
+      }
+
+      .meta {
+        text-align: right;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .meta strong {
+        color: var(--ink);
+      }
+
+      .content {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 16px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--teal);
+      }
+
+      .card p,
+      .card li {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .card ul {
+        margin: 0;
+        padding-left: 17px;
+      }
+      .card li + li {
+        margin-top: 8px;
+      }
+
+      .source {
+        margin-top: auto;
+        padding-top: 14px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      .note {
+        flex-shrink: 0;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: var(--teal-soft);
+        border: 1px solid #99f6e4;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .cards.triple {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 0.85fr 1.15fr;
+        gap: 14px;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+      }
+
+      .persona-box {
+        border: 2px dashed #9db7c9;
+        border-radius: 14px;
+        padding: 24px;
+        text-align: center;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef7f5 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      .avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #0f766e, #0369a1);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 38px;
+        font-weight: 700;
+        margin-bottom: 14px;
+      }
+
+      .persona-box h2 {
+        margin: 0 0 8px;
+        font-size: 26px;
+      }
+
+      .persona-box p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        max-width: 240px;
+        line-height: 1.45;
+      }
+
+      .badge {
+        margin-top: 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--teal);
+        background: white;
+        border: 1px solid #99f6e4;
+        border-radius: 999px;
+        padding: 6px 12px;
+      }
+
+      .fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr auto;
+        gap: 12px;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .field {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .field h3 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--sky);
+      }
+
+      .field p {
+        margin: 0;
+        font-size: 14.5px;
+        line-height: 1.45;
+        flex: 1;
+      }
+
+      .empathy-wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .empathy {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr 1.1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .cell {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cell h2 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .cell ul {
+        margin: 0;
+        padding-left: 17px;
+        font-size: 14px;
+        line-height: 1.45;
+        flex: 1;
+      }
+
+      .cell li + li {
+        margin-top: 7px;
+      }
+
+      .think {
+        background: var(--cyan-soft);
+        border-color: #a5f3fc;
+      }
+      .think h2 {
+        color: var(--cyan);
+      }
+      .see {
+        background: var(--sky-soft);
+        border-color: #bae6fd;
+      }
+      .see h2 {
+        color: var(--sky);
+      }
+      .hear {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+      }
+      .hear h2 {
+        color: #047857;
+      }
+      .say {
+        background: #fff7ed;
+        border-color: #fed7aa;
+      }
+      .say h2 {
+        color: #c2410c;
+      }
+      .pains {
+        background: var(--coral-soft);
+        border-color: #fdba74;
+      }
+      .pains h2 {
+        color: var(--coral);
+      }
+      .gains {
+        background: var(--teal-soft);
+        border-color: #99f6e4;
+      }
+      .gains h2 {
+        color: var(--teal);
+      }
+
+      .persona-center {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef7f5 100%);
+        border: 2px dashed #9db7c9;
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .bottom-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        flex: 0 0 28%;
+        min-height: 140px;
+      }
+
+      .jtbd-box {
+        border: 1px solid #99f6e4;
+        border-radius: 14px;
+        padding: 28px 28px;
+        background: linear-gradient(135deg, #ecfeff, #f0fdf4);
+        flex: 1.1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .jtbd-box .label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--teal);
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      .jtbd-box p {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.5;
+      }
+
+      .jtbd-box strong {
+        color: var(--teal);
+      }
+
+      .alt-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .alt {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 16px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .alt h2 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        color: var(--ink);
+      }
+
+      .alt .how {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.45;
+        flex: 1;
+      }
+
+      .alt .limit {
+        margin: 0;
+        margin-top: auto;
+        font-size: 13.5px;
+        line-height: 1.4;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: var(--coral-soft);
+        color: #9a3412;
+      }
+
+      .value-box {
+        border: 1px solid #99f6e4;
+        border-radius: 14px;
+        padding: 22px 24px;
+        background: linear-gradient(135deg, #ecfeff, #f0fdf4);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .value-box h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--teal);
+      }
+
+      .value-box p {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.55;
+      }
+
+      .solution {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px 22px;
+        background: #fff;
+        flex: 1.15;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .solution h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--sky);
+      }
+
+      .solution p {
+        margin: 0 0 10px;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .solution p:last-child {
+        margin-bottom: 0;
+      }
+
+      .footer-note {
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .slide {
+          box-shadow: none;
+          border-radius: 0;
+          border: none;
+          margin: 0;
+          width: 100%;
+          height: 194mm;
+          max-height: 194mm;
+          padding: 8mm 10mm 6mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SLIDE 1: Evidências -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Evidências do problema</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta · Saúde<br />
+          SUS Aracaju
+        </div>
+      </div>
+      <div class="content">
+        <div class="cards">
+          <div class="card">
+            <h2>Evidência 1</h2>
+            <p>
+              Absenteísmo <strong>acima de 50%</strong> em especialidades como
+              oftalmologia e neurologia no 1º quadrimestre de 2025.
+            </p>
+            <p class="source">
+              Fonte: SMS Aracaju - prestação de contas / RDQ 2025 (Imprensa24h;
+              Sergipe Em Debate).
+            </p>
+          </div>
+          <div class="card">
+            <h2>Evidência 2</h2>
+            <p>
+              Neurologia ~<strong>58%</strong> de faltas; endocrinologia
+              ~<strong>56%</strong>; ultrassonografia de abdome ~<strong
+                >71%</strong
+              >
+              de absenteísmo.
+            </p>
+            <p class="source">
+              Fonte: Prefeitura de Aracaju - “Prefeitura atua para reduzir o não
+              comparecimento a consultas médicas e exames”.
+            </p>
+          </div>
+          <div class="card">
+            <h2>Evidência 3</h2>
+            <p>
+              No CEMAR, média de ~<strong>55,5%</strong> de faltosos (consultas
+              + exames) em um semestre. Em 2026, a SMS ainda prioriza redução de
+              filas e tempo de espera.
+            </p>
+            <p class="source">
+              Fontes: Prefeitura de Aracaju (CEMAR); RDQ 1º quadrimestre/2026.
+            </p>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Observação:</strong> Os percentuais mais detalhados são de
+          2025 e períodos anteriores. Em 2026, a persistência do gargalo aparece
+          na prioridade pública de reduzir filas/espera - o absenteísmo é
+          tratado como problema estrutural recorrente.
+        </div>
+      </div>
+      <p class="footer-note">
+        1 / 6 · Material de aprofundamento - problema e usuário
+      </p>
+    </section>
+
+    <!-- SLIDE 2: Perfil -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Perfil do usuário principal</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta · Persona Ana
+        </div>
+      </div>
+      <div class="content profile-grid">
+        <div class="persona-box">
+          <div class="avatar">A</div>
+          <h2>Ana, 42</h2>
+          <p>
+            Usuária do SUS em Aracaju, com consulta ou exame especializado já
+            marcado.
+          </p>
+          <div class="badge">Usuário principal</div>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <h3>Contexto</h3>
+            <p>
+              Aguarda especialidade/exame há semanas ou meses; jornada pouco
+              flexível; cadastro/telefone pode estar desatualizado.
+            </p>
+          </div>
+          <div class="field">
+            <h3>Objetivo</h3>
+            <p>
+              Comparecer sem perder a vaga, ou remarcar com facilidade, sem
+              “ficar atrás” da informação.
+            </p>
+          </div>
+          <div class="field">
+            <h3>Dores</h3>
+            <p>
+              Esquecimento da data; medo de voltar ao fim da fila; remarcação
+              burocrática; custo de transporte/perda de renda.
+            </p>
+          </div>
+          <div class="field">
+            <h3>Comportamentos</h3>
+            <p>
+              Usa WhatsApp todos os dias; anota a data no celular/papel; baixa
+              adesão a apps institucionais.
+            </p>
+          </div>
+          <div class="field" style="grid-column: 1 / -1">
+            <h3>Limitações</h3>
+            <p>
+              Pouco tempo para ir à UBS ou ligar no 0800; baixa prioridade para
+              baixar/aprender app novo; contato institucional falha quando o
+              telefone está desatualizado.
+            </p>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        2 / 6 · Usuário secundário: regulação/SMS (reaproveitar agenda e reduzir
+        ociosidade)
+      </p>
+    </section>
+
+    <!-- SLIDE 3: Empatia -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Mapa de Empatia</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          Ana, 42 · SUS Aracaju
+        </div>
+      </div>
+      <div class="content">
+        <div class="empathy-wrap">
+          <div class="empathy">
+            <div class="cell think" style="grid-column: 1; grid-row: 1">
+              <h2>Pensa &amp; Sente</h2>
+              <ul>
+                <li>“Se eu perder essa vaga, não sei quando consigo outra.”</li>
+                <li>Ansiedade por esperar meses e ainda falhar no dia.</li>
+                <li>Insegurança sobre horário, local e documentos.</li>
+              </ul>
+            </div>
+            <div class="persona-center">
+              <div class="avatar">A</div>
+              <h2 style="margin: 0 0 6px; font-size: 22px">Ana, 42</h2>
+              <p
+                style="
+                  margin: 0;
+                  color: var(--muted);
+                  font-size: 14px;
+                  max-width: 210px;
+                  line-height: 1.4;
+                "
+              >
+                Usuária do SUS. Jornada pouco flexível. WhatsApp no dia a dia.
+              </p>
+              <div class="badge">Usuário principal</div>
+            </div>
+            <div class="cell see" style="grid-column: 3; grid-row: 1">
+              <h2>Vê</h2>
+              <ul>
+                <li>Filas longas para especialidades e exames.</li>
+                <li>Canais institucionais pouco claros ou pouco usados.</li>
+                <li>Mutirões e programas emergenciais pontuais.</li>
+              </ul>
+            </div>
+            <div class="cell hear" style="grid-column: 1; grid-row: 2">
+              <h2>Ouve</h2>
+              <ul>
+                <li>“Atualize o telefone.”</li>
+                <li>“Se faltar, vai para o fim da fila.”</li>
+                <li>
+                  Relatos de espera e perda de vaga na família/vizinhança.
+                </li>
+              </ul>
+            </div>
+            <div class="cell say" style="grid-column: 3; grid-row: 2">
+              <h2>Fala &amp; Faz</h2>
+              <ul>
+                <li>Anota a data no celular ou em papel.</li>
+                <li>Prioriza trabalho e família no dia do atendimento.</li>
+                <li>Às vezes falta e não avisa com antecedência.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bottom-two">
+            <div class="cell pains">
+              <h2>Dores</h2>
+              <ul>
+                <li>Esquecimento e ausência de lembrete no canal certo</li>
+                <li>Cancelar/remarcar é burocrático</li>
+                <li>Custo de transporte e perda de renda</li>
+              </ul>
+            </div>
+            <div class="cell gains">
+              <h2>Ganhos</h2>
+              <ul>
+                <li>Confirmação em 1 toque no WhatsApp</li>
+                <li>Lembretes no momento certo</li>
+                <li>Sensação de controle sobre a própria vaga</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">3 / 6 · Mapa de Empatia</p>
+    </section>
+
+    <!-- SLIDE 4: JTBD -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Jobs to Be Done</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta
+        </div>
+      </div>
+      <div class="content">
+        <div class="jtbd-box">
+          <div class="label">Job principal (funcional)</div>
+          <p>
+            <strong>Quando</strong> tenho consulta ou exame especializado
+            marcado no SUS, <strong>quero</strong> ser lembrada, confirmar
+            presença e remarcar facilmente, <strong>para</strong> não perder a
+            vaga e não prejudicar quem está na fila.
+          </p>
+        </div>
+        <div class="cards" style="grid-template-columns: 1fr 1fr 1fr; flex: 1">
+          <div class="card">
+            <h2>Job emocional</h2>
+            <p>
+              Reduzir a ansiedade de “perder a vez” depois de esperar semanas ou
+              meses.
+            </p>
+          </div>
+          <div class="card">
+            <h2>Job social</h2>
+            <p>
+              Cumprir o compromisso com a rede de saúde sem parecer
+              irresponsável.
+            </p>
+          </div>
+          <div class="card">
+            <h2>Job da gestão</h2>
+            <p>
+              Identificar risco de falta cedo o bastante para reaproveitar a
+              agenda.
+            </p>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Em uma frase:</strong> ajudar o paciente do SUS a comparecer -
+          ou liberar a vaga a tempo - com o mínimo de esforço.
+        </div>
+      </div>
+      <p class="footer-note">4 / 6 · Jobs to Be Done</p>
+    </section>
+
+    <!-- SLIDE 5: Alternativas -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Soluções atuais / alternativas</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          Como o problema é resolvido hoje
+        </div>
+      </div>
+      <div class="content">
+        <div class="alt-grid">
+          <div class="alt">
+            <h2>1. Ligações manuais / MonitorAju</h2>
+            <p class="how">
+              Equipe tenta confirmar presença, principalmente em filas longas.
+            </p>
+            <p class="limit">
+              <strong>Limitação:</strong> telefone desatualizado, escala
+              limitada, alto custo operacional.
+            </p>
+          </div>
+          <div class="alt">
+            <h2>2. Portal / app Mais Saúde Cidadão</h2>
+            <p class="how">
+              Consultar liberação, cancelar e remarcar por canais digitais
+              institucionais.
+            </p>
+            <p class="limit">
+              <strong>Limitação:</strong> baixa adesão de parte do público;
+              fricção digital; não é proativo.
+            </p>
+          </div>
+          <div class="alt">
+            <h2>3. UBS / agente / Ouvidoria 0800</h2>
+            <p class="how">
+              Cancelamento presencial ou por telefone, por iniciativa do
+              paciente.
+            </p>
+            <p class="limit">
+              <strong>Limitação:</strong> exige deslocamento ou horário; depende
+              da pessoa lembrar de avisar.
+            </p>
+          </div>
+          <div class="alt">
+            <h2>4. Overbooking empírico</h2>
+            <p class="how">
+              Marcar “a mais” com base no histórico médio de faltas.
+            </p>
+            <p class="limit">
+              <strong>Limitação:</strong> não individualiza risco; pode gerar
+              lotação ou ociosidade residual.
+            </p>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Síntese:</strong> as alternativas atuais são reativas, manuais
+          ou dependentes de canais com baixa adesão. Falta um fluxo simples,
+          proativo e previsível de confirmação + redistribuição.
+        </div>
+      </div>
+      <p class="footer-note">5 / 6 · Alternativas (≥3)</p>
+    </section>
+
+    <!-- SLIDE 6: Valor + Solução -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 01 · Anexo</p>
+          <h1>Proposta de valor e solução inicial</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta
+        </div>
+      </div>
+      <div class="content">
+        <div class="value-box">
+          <h2>Proposta de valor</h2>
+          <p>
+            Para usuários do SUS em Aracaju que enfrentam dificuldade para
+            lembrar, confirmar ou remarcar consultas e exames a tempo, o
+            AgendaCerta oferece lembretes e confirmação no WhatsApp com
+            remarcação em 1 toque, diferente de ligações manuais e apps
+            institucionais pouco usados, porque usa o canal do dia a dia do
+            paciente e libera vagas com antecedência para a rede reaproveitar a
+            agenda.
+          </p>
+        </div>
+        <div class="solution">
+          <h2>Solução inicial (até 5 linhas)</h2>
+          <p>
+            O AgendaCerta envia lembretes no WhatsApp e pede confirmação de
+            presença (SIM / NÃO / REMARCAR).
+          </p>
+          <p>Atualiza o status da vaga em um painel para a gestão da rede.</p>
+          <p>
+            Prioriza contatos com maior risco de falta (IA leve) e aciona lista
+            de espera quando a vaga é liberada.
+          </p>
+          <p>
+            Não substitui o sistema de marcação da SMS: entra depois que a
+            consulta ou exame já foi agendado.
+          </p>
+          <p>
+            MVP: WhatsApp (modo teste) + painel web; integração real com a
+            agenda municipal fica para evolução.
+          </p>
+        </div>
+      </div>
+      <p class="footer-note">
+        6 / 6 · InnovaPair · Hackinova 2026 · Innovation Hub × OPIN
+      </p>
+    </section>
+  </body>
+</html>

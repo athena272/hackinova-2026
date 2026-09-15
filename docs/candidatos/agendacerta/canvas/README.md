@@ -1,4 +1,4 @@
-# Canvas — AgendaCerta (Tarefa 01)
+# Canvas - AgendaCerta (Tarefa 01)
 
 Materiais visuais da InnovaPair para o candidato **AgendaCerta**.
 
@@ -14,4 +14,10 @@ Materiais visuais da InnovaPair para o candidato **AgendaCerta**.
 
 ```bash
 start docs/candidatos/agendacerta/canvas/empatia-e-valor.html
+```
+
+Para a entrega oficial na OPIN, use o anexo de 6 slides:
+
+```bash
+start docs/candidatos/agendacerta/anexo-tarefa01.html
 ```
