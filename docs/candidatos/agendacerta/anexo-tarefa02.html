@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InnovaPair - AgendaCerta · Anexo Tarefa 02</title>
+    <style>
+      :root {
+        --ink: #12263a;
+        --muted: #5b6b7c;
+        --line: #d7e0ea;
+        --bg: #f3f7fb;
+        --card: #ffffff;
+        --teal: #0f766e;
+        --teal-soft: #d9f3ef;
+        --coral: #c2410c;
+        --coral-soft: #ffedd5;
+        --sky: #0369a1;
+        --sky-soft: #e0f2fe;
+        --cyan: #0e7490;
+        --cyan-soft: #cffafe;
+        --todo: #fef9c3;
+        --todo-border: #fde047;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, #e8f7f4 0%, transparent 40%),
+          radial-gradient(circle at 90% 10%, #e0f2fe 0%, transparent 35%),
+          var(--bg);
+        padding: 16px;
+      }
+
+      .slide {
+        width: 1120px;
+        height: 760px;
+        margin: 0 auto 24px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px 26px 16px;
+        box-shadow: 0 10px 30px rgba(18, 38, 58, 0.06);
+        page-break-after: always;
+        break-after: page;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--teal);
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.15;
+      }
+
+      .meta {
+        text-align: right;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .meta strong {
+        color: var(--ink);
+      }
+
+      .content {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .footer-note {
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #854d0e;
+        background: var(--todo);
+        border: 1px solid var(--todo-border);
+        border-radius: 999px;
+        padding: 4px 10px;
+      }
+
+      .draft-banner {
+        flex-shrink: 0;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: var(--todo);
+        border: 1px solid var(--todo-border);
+        font-size: 13px;
+        line-height: 1.4;
+        color: #713f12;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .bmc-row {
+        display: grid;
+        grid-template-columns: 1.1fr 1.1fr 1.1fr 1.1fr;
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .bmc-row-5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .box {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 14px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .box h2 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--teal);
+      }
+
+      .box p,
+      .box li {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.4;
+      }
+
+      .box ul {
+        margin: 0;
+        padding-left: 16px;
+        flex: 1;
+      }
+
+      .box li + li {
+        margin-top: 6px;
+      }
+
+      .box.sky {
+        background: var(--sky-soft);
+        border-color: #bae6fd;
+      }
+      .box.sky h2 {
+        color: var(--sky);
+      }
+      .box.teal {
+        background: var(--teal-soft);
+        border-color: #99f6e4;
+      }
+      .box.cyan {
+        background: var(--cyan-soft);
+        border-color: #a5f3fc;
+      }
+      .box.cyan h2 {
+        color: var(--cyan);
+      }
+      .box.coral {
+        background: var(--coral-soft);
+        border-color: #fdba74;
+      }
+      .box.coral h2 {
+        color: var(--coral);
+      }
+      .box.open {
+        background: #fffbeb;
+        border: 1px dashed var(--todo-border);
+      }
+
+      .mono-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #a16207;
+        margin-bottom: 8px;
+      }
+
+      .placeholder {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px dashed #e5e7eb;
+        background: #fafafa;
+        min-height: 48px;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 10px;
+        line-height: 1.4;
+      }
+
+      .money-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .hero-box {
+        border: 1px solid #99f6e4;
+        border-radius: 14px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #ecfeff, #f0fdf4);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      .hero-box h2 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--teal);
+      }
+
+      .hero-box p {
+        margin: 0 0 10px;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .hero-box p:last-child {
+        margin-bottom: 0;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100%;
+      }
+
+      table.bench {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        flex: 1;
+      }
+
+      table.bench th,
+      table.bench td {
+        border: 1px solid var(--line);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+        line-height: 1.35;
+      }
+
+      table.bench th {
+        background: var(--teal-soft);
+        color: var(--teal);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      table.bench tr.todo-row td {
+        background: #fffbeb;
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .split-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.2fr;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .open-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .open-item {
+        flex: 1;
+        border: 1px dashed var(--todo-border);
+        border-radius: 10px;
+        background: #fffbeb;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .open-item .q {
+        font-size: 12px;
+        font-weight: 700;
+        color: #854d0e;
+        margin-bottom: 6px;
+      }
+
+      .open-item .slot {
+        flex: 1;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .slide {
+          box-shadow: none;
+          border: none;
+          border-radius: 0;
+          width: 100%;
+          height: 194mm;
+          margin: 0;
+          page-break-after: always;
+          break-after: page;
+        }
+        .slide:last-child {
+          page-break-after: auto;
+          break-after: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SLIDE 1: Capa + monetização -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Hackinova 2026 · Tarefa 02 · Anexo</p>
+          <h1>Modelo de negócio · AgendaCerta</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          Hipótese de monetização<br />
+          B2B · clínicas e labs
+        </div>
+      </div>
+      <div class="content">
+        <div class="money-grid">
+          <div class="hero-box">
+            <h2>Hipótese de monetização</h2>
+            <p>
+              <strong>Quem paga:</strong> clínicas, consultórios e laboratórios
+              privados (e redes de especialidade). O paciente não paga. Ele só
+              confirma ou remarca no WhatsApp.
+            </p>
+            <p>
+              <strong>Modelo principal:</strong> assinatura B2B. Mensalidade por
+              clínica ou por agenda coberta, com teto de mensagens no plano.
+              Decisão de compra rápida, sem depender de licitação.
+            </p>
+            <p>
+              <strong>Como cobrar:</strong> piloto pago de 30 a 60 dias em 1 ou
+              2 clínicas de especialidade com muita falta. Cartão ou boleto
+              mensal. Se reduzir ociosidade, sobe o plano ou indica a próxima
+              clínica da rede.
+            </p>
+          </div>
+          <div class="stack">
+            <div class="box teal">
+              <h2>Faixa / lógica inicial</h2>
+              <p>
+                Mensalidade fixa + faixa por volume. Partida sugerida para
+                clínica pequena/média: R$ 297 a R$ 997/mês, conforme número de
+                agendas e mensagens. O preço precisa ser menor que o custo de
+                poucas faltas por semana (horário do profissional parado).
+              </p>
+            </div>
+            <div class="box sky">
+              <h2>Por que esse modelo</h2>
+              <p>
+                No privado, falta vira receita perdida na hora. O dono da agenda
+                sente o buraco e pode comprar sem processo longo de governo. O
+                problema do SUS em Aracaju continua sendo a evidência social do
+                produto; a receita começa onde a venda é mais direta.
+              </p>
+            </div>
+            <div class="box cyan">
+              <h2>O que não vendemos (nesta fase)</h2>
+              <p>
+                Contrato B2G como caminho principal, app pago para o paciente,
+                anúncio ou marketplace de consultas. Também não prometemos
+                substituir o sistema de marcação da clínica: entram depois que a
+                vaga já existe.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">1 / 6 · InnovaPair · AgendaCerta · Tarefa 02</p>
+    </section>
+
+    <!-- SLIDE 2: BMC parte A -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Business Model Canvas · Parte A</p>
+          <h1>Segmentos, valor, canais e relacionamento</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta<br />
+          BMC completo
+        </div>
+      </div>
+      <div class="content">
+        <div class="bmc-row">
+          <div class="box sky">
+            <h2>Segmentos de clientes</h2>
+            <ul>
+              <li>
+                <strong>Cliente pagador:</strong> clínicas, consultórios e labs
+                privados em Aracaju/Sergipe (e depois outras cidades).
+              </li>
+              <li>
+                <strong>Usuário final:</strong> paciente com consulta ou exame
+                já marcado (WhatsApp no dia a dia, pouca paciência para app
+                novo).
+              </li>
+              <li>
+                <strong>Recorte inicial:</strong> especialidades com muita falta
+                (oftalmo, neuro, endócrino, imagem). O caso SUS serve de
+                evidência do problema, não de pagador.
+              </li>
+            </ul>
+          </div>
+          <div class="box teal">
+            <h2>Proposta de valor</h2>
+            <ul>
+              <li>
+                <strong>Clínica:</strong> menos horário ocioso, cancelamento
+                cedo e chance de encaixar outro paciente.
+              </li>
+              <li>
+                <strong>Paciente:</strong> lembrar, confirmar ou remarcar em 1
+                toque no WhatsApp.
+              </li>
+              <li>
+                <strong>Limite claro:</strong> não substitui o sistema de
+                marcação; confirma e redistribui a agenda que já existe.
+              </li>
+            </ul>
+          </div>
+          <div class="box cyan">
+            <h2>Canais</h2>
+            <ul>
+              <li>
+                <strong>Paciente:</strong> WhatsApp (lembrete, confirmação,
+                remarcação).
+              </li>
+              <li>
+                <strong>Clínica:</strong> painel web com status das vagas
+                (confirmado, risco, liberado).
+              </li>
+              <li>
+                <strong>Aquisição:</strong> indicação, visita a clínicas
+                locais, redes de especialidade e contatos do Hackinova/Hub.
+              </li>
+            </ul>
+          </div>
+          <div class="box coral">
+            <h2>Relacionamento com clientes</h2>
+            <ul>
+              <li>
+                <strong>Paciente:</strong> automático, curto (SIM / NÃO /
+                REMARCAR).
+              </li>
+              <li>
+                <strong>Clínica:</strong> self-service no painel + suporte no
+                onboarding e no piloto.
+              </li>
+              <li>
+                <strong>Confiança:</strong> resultado visível (menos falta,
+                vagas reaproveitadas), sem fricção para o paciente.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">2 / 6 · InnovaPair · AgendaCerta · Tarefa 02</p>
+    </section>
+
+    <!-- SLIDE 3: BMC parte B -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Business Model Canvas · Parte B</p>
+          <h1>Receita, recursos, atividades, parceiros e custos</h1>
+        </div>
+        <div class="meta">
+          <strong>InnovaPair</strong><br />
+          AgendaCerta<br />
+          BMC completo
+        </div>
+      </div>
+      <div class="content">
+        <div class="bmc-row-5">
+          <div class="box teal">
+            <h2>Fontes de receita</h2>
+            <ul>
+              <li>Assinatura mensal por clínica ou por agenda.</li>
+              <li>
+                Upgrade quando o volume de mensagens passa do teto do plano.
+              </li>
+              <li>
+                Setup leve no onboarding (opcional), se a clínica pedir
+                importação de agenda.
+              </li>
+            </ul>
+          </div>
+          <div class="box sky">
+            <h2>Recursos principais</h2>
+            <ul>
+              <li>Fluxo WhatsApp (API) + painel de gestão.</li>
+              <li>Cadastro/agenda da clínica (planilha, seed ou integração).</li>
+              <li>Regras ou score simples de risco de falta.</li>
+              <li>
+                Conhecimento local do fluxo de especialidades e do absenteísmo.
+              </li>
+            </ul>
+          </div>
+          <div class="box cyan">
+            <h2>Atividades principais</h2>
+            <ul>
+              <li>Disparar lembretes no tempo certo.</li>
+              <li>Coletar confirmação e atualizar status da vaga.</li>
+              <li>Priorizar contatos com maior risco de falta.</li>
+              <li>Acionar lista de espera quando a vaga é liberada.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h2>Parceiros principais</h2>
+            <ul>
+              <li>Clínicas e labs âncora (primeiro piloto pago).</li>
+              <li>Meta / WhatsApp Cloud API (canal).</li>
+              <li>
+                Sistemas de agenda / recepção que já usam (integração leve).
+              </li>
+              <li>Innovation Hub e rede do Hackinova (acesso e validação).</li>
+            </ul>
+          </div>
+          <div class="box coral">
+            <h2>Estrutura de custos</h2>
+            <ul>
+              <li>Mensagens e API do WhatsApp.</li>
+              <li>Hospedagem, domínio e manutenção do painel.</li>
+              <li>Tempo da equipe (produto, vendas, suporte).</li>
+              <li>Eventual custo de integração ou importação de agenda.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">3 / 6 · InnovaPair · AgendaCerta · Tarefa 02</p>
+    </section>
+
+    <!-- SLIDE 4: Benchmark (aberto) -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Benchmark de mercado</p>
+          <h1>Pelo menos 3 soluções relacionadas</h1>
+        </div>
+        <div class="meta">
+          <span class="tag">TODO (dupla)</span><br /><br />
+          Completar linhas 2 e 3<br />
+          + fontes
+        </div>
+      </div>
+      <div class="content">
+        <div class="draft-banner">
+          Preencher no mínimo 3 linhas. Para cada uma: o que oferecem, quem é o
+          cliente, como ganham dinheiro, preço/cobrança (se achar), diferencial
+          e fonte.
+        </div>
+        <table class="bench">
+          <thead>
+            <tr>
+              <th style="width: 14%">Solução</th>
+              <th style="width: 18%">O que oferece</th>
+              <th style="width: 14%">Cliente</th>
+              <th style="width: 16%">Como ganha dinheiro</th>
+              <th style="width: 12%">Preço / cobrança</th>
+              <th style="width: 14%">Diferencial</th>
+              <th style="width: 12%">Fonte</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>Exemplo de formato</strong><br /><span
+                  style="color: var(--muted); font-size: 11px"
+                  >(substituir ou manter como 1 das 3)</span
+                >
+              </td>
+              <td>
+                Lembrete / confirmação de consulta por mensagem ou app, focado
+                em reduzir falta.
+              </td>
+              <td>Clínica, operadora ou gestão de saúde (B2B).</td>
+              <td>Assinatura ou cobrança por volume de pacientes/mensagens.</td>
+              <td>TODO: achar valor público ou faixa típica.</td>
+              <td>Automação do contato antes da consulta.</td>
+              <td>TODO: link da página oficial ou matéria.</td>
+            </tr>
+            <tr class="todo-row">
+              <td>TODO (dupla)</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO: fonte</td>
+            </tr>
+            <tr class="todo-row">
+              <td>TODO (dupla)</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO</td>
+              <td>TODO: fonte</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="footer-note">
+        4 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+      </p>
+    </section>
+
+    <!-- SLIDE 5: Custos, parceiros, 10 clientes (aberto) -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Operação inicial</p>
+          <h1>Custos, parceiros e primeiros 10 clientes</h1>
+        </div>
+        <div class="meta">
+          <span class="tag">TODO (dupla)</span><br /><br />
+          Preencher os campos<br />
+          com a voz da equipe
+        </div>
+      </div>
+      <div class="content">
+        <div class="split-3">
+          <div class="box open">
+            <div class="mono-label">TODO (dupla)</div>
+            <h2>3 custos principais</h2>
+            <div class="open-list">
+              <div class="open-item">
+                <div class="q">Custo 1</div>
+                <div class="slot">
+                  O que mais pesa para colocar a solução no ar?
+                </div>
+              </div>
+              <div class="open-item">
+                <div class="q">Custo 2</div>
+                <div class="slot">O que mais pesa para manter funcionando?</div>
+              </div>
+              <div class="open-item">
+                <div class="q">Custo 3</div>
+                <div class="slot">Há custo de pessoas, suporte ou dado?</div>
+              </div>
+            </div>
+          </div>
+          <div class="box open">
+            <div class="mono-label">TODO (dupla)</div>
+            <h2>Pelo menos 2 parceiros</h2>
+            <div class="open-list">
+              <div class="open-item">
+                <div class="q">Parceiro 1</div>
+                <div class="slot">
+                  Quem acelera acesso ao cliente ou reduz custo? Por quê?
+                </div>
+              </div>
+              <div class="open-item">
+                <div class="q">Parceiro 2</div>
+                <div class="slot">
+                  Quem abre porta na rede de saúde ou no canal?
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="box open">
+            <div class="mono-label">TODO (dupla)</div>
+            <h2>Primeiros 10 clientes / usuários</h2>
+            <p
+              style="
+                margin: 0 0 8px;
+                font-size: 13px;
+                line-height: 1.4;
+                color: #854d0e;
+              "
+            >
+              Se a solução estivesse pronta amanhã, como vocês chegariam aos
+              primeiros 10?
+            </p>
+            <div class="placeholder">
+              Escrever canais e ordem realista (quem abordar primeiro, com qual
+              conversa, em qual prazo curto). Separar se “cliente” =
+              unidade/gestão e “usuário” = paciente.
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        5 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+      </p>
+    </section>
+
+    <!-- SLIDE 6: Diferencial (aberto) -->
+    <section class="slide">
+      <div class="header">
+        <div>
+          <p class="eyebrow">Posicionamento</p>
+          <h1>Diferencial competitivo</h1>
+        </div>
+        <div class="meta">
+          <span class="tag">TODO (dupla)</span><br /><br />
+          Responder com a<br />
+          voz da equipe
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid-2">
+          <div class="box open">
+            <div class="mono-label">TODO (dupla)</div>
+            <h2>Por que escolheriam o AgendaCerta?</h2>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #854d0e">
+              Em vez das alternativas atuais (ligação manual, app pouco usado,
+              só SMS genérico, etc.).
+            </p>
+            <div class="placeholder">
+              Escrever aqui o diferencial de verdade da proposta. Evitar frases
+              genéricas.
+            </div>
+          </div>
+          <div class="box open">
+            <div class="mono-label">TODO (dupla)</div>
+            <h2>O que dificulta copiar?</h2>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #854d0e">
+              Dados, parceria, processo, acesso ao mercado, conhecimento local,
+              comunidade, tecnologia...
+            </p>
+            <div class="placeholder">
+              Escrever aqui a barreira (mesmo que parcial). O edital aceita
+              barreira imperfeita, desde que justificada.
+            </div>
+          </div>
+        </div>
+        <div class="draft-banner">
+          Quando slides 4 a 6 estiverem preenchidos, gerar o PDF (paisagem,
+          margens mínimas, gráficos de fundo) e revisar se saíram até 6 páginas.
+        </div>
+      </div>
+      <p class="footer-note">
+        6 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+      </p>
+    </section>
+  </body>
+</html>
