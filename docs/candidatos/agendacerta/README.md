@@ -1,6 +1,6 @@
 # Candidato - AgendaCerta (Saúde)
 
-Entrega da Tarefa 01 (Problema, Usuário e Proposta de Valor) - Hackinova 2026.
+Entregas da equipe InnovaPair no Hackinova 2026 (AgendaCerta).
 
 **Equipe:** InnovaPair  
 **Produto provisório:** AgendaCerta  
@@ -10,19 +10,33 @@ Entrega da Tarefa 01 (Problema, Usuário e Proposta de Valor) - Hackinova 2026.
 
 | Arquivo | Para quê |
 | --- | --- |
-| `anexo-tarefa01.html` | **Anexo oficial** (6 slides) - abrir no browser e salvar como PDF |
-| `entrega.md` | Versão curta (~1–2 págs.) |
-| `completa.md` | Versão completa com evidências, JTBD, empatia e fontes |
+| `anexo-tarefa01.html` | **Tarefa 01** (6 slides) - problema, usuário e valor |
+| `anexo-tarefa02.html` | **Tarefa 02** (6 slides) - modelo de negócio (slides 4–6 pendentes da dupla) |
+| `entrega.md` | Versão curta da Tarefa 01 (~1–2 págs.) |
+| `completa.md` | Versão completa da Tarefa 01 com evidências, JTBD, empatia e fontes |
 | `canvas/` | Visuais extras para slide / mentoria |
+
+## Tarefa 02 (em andamento)
+
+`anexo-tarefa02.html`:
+
+- Slides 1 a 3: monetização + Business Model Canvas (versão fechada nesta leva)
+- Slides 4 a 6: abertos com `TODO (dupla)` (benchmark, custos/parceiros/primeiros 10, diferencial)
+
+```bash
+start docs/candidatos/agendacerta/anexo-tarefa02.html
+```
 
 ## Como gerar o PDF do anexo (OPIN)
 
-1. Abra `anexo-tarefa01.html` no Chrome ou Edge
+1. Abra o HTML no Chrome ou Edge (`anexo-tarefa01.html` ou `anexo-tarefa02.html`)
 2. `Ctrl+P` → Destino: **Salvar como PDF**
 3. Layout: **Paisagem**; margens **mínimas**; marcar **gráficos de fundo**
-4. Confira se saíram **6 páginas**
+4. Confira se saíram **até 6 páginas**
 
-O PDF cobre: evidências (≥3 com fontes), perfil do usuário, mapa de empatia, JTBD, alternativas (≥3), proposta de valor e solução inicial (≤5 linhas).
+**Tarefa 01 cobre:** evidências (≥3 com fontes), perfil do usuário, mapa de empatia, JTBD, alternativas (≥3), proposta de valor e solução inicial (≤5 linhas).
+
+**Tarefa 02 cobre:** BMC (9 blocos), benchmark (≥3), monetização, custos, parceiros, primeiros 10 clientes e diferencial competitivo.
 
 ## Respostas prontas dos campos da OPIN
 
