@@ -29,4 +29,3 @@ yarn-error.log*
 credentials/
 *.pem
 token.json
-app/agendacerta/.env.example
