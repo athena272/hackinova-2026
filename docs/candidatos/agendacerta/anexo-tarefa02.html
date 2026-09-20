@@ -19,8 +19,6 @@
         --sky-soft: #e0f2fe;
         --cyan: #0e7490;
         --cyan-soft: #cffafe;
-        --todo: #fef9c3;
-        --todo-border: #fde047;
       }
 
       * {
@@ -108,42 +106,9 @@
         flex-shrink: 0;
       }
 
-      .tag {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: #854d0e;
-        background: var(--todo);
-        border: 1px solid var(--todo-border);
-        border-radius: 999px;
-        padding: 4px 10px;
-      }
-
-      .draft-banner {
-        flex-shrink: 0;
-        padding: 10px 14px;
-        border-radius: 10px;
-        background: var(--todo);
-        border: 1px solid var(--todo-border);
-        font-size: 13px;
-        line-height: 1.4;
-        color: #713f12;
-      }
-
       .grid-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        flex: 1;
-        min-height: 0;
-      }
-
-      .grid-4 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
         gap: 12px;
         flex: 1;
         min-height: 0;
@@ -225,28 +190,17 @@
       .box.coral h2 {
         color: var(--coral);
       }
-      .box.open {
-        background: #fffbeb;
-        border: 1px dashed var(--todo-border);
-      }
 
-      .mono-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #a16207;
-        margin-bottom: 8px;
-      }
-
-      .placeholder {
+      .placeholder-clean {
         flex: 1;
         border-radius: 8px;
-        border: 1px dashed #e5e7eb;
-        background: #fafafa;
+        border: 1px solid var(--line);
+        background: #ffffff;
         min-height: 48px;
-        color: var(--muted);
+        color: var(--ink);
         font-size: 13px;
-        padding: 10px;
-        line-height: 1.4;
+        padding: 12px;
+        line-height: 1.45;
       }
 
       .money-grid {
@@ -292,11 +246,13 @@
         height: 100%;
       }
 
+      /* Estilização Padronizada da Tabela Benchmark */
       table.bench {
         width: 100%;
         border-collapse: collapse;
         font-size: 12.5px;
         flex: 1;
+        background: #ffffff;
       }
 
       table.bench th,
@@ -306,6 +262,8 @@
         text-align: left;
         vertical-align: top;
         line-height: 1.35;
+        color: var(--ink);
+        font-style: normal;
       }
 
       table.bench th {
@@ -314,12 +272,11 @@
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.03em;
+        font-weight: 700;
       }
 
-      table.bench tr.todo-row td {
-        background: #fffbeb;
-        color: var(--muted);
-        font-style: italic;
+      table.bench td strong {
+        color: var(--ink);
       }
 
       .split-3 {
@@ -337,28 +294,30 @@
         flex: 1;
       }
 
-      .open-item {
+      .open-item-clean {
         flex: 1;
-        border: 1px dashed var(--todo-border);
+        border: 1px solid var(--line);
         border-radius: 10px;
-        background: #fffbeb;
-        padding: 12px;
+        background: #ffffff;
+        padding: 10px 12px;
         display: flex;
         flex-direction: column;
       }
 
-      .open-item .q {
+      .open-item-clean .q {
         font-size: 12px;
         font-weight: 700;
-        color: #854d0e;
-        margin-bottom: 6px;
+        color: var(--teal);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
       }
 
-      .open-item .slot {
+      .open-item-clean .slot {
         flex: 1;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.4;
+        color: var(--ink);
+        font-size: 12.5px;
+        line-height: 1.35;
       }
 
       @page {
@@ -620,7 +579,7 @@
       <p class="footer-note">3 / 6 · InnovaPair · AgendaCerta · Tarefa 02</p>
     </section>
 
-    <!-- SLIDE 4: Benchmark (aberto) -->
+    <!-- SLIDE 4: Benchmark -->
     <section class="slide">
       <div class="header">
         <div>
@@ -628,17 +587,12 @@
           <h1>Pelo menos 3 soluções relacionadas</h1>
         </div>
         <div class="meta">
-          <span class="tag">TODO (dupla)</span><br /><br />
-          Completar linhas 2 e 3<br />
-          + fontes
+          <strong>InnovaPair</strong><br />
+          AgendaCerta<br />
+          Análise de concorrência
         </div>
       </div>
       <div class="content">
-        <div class="draft-banner">
-          Preencher no mínimo 3 linhas. Para cada uma: o que oferecem, quem é o
-          cliente, como ganham dinheiro, preço/cobrança (se achar), diferencial
-          e fonte.
-        </div>
         <table class="bench">
           <thead>
             <tr>
@@ -653,49 +607,41 @@
           </thead>
           <tbody>
             <tr>
-              <td>
-                <strong>Exemplo de formato</strong><br /><span
-                  style="color: var(--muted); font-size: 11px"
-                  >(substituir ou manter como 1 das 3)</span
-                >
-              </td>
-              <td>
-                Lembrete / confirmação de consulta por mensagem ou app, focado
-                em reduzir falta.
-              </td>
-              <td>Clínica, operadora ou gestão de saúde (B2B).</td>
+              <td><strong>Confirmação passiva</strong></td>
+              <td>Disparo automatizado de lembretes com botões interativos (SIM / NÃO / REMARCAR). O paciente confirma ou cancela em 1 toque no próprio WhatsApp.</td>
+              <td>Usuário Final (B2C): Pacientes com exames ou consultas já agendados.</td>
               <td>Assinatura ou cobrança por volume de pacientes/mensagens.</td>
-              <td>TODO: achar valor público ou faixa típica.</td>
+              <td>R$ 150 a R$ 400/mês (faixa de mercado).</td>
               <td>Automação do contato antes da consulta.</td>
-              <td>TODO: link da página oficial ou matéria.</td>
+              <td>Cochrane Library — DOI: 10.1002/14651858.CD007458.pub2</td>
             </tr>
-            <tr class="todo-row">
-              <td>TODO (dupla)</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO: fonte</td>
+            <tr>
+              <td><strong>Reencaixe automatizado</strong></td>
+              <td>Assim que um paciente informa o cancelamento, a vaga é liberada instantaneamente no sistema e oferecida para pacientes na lista de espera.</td>
+              <td>Cliente Pagador (B2B): Clínicas médicas e consultórios de especialidades.</td>
+              <td>Cobrança de assinatura mensal recorrente pela licença do painel e automação do WhatsApp.</td>
+              <td>R$ 297 a R$ 697/mês (conforme plano).</td>
+              <td>O horário ocioso é recuperado em minutos de forma 100% automática.</td>
+              <td>JMIR Formative Research / Operations Mgmt</td>
             </tr>
-            <tr class="todo-row">
-              <td>TODO (dupla)</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO</td>
-              <td>TODO: fonte</td>
+            <tr>
+              <td><strong>Painel de gestão</strong></td>
+              <td>Painel web para acompanhamento em tempo real das vagas (Confirmado, Em Risco, Liberado, Reencaixado).</td>
+              <td>Cliente Pagador (B2B): Clínicas médicas e consultórios de especialidades.</td>
+              <td>Planos categorizados por faixa de agendas ativas ou número de mensagens enviadas.</td>
+              <td>R$ 497 a R$ 997/mês (médio/enterprise).</td>
+              <td>Identifica pacientes com maior risco histórico de falta e aplica réguas reforçadas.</td>
+              <td>ResearchGate — The Permanente Journal</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p class="footer-note">
-        4 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+        4 / 6 · InnovaPair · AgendaCerta · Tarefa 02
       </p>
     </section>
 
-    <!-- SLIDE 5: Custos, parceiros, 10 clientes (aberto) -->
+    <!-- SLIDE 5: Custos, parceiros, 10 clientes -->
     <section class="slide">
       <div class="header">
         <div>
@@ -703,79 +649,72 @@
           <h1>Custos, parceiros e primeiros 10 clientes</h1>
         </div>
         <div class="meta">
-          <span class="tag">TODO (dupla)</span><br /><br />
-          Preencher os campos<br />
-          com a voz da equipe
+          <strong>InnovaPair</strong><br />
+          AgendaCerta<br />
+          Estratégia inicial
         </div>
       </div>
       <div class="content">
         <div class="split-3">
-          <div class="box open">
-            <div class="mono-label">TODO (dupla)</div>
+          <div class="box teal">
             <h2>3 custos principais</h2>
             <div class="open-list">
-              <div class="open-item">
-                <div class="q">Custo 1</div>
+              <div class="open-item-clean">
+                <div class="q">Onboarding & Agenda</div>
                 <div class="slot">
-                  O que mais pesa para colocar a solução no ar?
+                  Adaptação inicial e leitura da agenda para lidar com os sistemas e prontuários heterogêneos das clínicas.
                 </div>
               </div>
-              <div class="open-item">
-                <div class="q">Custo 2</div>
-                <div class="slot">O que mais pesa para manter funcionando?</div>
+              <div class="open-item-clean">
+                <div class="q">Suporte Técnico</div>
+                <div class="slot">
+                  Acompanhamento contínuo e treinamento da equipe de recepção devido à rotatividade do setor.
+                </div>
               </div>
-              <div class="open-item">
-                <div class="q">Custo 3</div>
-                <div class="slot">Há custo de pessoas, suporte ou dado?</div>
+              <div class="open-item-clean">
+                <div class="q">Manutenção de APIs</div>
+                <div class="slot">
+                  Estabilidade do sincronismo entre a nuvem e a API do WhatsApp (Meta) para disparos sem falhas.
+                </div>
               </div>
             </div>
           </div>
-          <div class="box open">
-            <div class="mono-label">TODO (dupla)</div>
+          <div class="box sky">
             <h2>Pelo menos 2 parceiros</h2>
             <div class="open-list">
-              <div class="open-item">
-                <div class="q">Parceiro 1</div>
+              <div class="open-item-clean">
+                <div class="q">Provedores BSP de WhatsApp</div>
                 <div class="slot">
-                  Quem acelera acesso ao cliente ou reduz custo? Por quê?
+                  Plataformas de infraestrutura que eliminam a complexidade de desenvolvimento e gerenciamento da API da Meta.
                 </div>
               </div>
-              <div class="open-item">
-                <div class="q">Parceiro 2</div>
+              <div class="open-item-clean">
+                <div class="q">Representantes de ERPs Médicos</div>
                 <div class="slot">
-                  Quem abre porta na rede de saúde ou no canal?
+                  Empresas e consultores de TI locais que já vendem software de recepção e possuem carteira ativa de clínicas.
                 </div>
               </div>
             </div>
           </div>
-          <div class="box open">
-            <div class="mono-label">TODO (dupla)</div>
+          <div class="box cyan">
             <h2>Primeiros 10 clientes / usuários</h2>
-            <p
-              style="
-                margin: 0 0 8px;
-                font-size: 13px;
-                line-height: 1.4;
-                color: #854d0e;
-              "
-            >
-              Se a solução estivesse pronta amanhã, como vocês chegariam aos
-              primeiros 10?
+            <p style="margin: 0 0 8px; font-size: 13px; line-height: 1.4; color: var(--cyan); font-weight: 600;">
+              Estratégia de entrada em 30 a 45 dias:
             </p>
-            <div class="placeholder">
-              Escrever canais e ordem realista (quem abordar primeiro, com qual
-              conversa, em qual prazo curto). Separar se “cliente” =
-              unidade/gestão e “usuário” = paciente.
+            <div class="placeholder-clean">
+              • <strong>Aproximação Direta com Gestores (Clientes 1 a 4):</strong> Prospecção ativa em estabelecimentos médicos com alto volume de atendimentos, oferecendo degustação de 30 dias com foco em métricas de presença.<br /><br />
+              • <strong>Ativação de Ecossistema e Relacionamento (Clientes 5 a 7):</strong> Pontes institucionais através de redes de inovação, mentores e hubs de negócios para validação rápida.<br /><br />
+              • <strong>Canais de Indicação e Parceiros de TI (Clientes 8 a 10):</strong> Parcerias estratégicas com consultores de software médico que indicam a ferramenta como módulo adicional para seus clientes ativos.
             </div>
           </div>
         </div>
       </div>
       <p class="footer-note">
-        5 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+        5 / 6 · InnovaPair · AgendaCerta · Tarefa 02
       </p>
     </section>
 
-    <!-- SLIDE 6: Diferencial (aberto) -->
+    <!-- SLIDE 6: Diferencial -->
     <section class="slide">
       <div class="header">
         <div>
@@ -783,45 +722,38 @@
           <h1>Diferencial competitivo</h1>
         </div>
         <div class="meta">
-          <span class="tag">TODO (dupla)</span><br /><br />
-          Responder com a<br />
-          voz da equipe
+          <strong>InnovaPair</strong><br />
+          AgendaCerta<br />
+          Barreiras de mercado
         </div>
       </div>
       <div class="content">
         <div class="grid-2">
-          <div class="box open">
-            <div class="mono-label">TODO (dupla)</div>
+          <div class="box teal">
             <h2>Por que escolheriam o AgendaCerta?</h2>
-            <p style="margin: 0 0 10px; font-size: 13px; color: #854d0e">
-              Em vez das alternativas atuais (ligação manual, app pouco usado,
-              só SMS genérico, etc.).
+            <p style="margin: 0 0 10px; font-size: 13px; color: var(--teal); font-weight: 600;">
+              Fechamento completo do ciclo da vaga ociosa em tempo real:
             </p>
-            <div class="placeholder">
-              Escrever aqui o diferencial de verdade da proposta. Evitar frases
-              genéricas.
+            <div class="placeholder-clean">
+              Enquanto os sistemas tradicionais do mercado apenas enviam um lembrete e registram o cancelamento do paciente, o AgendaCerta atua em duas frentes integradas:<br /><br />
+              • <strong>Fricção Zero para o Paciente:</strong> A confirmação ou o cancelamento acontecem em 1 toque diretamente no WhatsApp, sem baixar apps.<br /><br />
+              • <strong>Reencaixe Automático de Vagas:</strong> No exato momento em que um paciente desmarca, o sistema libera a vaga na hora e aciona automaticamente os pacientes da lista de espera via mensagem individual e sequencial.
             </div>
           </div>
-          <div class="box open">
-            <div class="mono-label">TODO (dupla)</div>
+          <div class="box coral">
             <h2>O que dificulta copiar?</h2>
-            <p style="margin: 0 0 10px; font-size: 13px; color: #854d0e">
-              Dados, parceria, processo, acesso ao mercado, conhecimento local,
-              comunidade, tecnologia...
+            <p style="margin: 0 0 10px; font-size: 13px; color: var(--coral); font-weight: 600;">
+              Barreiras de entrada e retenção de mercado:
             </p>
-            <div class="placeholder">
-              Escrever aqui a barreira (mesmo que parcial). O edital aceita
-              barreira imperfeita, desde que justificada.
+            <div class="placeholder-clean">
+              • <strong>Simplicidade Focada e Suporte Regional:</strong> Os grandes concorrentes (Doctoralia, Feegow) são softwares "pesados" e genéricos. O AgendaCerta foca exclusivamente na dor da ociosidade com onboarding ágil e atendimento próximo.<br /><br />
+              • <strong>Custos de Troca e Retenção Operacional:</strong> Uma vez integrado à rotina diária da recepção, trocar de fornecedor gera custo de retreinamento e risco de instabilidade nos disparos, criando retenção natural (<em>lock-in</em>).
             </div>
           </div>
-        </div>
-        <div class="draft-banner">
-          Quando slides 4 a 6 estiverem preenchidos, gerar o PDF (paisagem,
-          margens mínimas, gráficos de fundo) e revisar se saíram até 6 páginas.
         </div>
       </div>
       <p class="footer-note">
-        6 / 6 · pendente da dupla · InnovaPair · Tarefa 02
+        6 / 6 · InnovaPair · AgendaCerta · Tarefa 02
       </p>
     </section>
   </body>
