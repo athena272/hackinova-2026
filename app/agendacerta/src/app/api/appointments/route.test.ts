@@ -82,6 +82,27 @@ describe("GET /api/appointments", () => {
     });
   });
 
+  it("retorna JSON 500 legível para permission denied for table appointments", async () => {
+    vi.mocked(hasSupabaseConfig).mockReturnValue(true);
+    vi.mocked(createAppointmentRepository).mockReturnValue(
+      mockRepo({
+        list: vi.fn().mockRejectedValue(
+          new Error(
+            "Falha ao listar agendamentos: permission denied for table appointments. Confirme o GRANT ao service_role (migration) e que SUPABASE_SERVICE_ROLE_KEY é a secret, não a anon/publishable.",
+          ),
+        ),
+      }),
+    );
+
+    const response = await GET();
+    expect(response.status).toBe(500);
+
+    const body = await response.json();
+    expect(body.source).toBe("supabase");
+    expect(body.error).toContain("permission denied for table appointments");
+    expect(body.error).toMatch(/GRANT ao service_role/i);
+  });
+
   it("permite ao cliente ler o JSON de erro sem Unexpected end of JSON input", async () => {
     vi.mocked(hasSupabaseConfig).mockReturnValue(true);
     vi.mocked(createAppointmentRepository).mockReturnValue(
