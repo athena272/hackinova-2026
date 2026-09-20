@@ -11,7 +11,7 @@ Entregas da equipe InnovaPair no Hackinova 2026 (AgendaCerta).
 | Arquivo | Para quê |
 | --- | --- |
 | `anexo-tarefa01.html` | **Tarefa 01** (6 slides) - problema, usuário e valor |
-| `anexo-tarefa02.html` | **Tarefa 02** (6 slides) - modelo de negócio (slides 4–6 pendentes da dupla) |
+| `anexo-tarefa02.html` | **Tarefa 02** (6 slides) - modelo de negócio |
 | `entrega.md` | Versão curta da Tarefa 01 (~1–2 págs.) |
 | `completa.md` | Versão completa da Tarefa 01 com evidências, JTBD, empatia e fontes |
 | `canvas/` | Visuais extras para slide / mentoria |
@@ -21,7 +21,7 @@ Entregas da equipe InnovaPair no Hackinova 2026 (AgendaCerta).
 `anexo-tarefa02.html`:
 
 - Slides 1 a 3: monetização + Business Model Canvas (versão fechada nesta leva)
-- Slides 4 a 6: abertos com `TODO (dupla)` (benchmark, custos/parceiros/primeiros 10, diferencial)
+- Slides 4 a 6: benchmark, custos/parceiros/primeiros 10, diferencial
 
 ```bash
 start docs/candidatos/agendacerta/anexo-tarefa02.html
