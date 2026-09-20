@@ -14,6 +14,7 @@ import { AppointmentTable } from "@/components/AppointmentTable";
 
 export default function PainelPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [source, setSource] = useState<"supabase" | "memory" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,12 +25,14 @@ export default function PainelPage() {
       const response = await fetch("/api/appointments", { cache: "no-store" });
       const payload = (await response.json()) as {
         appointments?: Appointment[];
+        source?: "supabase" | "memory";
         error?: string;
       };
       if (!response.ok || !payload.appointments) {
         throw new Error(payload.error ?? "Falha ao carregar agenda.");
       }
       setAppointments(payload.appointments);
+      setSource(payload.source ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
@@ -69,8 +72,12 @@ export default function PainelPage() {
             <h1>Painel da clínica</h1>
           </div>
           <p className="lead">
-            Acompanhe confirmações e vagas que podem ser reaproveitadas. Os
-            dados vêm do seed em memória (reiniciam ao reiniciar o servidor).
+            Acompanhe confirmações e vagas que podem ser reaproveitadas.{" "}
+            {source === "supabase"
+              ? "Os dados vêm do Postgres (Supabase)."
+              : source === "memory"
+                ? "Os dados vêm do seed em memória (reiniciam ao reiniciar o servidor)."
+                : null}
           </p>
         </div>
         <div className="toolbar" style={{ marginBottom: 0 }}>
