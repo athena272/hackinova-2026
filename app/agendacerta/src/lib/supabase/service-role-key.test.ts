@@ -14,7 +14,7 @@ function jwtWithRole(role: string): string {
 describe("assertServiceRoleKey", () => {
   it("aceita sb_secret_", () => {
     expect(() =>
-      assertServiceRoleKey("sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz"),
+      assertServiceRoleKey("sb_secret_test_placeholder_not_a_real_key"),
     ).not.toThrow();
   });
 
