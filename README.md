@@ -28,11 +28,13 @@ hackinova-2026/
 │   ├── README.md
 │   └── candidatos/
 │       ├── README.md
-│       ├── agendacerta/     ← Tarefa 01 (Saúde)
-│       └── costaviva/       ← Tarefa 01 (Clima / erosão)
-└── (em breve) app/<produto>/
+│       ├── agendacerta/
+│       └── costaviva/
+└── app/
+    └── agendacerta/     ← MVP (painel + mock WhatsApp)
 ```
 
+Protótipo: [`app/agendacerta`](./app/agendacerta) (`pnpm install` + `pnpm dev`).
 ## AgendaCerta (em uma frase)
 
 Pacientes do SUS em Aracaju perdem (e fazem outros perderem) vagas de consultas/exames especializados porque o sistema atual não confirma, não prevê e não redistribui o não comparecimento com eficiência.

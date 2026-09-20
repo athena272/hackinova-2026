@@ -68,4 +68,4 @@ Pacientes do SUS em Aracaju perdem (e fazem outros perderem) vagas de consultas/
 
 ## Próximo passo
 
-Protótipo em `app/agendacerta/` - WhatsApp Cloud API (modo teste) + painel de gestão.
+Protótipo em [`app/agendacerta/`](../../../app/agendacerta/) - painel + mock WhatsApp (SIM/NÃO/REMARCAR). WhatsApp Cloud API fica para uma fatia futura.
