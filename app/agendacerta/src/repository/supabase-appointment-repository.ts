@@ -1,6 +1,11 @@
 import type { Appointment, ConfirmationAction } from "@/domain/appointment";
 import { applyConfirmationAction } from "@/domain/confirmation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  formatConfirmAppointmentError,
+  formatGetAppointmentError,
+  formatListAppointmentsError,
+} from "@/lib/supabase/errors";
 import type { AppointmentRepository } from "./appointment-repository";
 import { AppointmentNotFoundError } from "./errors";
 import { mapRowToAppointment, type AppointmentRow } from "./mappers";
@@ -16,7 +21,7 @@ export class SupabaseAppointmentRepository implements AppointmentRepository {
       .order("scheduled_at", { ascending: true });
 
     if (error) {
-      throw new Error(`Falha ao listar agendamentos: ${error.message}`);
+      throw new Error(formatListAppointmentsError(error.message));
     }
 
     return (data as AppointmentRow[]).map(mapRowToAppointment);
@@ -33,7 +38,7 @@ export class SupabaseAppointmentRepository implements AppointmentRepository {
       .maybeSingle();
 
     if (error) {
-      throw new Error(`Falha ao buscar agendamento: ${error.message}`);
+      throw new Error(formatGetAppointmentError(error.message));
     }
 
     if (!data) {
@@ -61,7 +66,7 @@ export class SupabaseAppointmentRepository implements AppointmentRepository {
       .single();
 
     if (error) {
-      throw new Error(`Falha ao confirmar agendamento: ${error.message}`);
+      throw new Error(formatConfirmAppointmentError(error.message));
     }
 
     return mapRowToAppointment(data as AppointmentRow);

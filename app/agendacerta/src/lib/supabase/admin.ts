@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { assertServiceRoleKey } from "./service-role-key";
 
 let adminClient: SupabaseClient | null = null;
 
@@ -20,6 +21,8 @@ export function getSupabaseAdmin(): SupabaseClient {
     );
   }
 
+  assertServiceRoleKey(key);
+
   if (!adminClient) {
     adminClient = createClient(url, key, {
       auth: {
@@ -30,4 +33,9 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
 
   return adminClient;
+}
+
+/** Apenas testes: limpa o singleton do client admin. */
+export function resetSupabaseAdminForTests(): void {
+  adminClient = null;
 }
