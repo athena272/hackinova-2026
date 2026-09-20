@@ -49,3 +49,7 @@ Analytics local (`supabase_vector`) fica **desligado** no `config.toml` para evi
 2. **Vercel** — Root Directory `app/agendacerta`; env vars do cloud (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, e opcionalmente a anon/publishable). Detalhes no README do app.
 
 Desenvolva e teste no **local** (`supabase start`) antes de mergear SQL novo.
+
+## Security Advisor
+
+Avisos do Dashboard (search_path, RLS sem policy) e o erro relacionado `permission denied for table appointments`: veja [`SECURITY_ADVISOR.md`](./SECURITY_ADVISOR.md).
