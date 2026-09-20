@@ -1,0 +1,6 @@
+# Supabase CLI / local
+.branches
+.temp
+
+# Não versionar dumps locais
+*.sql.gz
