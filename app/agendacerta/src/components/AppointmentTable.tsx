@@ -1,5 +1,6 @@
 import type { Appointment } from "@/domain/appointment";
 import { isSlotReusable } from "@/domain/appointment";
+import { Recycle } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 
 type AppointmentTableProps = {
@@ -34,14 +35,19 @@ export function AppointmentTable({ appointments }: AppointmentTableProps) {
         <tbody>
           {appointments.map((appointment) => (
             <tr key={appointment.id}>
-              <td>{appointment.patientName}</td>
+              <td>
+                <strong>{appointment.patientName}</strong>
+              </td>
               <td>{appointment.specialty}</td>
               <td>{formatDateTime(appointment.scheduledAt)}</td>
               <td>{appointment.phoneMasked}</td>
               <td>
                 <StatusBadge status={appointment.status} />
                 {isSlotReusable(appointment.status) ? (
-                  <div className="reusable">Vaga reaproveitável</div>
+                  <div className="reusable">
+                    <Recycle size={12} aria-hidden />
+                    Vaga reaproveitável
+                  </div>
                 ) : null}
               </td>
             </tr>
