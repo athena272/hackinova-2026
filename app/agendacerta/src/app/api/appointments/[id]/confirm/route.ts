@@ -4,7 +4,7 @@ import { ConfirmationError } from "@/domain/confirmation";
 import {
   AppointmentNotFoundError,
   createAppointmentRepository,
-} from "@/repository/in-memory-appointment-repository";
+} from "@/repository/create-appointment-repository";
 
 type RouteContext = {
   params: Promise<{ id: string }>;

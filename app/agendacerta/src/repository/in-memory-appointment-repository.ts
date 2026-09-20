@@ -2,13 +2,9 @@ import type { Appointment, ConfirmationAction } from "@/domain/appointment";
 import { applyConfirmationAction } from "@/domain/confirmation";
 import { loadAppointmentSeed } from "@/data/seed";
 import type { AppointmentRepository } from "./appointment-repository";
+import { AppointmentNotFoundError } from "./errors";
 
-export class AppointmentNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Agendamento não encontrado: ${id}`);
-    this.name = "AppointmentNotFoundError";
-  }
-}
+export { AppointmentNotFoundError };
 
 type Store = {
   appointments: Map<string, Appointment>;
@@ -59,10 +55,6 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     appointments.set(id, updated);
     return { ...updated };
   }
-}
-
-export function createAppointmentRepository(): AppointmentRepository {
-  return new InMemoryAppointmentRepository();
 }
 
 /** Apenas para testes: reinicia o store a partir do seed. */

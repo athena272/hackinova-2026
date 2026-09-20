@@ -25,16 +25,16 @@ hackinova-2026/
 ├── README.md
 ├── LICENSE
 ├── docs/
-│   ├── README.md
 │   └── candidatos/
-│       ├── README.md
 │       ├── agendacerta/
 │       └── costaviva/
+├── supabase/            ← Postgres local (Docker) + migrations
 └── app/
-    └── agendacerta/     ← MVP (painel + mock WhatsApp)
+    └── agendacerta/     ← MVP Next.js (pnpm dev no host)
 ```
 
-Protótipo: [`app/agendacerta`](./app/agendacerta) (`pnpm install` + `pnpm dev`).
+Protótipo: [`app/agendacerta`](./app/agendacerta) (`pnpm install` + `pnpm dev`).  
+Banco local: [`supabase/README.md`](./supabase/README.md) (`npx supabase start`).
 ## AgendaCerta (em uma frase)
 
 Pacientes do SUS em Aracaju perdem (e fazem outros perderem) vagas de consultas/exames especializados porque o sistema atual não confirma, não prevê e não redistribui o não comparecimento com eficiência.
