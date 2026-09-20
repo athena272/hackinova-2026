@@ -1,0 +1,50 @@
+[
+  {
+    "id": "apt-001",
+    "patientName": "Ana Souza",
+    "specialty": "Neurologia",
+    "scheduledAt": "2026-09-22T09:00:00-03:00",
+    "status": "pendente",
+    "phoneMasked": "(79) 9****-1234"
+  },
+  {
+    "id": "apt-002",
+    "patientName": "Bruno Lima",
+    "specialty": "Endocrinologia",
+    "scheduledAt": "2026-09-22T10:30:00-03:00",
+    "status": "pendente",
+    "phoneMasked": "(79) 9****-5678"
+  },
+  {
+    "id": "apt-003",
+    "patientName": "Carla Mendes",
+    "specialty": "Oftalmologia",
+    "scheduledAt": "2026-09-22T14:00:00-03:00",
+    "status": "pendente",
+    "phoneMasked": "(79) 9****-9012"
+  },
+  {
+    "id": "apt-004",
+    "patientName": "Diego Alves",
+    "specialty": "Ultrassonografia",
+    "scheduledAt": "2026-09-23T08:15:00-03:00",
+    "status": "confirmado",
+    "phoneMasked": "(79) 9****-3344"
+  },
+  {
+    "id": "apt-005",
+    "patientName": "Elena Rocha",
+    "specialty": "Neurologia",
+    "scheduledAt": "2026-09-23T11:00:00-03:00",
+    "status": "pendente",
+    "phoneMasked": "(79) 9****-7788"
+  },
+  {
+    "id": "apt-006",
+    "patientName": "Fábio Nunes",
+    "specialty": "Endocrinologia",
+    "scheduledAt": "2026-09-23T15:45:00-03:00",
+    "status": "liberado",
+    "phoneMasked": "(79) 9****-2211"
+  }
+]
