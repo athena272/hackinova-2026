@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
 
@@ -40,8 +42,18 @@ export default function MockWhatsAppPage() {
   }
 
   return (
-    <main className="card">
-      <h1>Mock WhatsApp</h1>
+    <motion.main
+      className="card"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
+      <div className="page-title-row" style={{ marginBottom: 8 }}>
+        <span className="page-icon" aria-hidden>
+          <MessageCircle size={22} />
+        </span>
+        <h1>Mock WhatsApp</h1>
+      </div>
       <p className="lead">
         Simula o lembrete e a resposta do paciente. Ao confirmar, o status muda
         na API em memória. Abra o painel para ver o resultado.
@@ -54,6 +66,6 @@ export default function MockWhatsAppPage() {
           onConfirmed={handleConfirmed}
         />
       ) : null}
-    </main>
+    </motion.main>
   );
 }
