@@ -4,7 +4,14 @@ import { createAppointmentRepository } from "@/repository/create-appointment-rep
 
 export async function GET() {
   const source = hasSupabaseConfig() ? "supabase" : "memory";
-  const repo = createAppointmentRepository();
-  const appointments = await repo.list();
-  return NextResponse.json({ appointments, source });
+  try {
+    const repo = createAppointmentRepository();
+    const appointments = await repo.list();
+    return NextResponse.json({ appointments, source });
+  } catch (error) {
+    console.error("[GET /api/appointments]", error);
+    const message =
+      error instanceof Error ? error.message : "Erro interno ao listar agenda.";
+    return NextResponse.json({ error: message, source }, { status: 500 });
+  }
 }

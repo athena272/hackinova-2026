@@ -22,6 +22,7 @@ create index appointments_scheduled_at_idx on public.appointments (scheduled_at)
 create or replace function public.set_appointments_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -36,9 +37,23 @@ execute function public.set_appointments_updated_at();
 
 alter table public.appointments enable row level security;
 
--- MVP: acesso só via service role nas API routes do Next (sem policies para anon).
+-- Bloqueia anon/authenticated; service_role continua bypassando RLS nas API routes.
+create policy "appointments_deny_anon"
+  on public.appointments
+  for all
+  to anon
+  using (false)
+  with check (false);
+
+create policy "appointments_deny_authenticated"
+  on public.appointments
+  for all
+  to authenticated
+  using (false)
+  with check (false);
+
 comment on table public.appointments is
-  'Agendamentos AgendaCerta. RLS ativo sem policies públicas; use service_role no servidor.';
+  'Agendamentos AgendaCerta. RLS com deny para anon/authenticated; use service_role no servidor.';
 
 insert into public.appointments (
   id,

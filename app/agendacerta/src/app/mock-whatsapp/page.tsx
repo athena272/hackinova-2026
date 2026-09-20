@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
+import { readResponseJson } from "@/lib/http";
 
 export default function MockWhatsAppPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -16,10 +17,10 @@ export default function MockWhatsAppPage() {
     setError(null);
     try {
       const response = await fetch("/api/appointments", { cache: "no-store" });
-      const payload = (await response.json()) as {
+      const payload = await readResponseJson<{
         appointments?: Appointment[];
         error?: string;
-      };
+      }>(response);
       if (!response.ok || !payload.appointments) {
         throw new Error(payload.error ?? "Falha ao carregar agenda.");
       }

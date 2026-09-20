@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import type { Appointment, ConfirmationAction } from "@/domain/appointment";
+import { readResponseJson } from "@/lib/http";
 import { StatusBadge } from "./StatusBadge";
 
 type MockWhatsAppThreadProps = {
@@ -68,10 +69,10 @@ export function MockWhatsAppThread({
         body: JSON.stringify({ action }),
       });
 
-      const payload = (await response.json()) as {
+      const payload = await readResponseJson<{
         appointment?: Appointment;
         error?: string;
-      };
+      }>(response);
 
       if (!response.ok || !payload.appointment) {
         throw new Error(payload.error ?? "Falha ao confirmar.");

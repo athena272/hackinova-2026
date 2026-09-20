@@ -12,18 +12,18 @@ concurrency:
 jobs:
   agendacerta:
     name: AgendaCerta (lint, test, build)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app/agendacerta
 
     steps:
-      # v5+ roda no runtime Node 24 (evita aviso de depreciação do Node 20)
+      # checkout@v5+ e action-setup@v6 rodam no runtime Node 24
       - name: Checkout
         uses: actions/checkout@v5
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
 
