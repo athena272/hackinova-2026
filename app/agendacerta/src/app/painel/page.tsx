@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { AppointmentTable } from "@/components/AppointmentTable";
+import { readResponseJson } from "@/lib/http";
 
 export default function PainelPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -23,11 +24,11 @@ export default function PainelPage() {
     setError(null);
     try {
       const response = await fetch("/api/appointments", { cache: "no-store" });
-      const payload = (await response.json()) as {
+      const payload = await readResponseJson<{
         appointments?: Appointment[];
         source?: "supabase" | "memory";
         error?: string;
-      };
+      }>(response);
       if (!response.ok || !payload.appointments) {
         throw new Error(payload.error ?? "Falha ao carregar agenda.");
       }
