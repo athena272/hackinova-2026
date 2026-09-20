@@ -1,6 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CalendarClock,
+  Check,
+  MessageCircle,
+  RefreshCcw,
+  Users,
+  X,
+} from "lucide-react";
 import type { Appointment, ConfirmationAction } from "@/domain/appointment";
 import { StatusBadge } from "./StatusBadge";
 
@@ -14,6 +23,15 @@ function formatDateTime(iso: string): string {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(iso));
+}
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function MockWhatsAppThread({
@@ -44,14 +62,11 @@ export function MockWhatsAppThread({
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/appointments/${selected.id}/confirm`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
-        },
-      );
+      const response = await fetch(`/api/appointments/${selected.id}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
 
       const payload = (await response.json()) as {
         appointment?: Appointment;
@@ -84,76 +99,115 @@ export function MockWhatsAppThread({
 
   return (
     <div className="wa-layout">
-      <div className="wa-list">
-        <p className="muted" style={{ marginBottom: 10 }}>
-          Escolha uma vaga pendente:
+      <div className="wa-list-panel">
+        <p className="wa-list-title">
+          <Users size={16} aria-hidden />
+          Vagas pendentes
         </p>
-        {pending.length === 0 ? (
-          <p className="muted">Não há vagas pendentes no momento.</p>
-        ) : (
-          pending.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={selected?.id === item.id ? "active" : undefined}
-              onClick={() => {
-                setSelectedId(item.id);
-                setLastReply(null);
-                setError(null);
-              }}
-            >
-              <strong>{item.patientName}</strong>
-              <div className="muted">
-                {item.specialty} · {formatDateTime(item.scheduledAt)}
-              </div>
-            </button>
-          ))
-        )}
+        <div className="wa-list">
+          {pending.length === 0 ? (
+            <p className="muted">Não há vagas pendentes no momento.</p>
+          ) : (
+            pending.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={selected?.id === item.id ? "active" : undefined}
+                onClick={() => {
+                  setSelectedId(item.id);
+                  setLastReply(null);
+                  setError(null);
+                }}
+              >
+                <strong>{item.patientName}</strong>
+                <div className="muted">
+                  {item.specialty} · {formatDateTime(item.scheduledAt)}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
       </div>
 
-      <div className="wa-thread">
-        {selected ? (
-          <>
-            <div className="bubble bubble-in">
-              {`Olá, ${selected.patientName}!\nLembrete: ${selected.specialty} em ${formatDateTime(selected.scheduledAt)}.\nVocê confirma presença?\nResponda SIM, NÃO ou REMARCAR.`}
-            </div>
-            {lastReply ? (
-              <div className="bubble bubble-out">{lastReply}</div>
-            ) : null}
-            <div>
-              Status atual: <StatusBadge status={selected.status} />
-            </div>
-            <div className="wa-actions">
-              <button
-                type="button"
-                className="btn-sim"
-                disabled={busy || selected.status !== "pendente"}
-                onClick={() => void sendAction("SIM")}
+      <div className="wa-phone">
+        <div className="wa-header">
+          <div className="wa-avatar" aria-hidden>
+            {selected ? initials(selected.patientName) : "AC"}
+          </div>
+          <div className="wa-header-text">
+            <strong>{selected?.patientName ?? "AgendaCerta"}</strong>
+            <span>
+              {selected
+                ? "online · simulação WhatsApp"
+                : "escolha um paciente"}
+            </span>
+          </div>
+          <MessageCircle size={18} aria-hidden style={{ marginLeft: "auto" }} />
+        </div>
+
+        <div className="wa-thread">
+          {selected ? (
+            <>
+              <motion.div
+                className="bubble bubble-in"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                key={`in-${selected.id}`}
               >
-                SIM
-              </button>
-              <button
-                type="button"
-                className="btn-nao"
-                disabled={busy || selected.status !== "pendente"}
-                onClick={() => void sendAction("NAO")}
-              >
-                NÃO
-              </button>
-              <button
-                type="button"
-                className="btn-remarcar"
-                disabled={busy || selected.status !== "pendente"}
-                onClick={() => void sendAction("REMARCAR")}
-              >
-                REMARCAR
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="muted">Selecione um paciente à esquerda.</p>
-        )}
-        {error ? <p className="error">{error}</p> : null}
+                {`Olá, ${selected.patientName}!\nLembrete: ${selected.specialty} em ${formatDateTime(selected.scheduledAt)}.\nVocê confirma presença?\nResponda SIM, NÃO ou REMARCAR.`}
+              </motion.div>
+              <AnimatePresence>
+                {lastReply ? (
+                  <motion.div
+                    className="bubble bubble-out"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    key={`out-${selected.id}-${lastReply}`}
+                  >
+                    {lastReply}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+              <div className="wa-status-row">
+                <CalendarClock size={14} aria-hidden />
+                Status atual: <StatusBadge status={selected.status} />
+              </div>
+              <div className="wa-actions">
+                <button
+                  type="button"
+                  className="btn-sim"
+                  disabled={busy || selected.status !== "pendente"}
+                  onClick={() => void sendAction("SIM")}
+                >
+                  <Check size={16} aria-hidden />
+                  SIM
+                </button>
+                <button
+                  type="button"
+                  className="btn-nao"
+                  disabled={busy || selected.status !== "pendente"}
+                  onClick={() => void sendAction("NAO")}
+                >
+                  <X size={16} aria-hidden />
+                  NÃO
+                </button>
+                <button
+                  type="button"
+                  className="btn-remarcar"
+                  disabled={busy || selected.status !== "pendente"}
+                  onClick={() => void sendAction("REMARCAR")}
+                >
+                  <RefreshCcw size={16} aria-hidden />
+                  REMARCAR
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="muted">Selecione um paciente à esquerda.</p>
+          )}
+          {error ? <p className="error">{error}</p> : null}
+        </div>
       </div>
     </div>
   );
