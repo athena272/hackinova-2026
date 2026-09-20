@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
-  createAppointmentRepository,
+  InMemoryAppointmentRepository,
   resetAppointmentStoreForTests,
-  AppointmentNotFoundError,
 } from "./in-memory-appointment-repository";
+import { AppointmentNotFoundError } from "./errors";
 import { ConfirmationError } from "@/domain/confirmation";
 
 describe("InMemoryAppointmentRepository", () => {
@@ -12,14 +12,14 @@ describe("InMemoryAppointmentRepository", () => {
   });
 
   it("lista agendamentos do seed", async () => {
-    const repo = createAppointmentRepository();
+    const repo = new InMemoryAppointmentRepository();
     const list = await repo.list();
     expect(list.length).toBeGreaterThanOrEqual(6);
     expect(list.some((a) => a.id === "apt-001")).toBe(true);
   });
 
   it("confirma SIM e atualiza status", async () => {
-    const repo = createAppointmentRepository();
+    const repo = new InMemoryAppointmentRepository();
     const updated = await repo.confirm("apt-001", "SIM");
     expect(updated.status).toBe("confirmado");
     const again = await repo.getById("apt-001");
@@ -27,14 +27,14 @@ describe("InMemoryAppointmentRepository", () => {
   });
 
   it("retorna erro tipado quando id não existe", async () => {
-    const repo = createAppointmentRepository();
+    const repo = new InMemoryAppointmentRepository();
     await expect(repo.confirm("apt-999", "SIM")).rejects.toBeInstanceOf(
       AppointmentNotFoundError,
     );
   });
 
   it("propaga ConfirmationError quando status não é pendente", async () => {
-    const repo = createAppointmentRepository();
+    const repo = new InMemoryAppointmentRepository();
     await expect(repo.confirm("apt-004", "SIM")).rejects.toBeInstanceOf(
       ConfirmationError,
     );
