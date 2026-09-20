@@ -55,6 +55,10 @@ create policy "appointments_deny_authenticated"
 comment on table public.appointments is
   'Agendamentos AgendaCerta. RLS com deny para anon/authenticated; use service_role no servidor.';
 
+-- Projetos cloud recentes não exposem tabelas novas à Data API sem GRANT explícito.
+grant usage on type public.appointment_status to service_role;
+grant select, insert, update, delete on table public.appointments to service_role;
+
 insert into public.appointments (
   id,
   patient_name,
