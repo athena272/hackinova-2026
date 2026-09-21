@@ -16,12 +16,16 @@ Entregas da equipe InnovaPair no Hackinova 2026 (AgendaCerta).
 | `completa.md` | Versão completa da Tarefa 01 com evidências, JTBD, empatia e fontes |
 | `canvas/` | Visuais extras para slide / mentoria |
 
-## Tarefa 02 (em andamento)
+## Tarefa 02 (concluída)
 
-`anexo-tarefa02.html`:
+`anexo-tarefa02.html` — 6 slides:
 
-- Slides 1 a 3: monetização + Business Model Canvas (versão fechada nesta leva)
-- Slides 4 a 6: benchmark, custos/parceiros/primeiros 10, diferencial
+1. Modelo de negócio / monetização
+2. BMC · segmentos, valor, canais e relacionamento
+3. BMC · receita, recursos, atividades, parceiros e custos
+4. Benchmark (≥3 soluções relacionadas)
+5. Custos, parceiros e primeiros 10 clientes
+6. Diferencial competitivo
 
 ```bash
 start docs/candidatos/agendacerta/anexo-tarefa02.html
