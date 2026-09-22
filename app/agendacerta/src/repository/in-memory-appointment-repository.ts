@@ -55,6 +55,16 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     appointments.set(id, updated);
     return { ...updated };
   }
+
+  async saveOffered(appointment: Appointment): Promise<Appointment> {
+    const { appointments } = getStore();
+    if (!appointments.has(appointment.id)) {
+      throw new AppointmentNotFoundError(appointment.id);
+    }
+    const saved: Appointment = { ...appointment };
+    appointments.set(appointment.id, saved);
+    return { ...saved };
+  }
 }
 
 /** Apenas para testes: reinicia o store a partir do seed. */

@@ -57,7 +57,7 @@ export default function MockWhatsAppPage() {
       </div>
       <p className="lead">
         Simula o lembrete e a resposta do paciente. Ao confirmar, o status muda
-        na API em memória. Abra o painel para ver o resultado.
+        na API (memória ou Supabase). Abra o painel para ver o resultado.
       </p>
       {loading ? <p className="muted">Carregando…</p> : null}
       {error ? <p className="error">{error}</p> : null}

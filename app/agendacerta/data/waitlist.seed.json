@@ -1,0 +1,30 @@
+[
+  {
+    "id": "wl-001",
+    "patientName": "Helena Dias",
+    "specialty": "Neurologia",
+    "phoneMasked": "(79) 9****-4444",
+    "status": "aguardando"
+  },
+  {
+    "id": "wl-002",
+    "patientName": "Igor Santos",
+    "specialty": "Endocrinologia",
+    "phoneMasked": "(79) 9****-5555",
+    "status": "aguardando"
+  },
+  {
+    "id": "wl-003",
+    "patientName": "Juliana Prado",
+    "specialty": "Oftalmologia",
+    "phoneMasked": "(79) 9****-6666",
+    "status": "aguardando"
+  },
+  {
+    "id": "wl-004",
+    "patientName": "Karen Oliveira",
+    "specialty": "Neurologia",
+    "phoneMasked": "(79) 9****-7777",
+    "status": "aguardando"
+  }
+]

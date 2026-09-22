@@ -125,7 +125,10 @@ export default function PainelPage() {
       {loading ? <p className="muted">Carregando…</p> : null}
       {error ? <p className="error">{error}</p> : null}
       {!loading && !error ? (
-        <AppointmentTable appointments={appointments} />
+        <AppointmentTable
+          appointments={appointments}
+          onOffered={() => void load()}
+        />
       ) : null}
     </motion.main>
   );

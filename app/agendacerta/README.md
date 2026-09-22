@@ -5,17 +5,20 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 ## O que esta fatia inclui
 
 - Seed de agendamentos (JSON + migration Supabase)
+- Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
 - Repositório em memória **ou** Supabase (se `.env.local` estiver configurado)
 - `GET /api/appointments`
+- `GET /api/waitlist?specialty=...`
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
+- `POST /api/appointments/[id]/offer` com `{ "waitlistId": "..." }`
 - Páginas `/painel` e `/mock-whatsapp`
-- Testes unitários da regra de status (Vitest)
+- Testes unitários da regra de status e da oferta de vaga (Vitest)
 
 ## O que fica de fora
 
 - WhatsApp Cloud API / Meta
 - Autenticação (Better Auth etc.)
-- Score de risco (IA) e lista de espera completa
+- Score de risco (IA) e fila de espera automática sem ação da clínica
 
 ## Requisitos
 
@@ -64,6 +67,8 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 1. Abra `/painel` e veja os status.
 2. Abra `/mock-whatsapp`, escolha uma vaga pendente e clique SIM, NÃO ou REMARCAR.
 3. Volte em `/painel` e clique em **Atualizar**.
+4. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock).
+5. No mock WhatsApp, o novo paciente aparece nas pendentes; use SIM/NÃO/REMARCAR.
 
 ## Variáveis de ambiente
 

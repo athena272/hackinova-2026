@@ -21,6 +21,7 @@ function mockRepo(
     list: vi.fn(),
     getById: vi.fn(),
     confirm: vi.fn(),
+    saveOffered: vi.fn(),
     ...partial,
   };
 }

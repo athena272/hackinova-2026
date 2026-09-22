@@ -5,6 +5,7 @@ import {
   formatConfirmAppointmentError,
   formatGetAppointmentError,
   formatListAppointmentsError,
+  formatOfferAppointmentError,
 } from "@/lib/supabase/errors";
 import type { AppointmentRepository } from "./appointment-repository";
 import { AppointmentNotFoundError } from "./errors";
@@ -67,6 +68,28 @@ export class SupabaseAppointmentRepository implements AppointmentRepository {
 
     if (error) {
       throw new Error(formatConfirmAppointmentError(error.message));
+    }
+
+    return mapRowToAppointment(data as AppointmentRow);
+  }
+
+  async saveOffered(appointment: Appointment): Promise<Appointment> {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("appointments")
+      .update({
+        patient_name: appointment.patientName,
+        phone_masked: appointment.phoneMasked,
+        status: appointment.status,
+      })
+      .eq("id", appointment.id)
+      .select(
+        "id, patient_name, specialty, scheduled_at, status, phone_masked",
+      )
+      .single();
+
+    if (error) {
+      throw new Error(formatOfferAppointmentError(error.message));
     }
 
     return mapRowToAppointment(data as AppointmentRow);

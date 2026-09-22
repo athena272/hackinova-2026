@@ -4,3 +4,10 @@ export class AppointmentNotFoundError extends Error {
     this.name = "AppointmentNotFoundError";
   }
 }
+
+export class WaitlistNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Candidato da lista de espera não encontrado: ${id}`);
+    this.name = "WaitlistNotFoundError";
+  }
+}
