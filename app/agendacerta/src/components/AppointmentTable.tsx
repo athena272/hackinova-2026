@@ -1,10 +1,12 @@
 import type { Appointment } from "@/domain/appointment";
 import { isSlotReusable } from "@/domain/appointment";
 import { Recycle } from "lucide-react";
+import { ReusableSlotActions } from "./ReusableSlotActions";
 import { StatusBadge } from "./StatusBadge";
 
 type AppointmentTableProps = {
   appointments: Appointment[];
+  onOffered?: () => void;
 };
 
 function formatDateTime(iso: string): string {
@@ -15,7 +17,10 @@ function formatDateTime(iso: string): string {
   }).format(date);
 }
 
-export function AppointmentTable({ appointments }: AppointmentTableProps) {
+export function AppointmentTable({
+  appointments,
+  onOffered,
+}: AppointmentTableProps) {
   if (appointments.length === 0) {
     return <p className="muted">Nenhum agendamento encontrado.</p>;
   }
@@ -45,8 +50,16 @@ export function AppointmentTable({ appointments }: AppointmentTableProps) {
                 <StatusBadge status={appointment.status} />
                 {isSlotReusable(appointment.status) ? (
                   <div className="reusable">
-                    <Recycle size={12} aria-hidden />
-                    Vaga reaproveitável
+                    <div className="reusable-label">
+                      <Recycle size={12} aria-hidden />
+                      Vaga reaproveitável
+                    </div>
+                    {onOffered ? (
+                      <ReusableSlotActions
+                        appointment={appointment}
+                        onOffered={onOffered}
+                      />
+                    ) : null}
                   </div>
                 ) : null}
               </td>

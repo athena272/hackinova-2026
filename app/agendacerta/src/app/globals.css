@@ -401,13 +401,83 @@ table.appointments tbody tr:last-child td {
 }
 
 .reusable {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   margin-top: 6px;
   font-size: 0.75rem;
   color: var(--coral);
   font-weight: 600;
+}
+
+.reusable-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.offer-slot {
+  width: 100%;
+  max-width: 280px;
+}
+
+.offer-slot-trigger,
+.offer-slot-panel button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.offer-slot-trigger:disabled,
+.offer-slot-panel button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.offer-slot-panel {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.offer-slot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offer-slot-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.offer-slot-cancel {
+  margin-top: 8px;
+}
+
+.offer-slot-error {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .muted {
