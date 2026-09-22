@@ -34,7 +34,10 @@ Parar:
 npx supabase stop
 ```
 
-Analytics local (`supabase_vector`) fica **desligado** no `config.toml` para evitar loop no Docker Desktop no Windows. Postgres + Data API continuam normais.
+**Não use o botão Stop do Docker Desktop** nos containers `supabase_*`.  
+O CLI sobe a stack com política `restart=unless-stopped`. Parar um container (ou o grupo) pela UI costuma ficar em loading infinito e os serviços voltam a subir. O caminho certo é sempre `npx supabase stop` na raiz do monorepo.
+
+Analytics local (`supabase_vector`) e Edge Runtime ficam **desligados** no `config.toml` (Windows/Docker Desktop: loop ou exit 255). Postgres + Data API continuam normais.
 
 ## O que sobe no Docker
 
