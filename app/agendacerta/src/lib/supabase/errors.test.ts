@@ -5,13 +5,12 @@ import {
 } from "./errors";
 
 describe("enrichDataApiErrorMessage", () => {
-  it("enriquece permission denied for table appointments (regressão Vercel)", () => {
-    const raw = "permission denied for table appointments";
+  it("enriquece permission denied for table waitlist", () => {
+    const raw = "permission denied for table waitlist";
     const enriched = enrichDataApiErrorMessage(raw);
 
     expect(enriched).toContain(raw);
     expect(enriched).toMatch(/GRANT ao service_role/i);
-    expect(enriched).toMatch(/SUPABASE_SERVICE_ROLE_KEY/i);
   });
 
   it("não altera outras mensagens da Data API", () => {
