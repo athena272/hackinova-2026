@@ -35,6 +35,9 @@ hackinova-2026/
 
 Protótipo: [`app/agendacerta`](./app/agendacerta) (`pnpm install` + `pnpm dev`).  
 Banco local: [`supabase/README.md`](./supabase/README.md) (`npx supabase start`).
+
+Convenção de Git (branches e commits): [`docs/CONVENCAO-GIT.md`](./docs/CONVENCAO-GIT.md).
+
 ## AgendaCerta (em uma frase)
 
 Pacientes do SUS em Aracaju perdem (e fazem outros perderem) vagas de consultas/exames especializados porque o sistema atual não confirma, não prevê e não redistribui o não comparecimento com eficiência.
