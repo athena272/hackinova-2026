@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireClinicSession } from "@/lib/auth/require-session";
 import { createWaitlistRepository } from "@/repository/create-waitlist-repository";
 
 export async function GET(request: Request) {
+  const sessionCheck = await requireClinicSession(request);
+  if (!sessionCheck.ok) return sessionCheck.response;
+
   const specialty = new URL(request.url).searchParams.get("specialty")?.trim();
 
   if (!specialty) {

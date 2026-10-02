@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { requireClinicSession } from "@/lib/auth/require-session";
 import { hasSupabaseConfig } from "@/lib/supabase/admin";
 import { createAppointmentRepository } from "@/repository/create-appointment-repository";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const sessionCheck = await requireClinicSession(request);
+  if (!sessionCheck.ok) return sessionCheck.response;
+
   const source = hasSupabaseConfig() ? "supabase" : "memory";
   try {
     const repo = createAppointmentRepository();
