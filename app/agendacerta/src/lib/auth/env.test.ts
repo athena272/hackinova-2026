@@ -39,9 +39,9 @@ describe("getAuthEnv", () => {
   );
 
   it("rejeita DATABASE_URL que não é Postgres (ex.: SQLite antigo)", () => {
-    expect(() => getAuthEnv(env({ DATABASE_URL: "file:./dev.db" }))).toThrow(
-      /DATABASE_URL deve começar com postgres/,
-    );
+    const call = () => getAuthEnv(env({ DATABASE_URL: "file:./dev.db" }));
+    expect(call).toThrow(AuthConfigError);
+    expect(call).toThrow(/DATABASE_URL deve começar com postgres/);
   });
 
   it("rejeita secret curto", () => {
