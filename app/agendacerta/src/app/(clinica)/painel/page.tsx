@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   CalendarClock,
@@ -11,9 +12,11 @@ import {
 } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { AppointmentTable } from "@/components/AppointmentTable";
+import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
 export default function PainelPage() {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [source, setSource] = useState<"supabase" | "memory" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +27,11 @@ export default function PainelPage() {
     setError(null);
     try {
       const response = await fetch("/api/appointments", { cache: "no-store" });
+      if (response.status === 401) {
+        setError("Sessão expirada. Redirecionando para o login…");
+        router.replace(buildLoginHref("/painel"));
+        return;
+      }
       const payload = await readResponseJson<{
         appointments?: Appointment[];
         source?: "supabase" | "memory";
@@ -39,7 +47,7 @@ export default function PainelPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     void load();
