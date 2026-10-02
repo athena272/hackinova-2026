@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { offerWaitlistSlot } from "@/application/offer-waitlist-slot";
 import { OfferSlotError } from "@/domain/offer-slot";
+import { requireClinicSession } from "@/lib/auth/require-session";
 import { createAppointmentRepository } from "@/repository/create-appointment-repository";
 import {
   AppointmentNotFoundError,
@@ -13,6 +14,9 @@ type RouteContext = {
 };
 
 export async function POST(request: Request, context: RouteContext) {
+  const sessionCheck = await requireClinicSession(request);
+  if (!sessionCheck.ok) return sessionCheck.response;
+
   const { id } = await context.params;
 
   let body: unknown;

@@ -1,9 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { OfferSlotError } from "@/domain/offer-slot";
 import {
+  authorizedSessionCheck,
+  unauthorizedSessionCheck,
+} from "@/lib/auth/session-check.test-utils";
+import {
   AppointmentNotFoundError,
   WaitlistNotFoundError,
 } from "@/repository/errors";
+
+vi.mock("@/lib/auth/require-session", () => ({
+  requireClinicSession: vi.fn(),
+}));
 
 vi.mock("@/application/offer-waitlist-slot", () => ({
   offerWaitlistSlot: vi.fn(),
@@ -18,12 +26,30 @@ vi.mock("@/repository/create-waitlist-repository", () => ({
 }));
 
 import { offerWaitlistSlot } from "@/application/offer-waitlist-slot";
+import { requireClinicSession } from "@/lib/auth/require-session";
 import { POST } from "./route";
 
 describe("POST /api/appointments/[id]/offer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(requireClinicSession).mockResolvedValue(authorizedSessionCheck());
+  });
+
+  it("responde 401 sem sessão e não oferece a vaga", async () => {
+    vi.mocked(requireClinicSession).mockResolvedValue(unauthorizedSessionCheck());
+
+    const response = await POST(
+      new Request("http://localhost/api/appointments/apt-006/offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ waitlistId: "wl-002" }),
+      }),
+      { params: Promise.resolve({ id: "apt-006" }) },
+    );
+
+    expect(response.status).toBe(401);
+    expect(offerWaitlistSlot).not.toHaveBeenCalled();
   });
 
   it("oferece vaga e devolve appointment + candidate", async () => {
