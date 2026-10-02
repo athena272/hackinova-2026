@@ -17,8 +17,8 @@ Na **raiz** do monorepo (`hackinova-2026/`):
 npx supabase start
 ```
 
-Ao terminar, o CLI imprime URL e keys locais (anon / service_role).  
-Copie para `app/agendacerta/.env.local` (veja `.env.example` do app).
+O app usa só a connection string do Postgres local (`DATABASE_URL`, porta 54322), já preenchida no `.env.example` do app.  
+Copie para `app/agendacerta/.env.local`.
 
 Aplicar migrations (se ainda não aplicou):
 
@@ -49,7 +49,8 @@ Analytics local (`supabase_vector`) e Edge Runtime ficam **desligados** no `conf
 ## Produção (cloud + Vercel)
 
 1. **Migrations no projeto Supabase cloud** — com a integração GitHub ligada, merge em `main` aplica o SQL; ou rode `npx supabase db push` com o projeto linkado.
-2. **Vercel** — Root Directory `app/agendacerta`; env vars do cloud (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, e opcionalmente a anon/publishable). Detalhes no README do app.
+2. **Vercel** — Root Directory `app/agendacerta`; env vars do cloud (`DATABASE_URL` do Transaction pooler, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL`). Detalhes no README do app.
+3. **Schema do Prisma** — depois de criar uma migration, rode `npx supabase db reset` e, em `app/agendacerta`, `pnpm db:pull` para atualizar o `prisma/schema.prisma`.
 
 Desenvolva e teste no **local** (`supabase start`) antes de mergear SQL novo.
 
