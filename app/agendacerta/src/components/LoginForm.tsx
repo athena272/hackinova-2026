@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2, LockKeyhole, LogIn } from "lucide-react";
+import { PasswordInput } from "@/components/PasswordInput";
 import { authClient } from "@/lib/auth/client";
 import { describeSignInError, SIGN_IN_MESSAGES } from "@/lib/auth/sign-in-error";
 
@@ -14,6 +15,7 @@ type LoginFormProps = {
 
 export function LoginForm({ nextPath, authUnavailable }: LoginFormProps) {
   const router = useRouter();
+  const passwordId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -78,17 +80,17 @@ export function LoginForm({ nextPath, authUnavailable }: LoginFormProps) {
             required
           />
         </label>
-        <label className="form-field">
-          <span>Senha</span>
-          <input
-            type="password"
+        <div className="form-field">
+          <label htmlFor={passwordId}>Senha</label>
+          <PasswordInput
+            id={passwordId}
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={submitting}
             required
           />
-        </label>
+        </div>
 
         {error ? (
           <p className="error" role="alert">
