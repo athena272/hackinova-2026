@@ -1,15 +1,15 @@
-import { hasSupabaseConfig } from "@/lib/supabase/admin";
+import { hasDatabaseConfig } from "@/lib/database/env";
 import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
-import { SupabaseWaitlistRepository } from "./supabase-waitlist-repository";
+import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 import type { WaitlistRepository } from "./waitlist-repository";
 
 /**
- * Usa Supabase quando URL + service role estão definidos.
+ * Usa o Postgres (Prisma) quando DATABASE_URL está definida.
  * Sem isso, cai no seed em memória.
  */
 export function createWaitlistRepository(): WaitlistRepository {
-  if (hasSupabaseConfig()) {
-    return new SupabaseWaitlistRepository();
+  if (hasDatabaseConfig()) {
+    return new PrismaWaitlistRepository();
   }
   return new InMemoryWaitlistRepository();
 }
