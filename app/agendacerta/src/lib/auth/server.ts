@@ -1,8 +1,10 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { Pool } from "pg";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import type { PrismaClient } from "@/generated/prisma/client";
+import { getPrisma } from "@/lib/database/prisma";
 import { getAuthEnv, type AuthEnv } from "./env";
 
-/** Precisam bater com supabase/migrations/*_create_auth_tables.sql. */
+/** Precisam bater com supabase/migrations/*_create_auth_tables.sql e prisma/schema.prisma. */
 export const AUTH_TABLES = {
   user: "auth_user",
   session: "auth_session",
@@ -14,27 +16,19 @@ type BuildAuthOptionsParams = {
   /** Só o script de criação de usuário deve habilitar cadastro. */
   allowSignUp: boolean;
   env?: AuthEnv;
-  pool?: Pool;
+  prisma?: PrismaClient;
 };
-
-function createPool(databaseUrl: string): Pool {
-  const pool = new Pool({ connectionString: databaseUrl });
-  pool.on("error", (error) => {
-    console.error("[auth] erro em conexão ociosa do Postgres", error);
-  });
-  return pool;
-}
 
 export function buildAuthOptions({
   allowSignUp,
   env = getAuthEnv(),
-  pool,
+  prisma = getPrisma(),
 }: BuildAuthOptionsParams) {
   return {
     appName: "AgendaCerta",
     baseURL: env.baseUrl,
     secret: env.secret,
-    database: pool ?? createPool(env.databaseUrl),
+    database: prismaAdapter(prisma, { provider: "postgresql" }),
     user: { modelName: AUTH_TABLES.user },
     session: { modelName: AUTH_TABLES.session },
     account: { modelName: AUTH_TABLES.account },
