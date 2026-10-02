@@ -14,28 +14,36 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "auth:create-user": "tsx --env-file-if-exists=.env.local scripts/create-clinic-user.ts"
+    "postinstall": "prisma generate",
+    "db:pull": "prisma db pull",
+    "auth:create-user": "tsx --env-file-if-exists=.env.local prisma/seed.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.116.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "better-auth": "^1.7.7",
     "framer-motion": "^13.4.0",
     "lucide-react": "^1.47.0",
     "next": "15.5.25",
-    "pg": "^8.23.1",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^24",
-    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.25",
+    "prisma": "7.10.0",
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "3.2.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma"
+    ]
   }
 }
