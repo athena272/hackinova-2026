@@ -99,7 +99,7 @@ create policy "appointments_deny_authenticated"
   with check (false);
 ```
 
-`service_role` continua bypassando RLS e é o único caminho usado pelo app (`getSupabaseAdmin()` + `SUPABASE_SERVICE_ROLE_KEY`).
+O app não usa a Data API: acessa o Postgres pelo Prisma com a `DATABASE_URL` (role dona das tabelas, que não é afetada por essas políticas). `service_role` continua bypassando RLS.
 
 ### Como validar
 

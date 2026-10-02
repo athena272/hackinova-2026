@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getAuthTables } from "better-auth/db";
-import { Pool } from "pg";
 import { describe, expect, it } from "vitest";
+import type { PrismaClient } from "@/generated/prisma/client";
 import { AUTH_TABLES, buildAuthOptions } from "@/lib/auth/server";
 
 /**
@@ -42,7 +42,7 @@ describe("migration auth_* (Better Auth)", () => {
     const options = buildAuthOptions({
       allowSignUp: false,
       env: { databaseUrl: "postgresql://localhost/db", secret: "x".repeat(32) },
-      pool: new Pool(),
+      prisma: {} as PrismaClient,
     });
     const tables = getAuthTables(options);
 

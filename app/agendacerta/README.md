@@ -6,7 +6,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 
 - Seed de agendamentos (JSON + migration Supabase)
 - Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
-- Repositório em memória **ou** Supabase (se `.env.local` estiver configurado)
+- Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/waitlist?specialty=...`
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
@@ -40,10 +40,30 @@ npx supabase start
 npx supabase db reset
 ```
 
-Copie URL e `service_role` para `app/agendacerta/.env.local` (veja `.env.example`).  
+Defina `DATABASE_URL` em `app/agendacerta/.env.local` (veja `.env.example`; o valor local padrão já vem pronto).  
 Detalhes: [`supabase/README.md`](../../supabase/README.md).
 
-Sem `.env.local` de Supabase, a API usa o seed em memória (CI e smoke sem Docker).
+Sem `DATABASE_URL`, a API usa o seed em memória (CI e smoke sem Docker).
+
+## Banco e Prisma
+
+O app acessa o Postgres do Supabase pelo Prisma 7 (agendamentos, lista de espera e as tabelas `auth_*` do login). As migrations continuam em `supabase/migrations/` e são a fonte da verdade; o `prisma/schema.prisma` é gerado a partir do banco, sem `prisma migrate`.
+
+- `pnpm install` roda `prisma generate` (postinstall) e cria o client em `src/generated/prisma` (fora do git). Não precisa de banco.
+- `prisma.config.ts` lê o `DATABASE_URL` do `.env.local`.
+
+Para mudar uma tabela:
+
+1. Crie a migration em `supabase/migrations/` (na raiz: `npx supabase migration new <nome>`)
+2. Aplique no local: `npx supabase db reset`
+3. Atualize o schema: `pnpm db:pull` (mantém os renomes `@map` / `@@map`) e, se precisar, ajuste o domínio
+4. Rode `pnpm test` (o `prisma-schema.test.ts` acusa tabela ou enum fora de sincronia) e commite a migration junto com o `schema.prisma`
+
+Teste de integração opcional, somente leitura, com o Supabase local rodando (PowerShell):
+
+```powershell
+$env:RUN_DB_TESTS="1"; pnpm test; Remove-Item Env:RUN_DB_TESTS
+```
 
 ## Como rodar o app
 
@@ -88,7 +108,7 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 cp .env.example .env.local
 ```
 
-Preencha após `npx supabase start` (local) ou com as keys do projeto cloud (Vercel).  
+Preencha após `npx supabase start` (local) ou com os valores do projeto cloud (Vercel).  
 Nunca commite `.env` / `.env.local`.
 
 ## Deploy na Vercel
@@ -102,16 +122,15 @@ Na tela **New Project**:
 
 | Nome | Valor |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://<ref>.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | publishable / anon do cloud |
-| `SUPABASE_SERVICE_ROLE_KEY` | secret / service_role do cloud |
-| `DATABASE_URL` | Supabase → Connect → Transaction pooler (porta 6543) |
+| `DATABASE_URL` | Supabase → Connect → Transaction pooler (porta 6543), com `?sslmode=no-verify` no final |
 | `BETTER_AUTH_SECRET` | valor novo de 32+ caracteres (`openssl rand -base64 32`) |
 | `BETTER_AUTH_URL` | `https://<seu-app>.vercel.app` |
+
+A mesma `DATABASE_URL` serve para os dados e para o login. Se o pooler de transação reclamar de prepared statements, troque pela URL do Session pooler (porta 5432). As antigas `NEXT_PUBLIC_SUPABASE_*` e `SUPABASE_SERVICE_ROLE_KEY` não são mais usadas pelo app.
 
 Para criar o usuário da clínica em produção, rode `pnpm auth:create-user` localmente com `DATABASE_URL` e `BETTER_AUTH_SECRET` do cloud (sem salvar esses valores no repo).
 
 5. Garanta que as migrations de `supabase/migrations/` (incluindo `..._create_auth_tables.sql`) já rodaram no projeto cloud (integração GitHub do Supabase ou `npx supabase db push` com o projeto linkado). Sem isso o painel sobe, mas a API falha ao listar.
 6. Faça o deploy **depois** de mergear a fatia Supabase em `main` (senão a Vercel sobe o código antigo sem Postgres).
 
-Sem as env vars, o deploy funciona, mas cai no seed em memória (dados não persistem entre cold starts).
+Sem `DATABASE_URL`, o deploy funciona, mas cai no seed em memória (dados não persistem entre cold starts) e o login fica indisponível.

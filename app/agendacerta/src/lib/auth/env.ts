@@ -1,3 +1,9 @@
+import {
+  DatabaseConfigError,
+  readDatabaseUrl,
+  type EnvSource,
+} from "@/lib/database/env";
+
 export class AuthConfigError extends Error {
   constructor(message: string) {
     super(message);
@@ -12,8 +18,6 @@ export type AuthEnv = {
 };
 
 export const MIN_AUTH_SECRET_LENGTH = 32;
-
-type EnvSource = Record<string, string | undefined>;
 
 function readRequired(
   env: EnvSource,
@@ -43,17 +47,23 @@ function assertUrl(name: string, value: string, protocols: string[]): void {
   }
 }
 
+function readAuthDatabaseUrl(env: EnvSource): string {
+  try {
+    return readDatabaseUrl(env);
+  } catch (error) {
+    if (error instanceof DatabaseConfigError) {
+      throw new AuthConfigError(error.message);
+    }
+    throw error;
+  }
+}
+
 /**
  * Lê e valida as variáveis do Better Auth.
  * BETTER_AUTH_URL é opcional: sem ela, o Better Auth infere a URL da requisição.
  */
 export function getAuthEnv(env: EnvSource = process.env): AuthEnv {
-  const databaseUrl = readRequired(
-    env,
-    "DATABASE_URL",
-    "Use a connection string Postgres do Supabase (veja .env.example).",
-  );
-  assertUrl("DATABASE_URL", databaseUrl, ["postgres:", "postgresql:"]);
+  const databaseUrl = readAuthDatabaseUrl(env);
 
   const secret = readRequired(
     env,

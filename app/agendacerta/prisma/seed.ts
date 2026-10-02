@@ -3,39 +3,43 @@
  * Uso: pnpm auth:create-user  (lê DATABASE_URL, BETTER_AUTH_SECRET e CLINIC_USER_* do .env.local)
  */
 import { betterAuth } from "better-auth";
-import { Pool } from "pg";
 import { readClinicUserInput } from "../src/lib/auth/clinic-user-input";
 import { getAuthEnv } from "../src/lib/auth/env";
-import { AUTH_TABLES, buildAuthOptions } from "../src/lib/auth/server";
+import { buildAuthOptions } from "../src/lib/auth/server";
+import { getPrisma } from "../src/lib/database/prisma";
+
+const UNREACHABLE_CODES = new Set(["ECONNREFUSED", "P1001"]);
 
 async function main(): Promise<void> {
   const input = readClinicUserInput(process.env);
   const env = getAuthEnv();
-  const pool = new Pool({ connectionString: env.databaseUrl });
+  const prisma = getPrisma();
 
   try {
-    const existing = await pool.query(
-      `select 1 from public.${AUTH_TABLES.user} where email = $1 limit 1`,
-      [input.email],
-    );
-    if (existing.rowCount) {
+    const existing = await prisma.auth_user.findUnique({
+      where: { email: input.email },
+      select: { id: true },
+    });
+    if (existing) {
       console.log(`Usuário ${input.email} já existe. Nada a fazer.`);
       return;
     }
 
-    const auth = betterAuth(buildAuthOptions({ allowSignUp: true, env, pool }));
+    const auth = betterAuth(buildAuthOptions({ allowSignUp: true, env, prisma }));
     await auth.api.signUpEmail({
       body: { email: input.email, password: input.password, name: input.name },
     });
     console.log(`Usuário ${input.email} criado. Já pode entrar em /login.`);
   } finally {
-    await pool.end();
+    await prisma.$disconnect();
   }
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error && "code" in error && error.code === "ECONNREFUSED") {
-    return `${error.message}. O Postgres está rodando? Local: npx supabase start (na raiz do repo).`;
+  const code =
+    error instanceof Error && "code" in error ? String(error.code) : undefined;
+  if (code && UNREACHABLE_CODES.has(code)) {
+    return `${(error as Error).message}. O Postgres está rodando? Local: npx supabase start (na raiz do repo).`;
   }
   return error instanceof Error ? error.message : String(error);
 }
