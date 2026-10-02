@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck2, Home, LayoutDashboard, MessageCircle } from "lucide-react";
+import { SessionMenu } from "@/components/SessionMenu";
 
 type AppShellProps = {
   children: ReactNode;
@@ -43,6 +44,7 @@ export function AppShell({ children }: AppShellProps) {
             );
           })}
         </nav>
+        <SessionMenu />
       </header>
       {children}
     </div>

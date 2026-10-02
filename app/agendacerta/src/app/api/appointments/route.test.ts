@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppointmentRepository } from "@/repository/appointment-repository";
 import { readResponseJson } from "@/lib/http";
+import {
+  authorizedSessionCheck,
+  unauthorizedSessionCheck,
+} from "@/lib/auth/session-check.test-utils";
+
+vi.mock("@/lib/auth/require-session", () => ({
+  requireClinicSession: vi.fn(),
+}));
 
 vi.mock("@/lib/supabase/admin", () => ({
   hasSupabaseConfig: vi.fn(),
@@ -10,9 +18,14 @@ vi.mock("@/repository/create-appointment-repository", () => ({
   createAppointmentRepository: vi.fn(),
 }));
 
+import { requireClinicSession } from "@/lib/auth/require-session";
 import { hasSupabaseConfig } from "@/lib/supabase/admin";
 import { createAppointmentRepository } from "@/repository/create-appointment-repository";
-import { GET } from "./route";
+import { GET as getHandler } from "./route";
+
+function GET() {
+  return getHandler(new Request("http://localhost/api/appointments"));
+}
 
 function mockRepo(
   partial: Partial<AppointmentRepository>,
@@ -30,6 +43,19 @@ describe("GET /api/appointments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(requireClinicSession).mockResolvedValue(authorizedSessionCheck());
+  });
+
+  it("responde 401 sem sessão e não consulta o repositório", async () => {
+    vi.mocked(requireClinicSession).mockResolvedValue(unauthorizedSessionCheck());
+
+    const response = await GET();
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "Sessão expirada. Faça login novamente.",
+    });
+    expect(createAppointmentRepository).not.toHaveBeenCalled();
   });
 
   it("retorna lista e source memory quando Supabase não está configurado", async () => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isConfirmationAction } from "@/domain/appointment";
 import { ConfirmationError } from "@/domain/confirmation";
+import { requireClinicSession } from "@/lib/auth/require-session";
 import {
   AppointmentNotFoundError,
   createAppointmentRepository,
@@ -11,6 +12,9 @@ type RouteContext = {
 };
 
 export async function POST(request: Request, context: RouteContext) {
+  const sessionCheck = await requireClinicSession(request);
+  if (!sessionCheck.ok) return sessionCheck.response;
+
   const { id } = await context.params;
 
   let body: unknown;

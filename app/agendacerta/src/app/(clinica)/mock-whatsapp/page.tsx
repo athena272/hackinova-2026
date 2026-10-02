@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
+import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
 export default function MockWhatsAppPage() {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -17,6 +20,11 @@ export default function MockWhatsAppPage() {
     setError(null);
     try {
       const response = await fetch("/api/appointments", { cache: "no-store" });
+      if (response.status === 401) {
+        setError("Sessão expirada. Redirecionando para o login…");
+        router.replace(buildLoginHref("/mock-whatsapp"));
+        return;
+      }
       const payload = await readResponseJson<{
         appointments?: Appointment[];
         error?: string;
@@ -30,7 +38,7 @@ export default function MockWhatsAppPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     void load();
