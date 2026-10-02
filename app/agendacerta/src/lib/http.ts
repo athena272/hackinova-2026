@@ -3,7 +3,7 @@ export async function readResponseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
   if (!text.trim()) {
     throw new Error(
-      `Resposta vazia da API (HTTP ${response.status}). Confira as env vars do Supabase na Vercel e se a migration rodou no projeto cloud.`,
+      `Resposta vazia da API (HTTP ${response.status}). Confira a DATABASE_URL na Vercel e se as migrations rodaram no projeto cloud.`,
     );
   }
   try {
