@@ -1,11 +1,11 @@
 # Candidatos de tema — InnovaPair
 
-Dois caminhos em avaliação para a Tarefa 01 do Hackinova 2026. Cada pasta é autocontida.
+Dois caminhos em avaliação para a Tarefa 01 do Hackinova 2026. Cada candidato é autocontido; o CostaViva foi movido para um repositório próprio.
 
-| Candidato | Área | Pasta | Resumo |
+| Candidato | Área | Local | Resumo |
 | --- | --- | --- | --- |
 | **AgendaCerta** | Saúde (+ IA) | `agendacerta/` | Absenteísmo em consultas/exames do SUS em Aracaju |
-| **CostaViva** | Mudanças Climáticas | `costaviva/` | Erosão costeira no litoral sergipano — mapa + relatos |
+| **CostaViva** | Mudanças Climáticas | [athena272/costa-viva](https://github.com/athena272/costa-viva) | Erosão costeira no litoral sergipano — mapa + relatos |
 
 ## Comparativo rápido
 
@@ -18,7 +18,7 @@ Dois caminhos em avaliação para a Tarefa 01 do Hackinova 2026. Cada pasta é a
 | Risco técnico | Conta Meta / sandbox WhatsApp | Mapa + DB (mais previsível em web) |
 
 ## Como decidir
-1. Ler `agendacerta/entrega.md` e `costaviva/entrega.md`
+1. Ler `agendacerta/entrega.md` e a [entrega do CostaViva](https://github.com/athena272/costa-viva/blob/main/docs/proposta/entrega.md)
 2. Comparar esforço de demo em 1–2 semanas
 3. Escolher **um** tema para a entrega oficial na OPIN
 
