@@ -7,7 +7,7 @@ Dois candidatos de tema estão documentados (decisão em aberto):
 | Produto | Área | Pasta |
 | --- | --- | --- |
 | **AgendaCerta** | Saúde (+ IA) | [`docs/candidatos/agendacerta`](./docs/candidatos/agendacerta) |
-| **CostaViva** | Mudanças Climáticas | [`docs/candidatos/costaviva`](./docs/candidatos/costaviva) |
+| **CostaViva** | Mudanças Climáticas | Repositório próprio: [athena272/costa-viva](https://github.com/athena272/costa-viva) |
 
 Comparativo: [`docs/candidatos/README.md`](./docs/candidatos/README.md)
 
@@ -26,8 +26,7 @@ hackinova-2026/
 ├── LICENSE
 ├── docs/
 │   └── candidatos/
-│       ├── agendacerta/
-│       └── costaviva/
+│       └── agendacerta/
 ├── supabase/            ← Postgres local (Docker) + migrations
 └── app/
     └── agendacerta/     ← MVP Next.js (pnpm dev no host)
@@ -45,6 +44,8 @@ Pacientes do SUS em Aracaju perdem (e fazem outros perderem) vagas de consultas/
 ## CostaViva (em uma frase)
 
 Municípios do litoral sergipano sofrem erosão costeira/fluvial, mas a evidência geolocalizada chega tarde e fragmentada para cidadãos e órgãos públicos.
+
+A proposta, os canvas, o seed de zonas críticas e o protótipo agora ficam no repositório [athena272/costa-viva](https://github.com/athena272/costa-viva).
 
 ## Licença
 

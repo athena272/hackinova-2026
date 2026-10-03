@@ -7,7 +7,7 @@ Materiais de produto, entregas e canvas da equipe **InnovaPair**.
 | Candidato | Área | Pasta |
 | --- | --- | --- |
 | AgendaCerta | Saúde | [`candidatos/agendacerta`](./candidatos/agendacerta) |
-| CostaViva | Mudanças Climáticas | [`candidatos/costaviva`](./candidatos/costaviva) |
+| CostaViva | Mudanças Climáticas | Repositório próprio: [athena272/costa-viva](https://github.com/athena272/costa-viva) |
 
 Comparativo: [`candidatos/README.md`](./candidatos/README.md)
 
