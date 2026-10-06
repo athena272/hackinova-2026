@@ -20,7 +20,14 @@ import {
   countByStatus,
   splitAgendaAndHistory,
 } from "@/domain/appointment-summary";
+import {
+  type ExamPreparation,
+  type PreparationStatus,
+  preparationStatusFor,
+} from "@/domain/exam-preparation";
 import { AppointmentTable } from "@/components/AppointmentTable";
+import { PreparationAlerts } from "@/components/PreparationAlerts";
+import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { useNoShowRisks } from "@/hooks/use-no-show-risks";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
@@ -37,6 +44,8 @@ const STAT_CARDS: readonly {
   { status: "compareceu", label: "Compareceu", Icon: UserCheck },
   { status: "faltou", label: "Faltou", Icon: UserX },
 ];
+
+const NO_PREPARATIONS: readonly ExamPreparation[] = [];
 
 export default function PainelPage() {
   const router = useRouter();
@@ -77,8 +86,9 @@ export default function PainelPage() {
   }, [load]);
 
   const { state: risks, reload: reloadRisks } = useNoShowRisks();
+  const { state: preparations, reload: reloadPreparations } = useExamPreparations();
 
-  /** Uma oferta troca o paciente da vaga e, com isso, o risco: recarrega os dois. */
+  /** Oferta e liberação mudam o paciente ou o status da vaga, e com isso o risco: recarrega os dois. */
   const reloadAll = useCallback(() => {
     void load();
     void reloadRisks();
@@ -89,6 +99,18 @@ export default function PainelPage() {
     () => splitAgendaAndHistory(appointments),
     [appointments],
   );
+
+  /** Sem o cadastro, o painel ainda mostra as respostas já gravadas. */
+  const catalog =
+    preparations.status === "ready" ? preparations.data : NO_PREPARATIONS;
+  const preparationStatusById = useMemo(() => {
+    const byId = new Map<string, PreparationStatus>();
+    for (const appointment of appointments) {
+      const status = preparationStatusFor(appointment, catalog);
+      if (status) byId.set(appointment.id, status);
+    }
+    return byId;
+  }, [appointments, catalog]);
 
   return (
     <motion.main
@@ -118,7 +140,11 @@ export default function PainelPage() {
           <button type="button" onClick={reloadAll}>
             <RefreshCw
               size={16}
-              className={loading || risks.status === "loading" ? "spin" : undefined}
+              className={
+                loading || risks.status === "loading" || preparations.status === "loading"
+                  ? "spin"
+                  : undefined
+              }
               aria-hidden
             />
             Atualizar
@@ -162,11 +188,30 @@ export default function PainelPage() {
                 </button>
               </div>
             ) : null}
+            {preparations.status === "error" ? (
+              <div className="risk-notice" role="alert">
+                <span>
+                  <strong>Cadastro de preparo indisponível.</strong>{" "}
+                  {preparations.message} As respostas já recebidas continuam
+                  aparecendo.
+                </span>
+                <button type="button" onClick={() => void reloadPreparations()}>
+                  <RefreshCw size={14} aria-hidden />
+                  Tentar de novo
+                </button>
+              </div>
+            ) : null}
+            <PreparationAlerts
+              appointments={agenda}
+              preparations={catalog}
+              onReleased={reloadAll}
+            />
             <AppointmentTable
               appointments={agenda}
               onOffered={reloadAll}
               emptyMessage="Nenhum agendamento na agenda."
               risks={risks}
+              preparationStatusById={preparationStatusById}
             />
           </section>
 
@@ -181,6 +226,7 @@ export default function PainelPage() {
             <AppointmentTable
               appointments={history}
               emptyMessage="Ainda não há histórico de comparecimento."
+              preparationStatusById={preparationStatusById}
             />
           </section>
         </>
