@@ -418,6 +418,86 @@ table.appointments tbody tr:last-child td {
   color: var(--rose);
 }
 
+.risk-baixo {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.risk-medio {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.risk-alto {
+  background: var(--rose-soft);
+  color: var(--rose);
+}
+
+.risk-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 260px;
+}
+
+.risk-reasons {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.risk-details {
+  font-size: 0.75rem;
+}
+
+.risk-details summary {
+  cursor: pointer;
+  color: var(--sky);
+}
+
+.risk-details .risk-reasons {
+  margin-top: 4px;
+}
+
+.risk-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.risk-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--coral-soft);
+  border-radius: 12px;
+  background: #fff7ed;
+  color: var(--coral);
+  font-size: 0.88rem;
+}
+
+.risk-notice button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
 .panel-section + .panel-section {
   margin-top: 28px;
 }

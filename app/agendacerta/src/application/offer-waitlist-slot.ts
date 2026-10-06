@@ -22,6 +22,7 @@ export async function offerWaitlistSlot(
   waitlistRepo: WaitlistRepository,
   appointmentId: string,
   waitlistId: string,
+  now: () => Date = () => new Date(),
 ): Promise<OfferWaitlistSlotResult> {
   const appointment = await appointmentRepo.getById(appointmentId);
   if (!appointment) {
@@ -33,7 +34,7 @@ export async function offerWaitlistSlot(
     throw new WaitlistNotFoundError(waitlistId);
   }
 
-  const offered = offerSlot(appointment, candidate);
+  const offered = offerSlot(appointment, candidate, now().toISOString());
   const savedAppointment = await appointmentRepo.saveOffered(
     offered.appointment,
   );

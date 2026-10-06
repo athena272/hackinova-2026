@@ -30,6 +30,7 @@ export function loadAppointmentSeed(): Appointment[] {
       patientName: patient.fullName,
       specialty: item.specialty,
       scheduledAt: item.scheduledAt,
+      bookedAt: item.bookedAt,
       status: item.status,
       phoneMasked: patient.phoneMasked,
       procedure: createProcedure(item.procedureType, item.procedureName),

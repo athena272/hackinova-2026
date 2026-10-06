@@ -18,6 +18,15 @@ export class OfferSlotError extends Error {
   }
 }
 
+/**
+ * O banco exige booked_at <= scheduled_at. Oferta feita depois do horário
+ * (vaga de última hora ou agenda de demonstração no passado) conta como
+ * marcada no próprio horário, ou seja, antecedência zero.
+ */
+function bookingTimeFor(scheduledAt: string, offeredAt: string): string {
+  return Date.parse(offeredAt) < Date.parse(scheduledAt) ? offeredAt : scheduledAt;
+}
+
 export type OfferSlotResult = {
   appointment: Appointment;
   candidate: WaitlistEntry;
@@ -25,12 +34,14 @@ export type OfferSlotResult = {
 
 /**
  * Oferece uma vaga reaproveitável a um candidato da lista de espera.
- * A vaga fica pendente para o novo paciente confirmar (SIM/NÃO/REMARCAR).
+ * A vaga fica pendente para o novo paciente confirmar (SIM/NÃO/REMARCAR)
+ * e conta como uma marcação nova, feita em `offeredAt`.
  * Função pura: não persiste nada.
  */
 export function offerSlot(
   appointment: Appointment,
   candidate: WaitlistEntry,
+  offeredAt: string,
 ): OfferSlotResult {
   if (!isSlotReusable(appointment.status)) {
     throw new OfferSlotError(
@@ -59,6 +70,7 @@ export function offerSlot(
       patientId: candidate.patientId,
       patientName: candidate.patientName,
       phoneMasked: candidate.phoneMasked,
+      bookedAt: bookingTimeFor(appointment.scheduledAt, offeredAt),
       status: "pendente",
     },
     candidate: {

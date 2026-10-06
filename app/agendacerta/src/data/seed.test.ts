@@ -96,6 +96,15 @@ describe("seed em memória", () => {
     expect([...withHistory].some((id) => !noShowsByPatient.has(id))).toBe(true);
   });
 
+  it("toda consulta foi marcada antes do horário (mesma regra da check constraint)", () => {
+    for (const item of appointments) {
+      expect(Date.parse(item.bookedAt), item.id).not.toBeNaN();
+      expect(Date.parse(item.bookedAt), item.id).toBeLessThanOrEqual(
+        Date.parse(item.scheduledAt),
+      );
+    }
+  });
+
   it("exame sempre tem nome e consulta nunca tem (mesma regra da check constraint)", () => {
     for (const item of rawAppointments) {
       expect(item.procedureType === "exame", item.id).toBe(
@@ -151,5 +160,26 @@ describe("seed em memória x migrations", () => {
     );
 
     expect(sqlNeighborhoods).toEqual(neighborhoods);
+  });
+
+  it("antecedência de cada agendamento é a mesma no JSON e na migration de booked_at", () => {
+    const bookedAtSql = readFileSync(
+      join(migrationsDir, "20261006130000_appointments_booked_at.sql"),
+      "utf8",
+    );
+    const sqlLeadDays = Object.fromEntries(
+      Array.from(
+        bookedAtSql.matchAll(/\('((?:apt|hist)-\d+)', (\d+)\)/g),
+        ([, id, days]) => [id, Number(days)],
+      ),
+    );
+    const jsonLeadDays = Object.fromEntries(
+      appointments.map((item) => [
+        item.id,
+        (Date.parse(item.scheduledAt) - Date.parse(item.bookedAt)) / (24 * 60 * 60 * 1000),
+      ]),
+    );
+
+    expect(jsonLeadDays).toEqual(sqlLeadDays);
   });
 });

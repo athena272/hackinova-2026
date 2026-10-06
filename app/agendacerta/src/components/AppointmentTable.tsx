@@ -1,6 +1,8 @@
 import type { Appointment } from "@/domain/appointment";
 import { isSlotReusable } from "@/domain/appointment";
 import { Recycle } from "lucide-react";
+import type { NoShowRisksState } from "@/hooks/use-no-show-risks";
+import { NoShowRiskCell } from "./NoShowRiskCell";
 import { ReusableSlotActions } from "./ReusableSlotActions";
 import { StatusBadge } from "./StatusBadge";
 
@@ -8,6 +10,8 @@ type AppointmentTableProps = {
   appointments: Appointment[];
   onOffered?: () => void;
   emptyMessage?: string;
+  /** Quando informado, mostra a coluna "Risco de falta". */
+  risks?: NoShowRisksState;
 };
 
 function formatDateTime(iso: string): string {
@@ -22,6 +26,7 @@ export function AppointmentTable({
   appointments,
   onOffered,
   emptyMessage = "Nenhum agendamento encontrado.",
+  risks,
 }: AppointmentTableProps) {
   if (appointments.length === 0) {
     return <p className="muted">{emptyMessage}</p>;
@@ -37,6 +42,7 @@ export function AppointmentTable({
             <th>Data / hora</th>
             <th>Telefone</th>
             <th>Status</th>
+            {risks ? <th>Risco de falta</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -65,6 +71,11 @@ export function AppointmentTable({
                   </div>
                 ) : null}
               </td>
+              {risks ? (
+                <td>
+                  <NoShowRiskCell appointment={appointment} risks={risks} />
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>

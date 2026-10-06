@@ -21,6 +21,8 @@ export type Appointment = {
   patientName: string;
   specialty: string;
   scheduledAt: string;
+  /** Quando a consulta foi marcada (base do fator antecedência). */
+  bookedAt: string;
   status: AppointmentStatus;
   phoneMasked: string;
   procedure: Procedure;

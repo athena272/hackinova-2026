@@ -13,6 +13,7 @@ function appointment(
     patientName: `Paciente ${id}`,
     specialty: "Neurologia",
     scheduledAt,
+    bookedAt: scheduledAt,
     status,
     phoneMasked: "(79) 9****-0000",
     procedure: { type: "consulta" },

@@ -21,6 +21,7 @@ import {
   splitAgendaAndHistory,
 } from "@/domain/appointment-summary";
 import { AppointmentTable } from "@/components/AppointmentTable";
+import { useNoShowRisks } from "@/hooks/use-no-show-risks";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
@@ -75,6 +76,14 @@ export default function PainelPage() {
     void load();
   }, [load]);
 
+  const { state: risks, reload: reloadRisks } = useNoShowRisks();
+
+  /** Uma oferta troca o paciente da vaga e, com isso, o risco: recarrega os dois. */
+  const reloadAll = useCallback(() => {
+    void load();
+    void reloadRisks();
+  }, [load, reloadRisks]);
+
   const stats = useMemo(() => countByStatus(appointments), [appointments]);
   const { agenda, history } = useMemo(
     () => splitAgendaAndHistory(appointments),
@@ -106,10 +115,10 @@ export default function PainelPage() {
           </p>
         </div>
         <div className="toolbar" style={{ marginBottom: 0 }}>
-          <button type="button" onClick={() => void load()}>
+          <button type="button" onClick={reloadAll}>
             <RefreshCw
               size={16}
-              className={loading ? "spin" : undefined}
+              className={loading || risks.status === "loading" ? "spin" : undefined}
               aria-hidden
             />
             Atualizar
@@ -140,11 +149,24 @@ export default function PainelPage() {
             </h2>
             <p className="muted section-lead">
               Confirmações em andamento e vagas que podem ser reaproveitadas.
+              O risco de falta mostra quem vale lembrar primeiro.
             </p>
+            {risks.status === "error" ? (
+              <div className="risk-notice" role="alert">
+                <span>
+                  <strong>Risco de falta indisponível.</strong> {risks.message}
+                </span>
+                <button type="button" onClick={() => void reloadRisks()}>
+                  <RefreshCw size={14} aria-hidden />
+                  Tentar de novo
+                </button>
+              </div>
+            ) : null}
             <AppointmentTable
               appointments={agenda}
-              onOffered={() => void load()}
+              onOffered={reloadAll}
               emptyMessage="Nenhum agendamento na agenda."
+              risks={risks}
             />
           </section>
 
