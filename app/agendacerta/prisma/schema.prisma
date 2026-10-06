@@ -10,16 +10,19 @@ datasource db {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Appointment {
-  id          String             @id
-  patientName String             @map("patient_name")
-  specialty   String
-  scheduledAt DateTime           @map("scheduled_at") @db.Timestamptz(6)
-  status      appointment_status @default(pendente)
-  phoneMasked String             @map("phone_masked")
-  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id            String             @id
+  specialty     String
+  scheduledAt   DateTime           @map("scheduled_at") @db.Timestamptz(6)
+  status        appointment_status @default(pendente)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patientId     String             @map("patient_id")
+  procedureType procedure_type     @default(consulta) @map("procedure_type")
+  procedureName String?            @map("procedure_name")
+  patient       Patient            @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 
   @@index([scheduledAt])
+  @@index([patientId])
   @@map("appointments")
 }
 
@@ -90,16 +93,50 @@ model auth_verification {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model WaitlistEntry {
-  id          String          @id
-  patientName String          @map("patient_name")
-  specialty   String
-  phoneMasked String          @map("phone_masked")
-  status      waitlist_status @default(aguardando)
-  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id        String          @id
+  specialty String
+  status    waitlist_status @default(aguardando)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patientId String          @map("patient_id")
+  patient   Patient         @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 
   @@index([specialty, status])
+  @@index([patientId])
   @@map("waitlist")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Neighborhood {
+  id        String    @id
+  name      String
+  city      String
+  latitude  Decimal   @db.Decimal(9, 6)
+  longitude Decimal   @db.Decimal(9, 6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patients  Patient[]
+
+  @@unique([name, city])
+  @@map("neighborhoods")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Patient {
+  id              String          @id
+  fullName        String          @map("full_name")
+  phoneMasked     String          @map("phone_masked")
+  neighborhoodId  String?         @map("neighborhood_id")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  appointments    Appointment[]
+  neighborhood    Neighborhood?   @relation(fields: [neighborhoodId], references: [id], onUpdate: NoAction)
+  waitlistEntries WaitlistEntry[]
+
+  @@index([neighborhoodId])
+  @@map("patients")
 }
 
 enum appointment_status {
@@ -107,9 +144,16 @@ enum appointment_status {
   confirmado
   liberado
   remarcacao_solicitada
+  compareceu
+  faltou
 }
 
 enum waitlist_status {
   aguardando
   atribuido
+}
+
+enum procedure_type {
+  consulta
+  exame
 }
