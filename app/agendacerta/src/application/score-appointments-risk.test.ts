@@ -95,10 +95,18 @@ describe("scoreAppointmentsRisk com repositórios simulados", () => {
     status: "pendente",
     phoneMasked: "(79) 9****-0000",
     procedure: { type: "consulta" },
+    preparation: null,
   };
 
   function appointmentRepo(list: AppointmentRepository["list"]): AppointmentRepository {
-    return { list, getById: vi.fn(), confirm: vi.fn(), saveOffered: vi.fn() };
+    return {
+      list,
+      getById: vi.fn(),
+      confirm: vi.fn(),
+      saveOffered: vi.fn(),
+      savePreparationAnswer: vi.fn(),
+      saveReleased: vi.fn(),
+    };
   }
 
   function patientRepo(): PatientRepository {
