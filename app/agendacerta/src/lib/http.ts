@@ -14,3 +14,19 @@ export async function readResponseJson<T>(response: Response): Promise<T> {
     );
   }
 }
+
+export type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
+
+/** GET sem cache. Resposta de erro vira Error com a mensagem que a API mandou. */
+export async function getApiJson<T extends object>(
+  url: string,
+  fallbackError: string,
+  fetcher: Fetcher = fetch,
+): Promise<T> {
+  const response = await fetcher(url, { cache: "no-store" });
+  const payload = await readResponseJson<T & { error?: string }>(response);
+  if (!response.ok) {
+    throw new Error(payload.error ?? fallbackError);
+  }
+  return payload;
+}

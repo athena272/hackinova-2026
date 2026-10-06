@@ -21,6 +21,9 @@ const consultaRecord: AppointmentRecord = {
   status: "pendente",
   procedureType: "consulta",
   procedureName: null,
+  preparationResult: null,
+  preparationAnsweredAt: null,
+  preparationMissedItemIds: [],
   patient,
 };
 
@@ -36,6 +39,24 @@ describe("mapRecordToAppointment", () => {
       status: "pendente",
       phoneMasked: "(79) 9****-8181",
       procedure: { type: "consulta" },
+      preparation: null,
+    });
+  });
+
+  it("monta a resposta do preparo com a data em ISO", () => {
+    const appointment = mapRecordToAppointment({
+      ...consultaRecord,
+      procedureType: "exame",
+      procedureName: "Glicemia em jejum",
+      preparationResult: "nao_cumprido",
+      preparationAnsweredAt: new Date("2026-09-23T21:00:00.000Z"),
+      preparationMissedItemIds: ["prep-glicemia-jejum-jejum"],
+    });
+
+    expect(appointment.preparation).toEqual({
+      result: "nao_cumprido",
+      missedItemIds: ["prep-glicemia-jejum-jejum"],
+      answeredAt: "2026-09-23T21:00:00.000Z",
     });
   });
 

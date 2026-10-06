@@ -35,7 +35,8 @@ export type OfferSlotResult = {
 /**
  * Oferece uma vaga reaproveitável a um candidato da lista de espera.
  * A vaga fica pendente para o novo paciente confirmar (SIM/NÃO/REMARCAR)
- * e conta como uma marcação nova, feita em `offeredAt`.
+ * e conta como uma marcação nova, feita em `offeredAt`. O checklist de
+ * preparo volta a ficar sem resposta: quem responde agora é o novo paciente.
  * Função pura: não persiste nada.
  */
 export function offerSlot(
@@ -72,6 +73,7 @@ export function offerSlot(
       phoneMasked: candidate.phoneMasked,
       bookedAt: bookingTimeFor(appointment.scheduledAt, offeredAt),
       status: "pendente",
+      preparation: null,
     },
     candidate: {
       ...candidate,

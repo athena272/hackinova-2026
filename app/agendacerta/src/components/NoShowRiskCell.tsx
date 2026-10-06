@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { ChevronDown, ListChecks, Loader2 } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import {
   isRiskScorable,
@@ -56,12 +56,17 @@ function RiskSummary({ risk }: { risk: NoShowRisk }) {
       </span>
       {top.length > 0 ? <ReasonList reasons={top} /> : null}
       <details className="risk-details">
-        <summary>ver todos os motivos</summary>
-        <ul className="risk-reasons">
+        <summary>
+          <ListChecks size={13} aria-hidden />
+          <span className="risk-details-show">ver todos os motivos</span>
+          <span className="risk-details-hide">ocultar motivos</span>
+          <ChevronDown size={13} className="risk-details-chevron" aria-hidden />
+        </summary>
+        <ul className="risk-reasons risk-reasons-all">
           {risk.reasons.map((reason) => (
             <li key={reason.factor}>
-              {reason.description}{" "}
-              <span className="muted">({formatPoints(reason.points)})</span>
+              <span>{reason.description}</span>
+              <span className="risk-points">{formatPoints(reason.points)}</span>
             </li>
           ))}
         </ul>

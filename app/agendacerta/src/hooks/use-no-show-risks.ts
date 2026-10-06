@@ -1,55 +1,44 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMemo } from "react";
 import type { NoShowRisk } from "@/domain/no-show-risk";
-import { readResponseJson } from "@/lib/http";
+import { type Fetcher, getApiJson } from "@/lib/http";
+import { useAsyncResource } from "./use-async-resource";
 
 export type NoShowRisksState =
   | { status: "loading" }
   | { status: "ready"; risksById: ReadonlyMap<string, NoShowRisk> }
   | { status: "error"; message: string };
 
-type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
+const FALLBACK_ERROR = "Falha ao calcular risco de falta.";
 
 export async function fetchNoShowRisks(
   fetcher: Fetcher = fetch,
 ): Promise<ReadonlyMap<string, NoShowRisk>> {
-  const response = await fetcher("/api/appointments/risk", { cache: "no-store" });
-  const payload = await readResponseJson<{ risks?: NoShowRisk[]; error?: string }>(
-    response,
+  const { risks } = await getApiJson<{ risks?: NoShowRisk[] }>(
+    "/api/appointments/risk",
+    FALLBACK_ERROR,
+    fetcher,
   );
-  if (!response.ok || !payload.risks) {
-    throw new Error(payload.error ?? "Falha ao calcular risco de falta.");
+  if (!risks) {
+    throw new Error(FALLBACK_ERROR);
   }
-  return new Map(payload.risks.map((risk) => [risk.appointmentId, risk]));
+  return new Map(risks.map((risk) => [risk.appointmentId, risk]));
 }
+
+const loadNoShowRisks = () => fetchNoShowRisks();
 
 /** Carrega o risco à parte da agenda: se falhar, a agenda continua utilizável. */
 export function useNoShowRisks() {
-  const [state, setState] = useState<NoShowRisksState>({ status: "loading" });
-  const latestRequest = useRef(0);
+  const { state: resource, reload } = useAsyncResource(loadNoShowRisks);
 
-  const reload = useCallback(async () => {
-    const requestId = ++latestRequest.current;
-    setState({ status: "loading" });
-    try {
-      const risksById = await fetchNoShowRisks();
-      if (requestId === latestRequest.current) {
-        setState({ status: "ready", risksById });
-      }
-    } catch (err) {
-      if (requestId === latestRequest.current) {
-        setState({
-          status: "error",
-          message: err instanceof Error ? err.message : "Erro inesperado.",
-        });
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const state = useMemo<NoShowRisksState>(
+    () =>
+      resource.status === "ready"
+        ? { status: "ready", risksById: resource.data }
+        : resource,
+    [resource],
+  );
 
   return { state, reload };
 }

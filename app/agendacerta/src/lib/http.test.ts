@@ -1,5 +1,31 @@
-import { describe, expect, it } from "vitest";
-import { readResponseJson } from "./http";
+import { describe, expect, it, vi } from "vitest";
+import { getApiJson, readResponseJson } from "./http";
+
+describe("getApiJson", () => {
+  const jsonResponse = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status });
+
+  it("faz GET sem cache e devolve o corpo", async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ items: [1] }));
+
+    await expect(getApiJson("/api/x", "Falha.", fetcher)).resolves.toEqual({ items: [1] });
+    expect(fetcher).toHaveBeenCalledWith("/api/x", { cache: "no-store" });
+  });
+
+  it("usa a mensagem da API quando a resposta é de erro", async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ error: "Sem sessão." }, 401));
+
+    await expect(getApiJson("/api/x", "Falha.", fetcher)).rejects.toThrow("Sem sessão.");
+  });
+
+  it("usa a mensagem padrão quando o erro não traz motivo", async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({}, 500));
+
+    await expect(getApiJson("/api/x", "Falha padrão.", fetcher)).rejects.toThrow(
+      "Falha padrão.",
+    );
+  });
+});
 
 describe("readResponseJson", () => {
   it("parseia JSON válido", async () => {

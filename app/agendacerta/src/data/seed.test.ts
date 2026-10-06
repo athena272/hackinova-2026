@@ -4,7 +4,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import rawAppointments from "../../data/appointments.seed.json";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
-import { isAttendanceOutcome } from "@/domain/appointment";
+import { isActiveBooking, isAttendanceOutcome } from "@/domain/appointment";
+import { findExamPreparation } from "@/domain/exam-preparation";
+import { loadExamPreparationSeed } from "./exam-preparation-seed";
 import { loadNeighborhoodSeed, loadPatientSeed } from "./patient-seed";
 import { loadAppointmentSeed } from "./seed";
 import { loadWaitlistSeed } from "./waitlist-seed";
@@ -23,6 +25,7 @@ const appointments = loadAppointmentSeed();
 const waitlist = loadWaitlistSeed();
 const patients = loadPatientSeed();
 const neighborhoods = loadNeighborhoodSeed();
+const preparations = loadExamPreparationSeed();
 
 const ids = (items: readonly { id: string }[]) => items.map((item) => item.id);
 const sorted = (values: Iterable<string>) => Array.from(values).sort();
@@ -33,6 +36,8 @@ describe("seed em memória", () => {
     ["lista de espera", ids(waitlist)],
     ["pacientes", ids(patients)],
     ["bairros", ids(neighborhoods)],
+    ["preparos", ids(preparations)],
+    ["itens de preparo", preparations.flatMap((preparation) => ids(preparation.items))],
   ])("não repete ids de %s", (_, values) => {
     expect(new Set(values).size).toBe(values.length);
   });
@@ -68,6 +73,8 @@ describe("seed em memória", () => {
       { id: "wl-002", patientName: "Igor Santos", status: "aguardando" },
       { id: "wl-003", patientName: "Juliana Prado", status: "aguardando" },
       { id: "wl-004", patientName: "Karen Oliveira", status: "aguardando" },
+      { id: "wl-005", patientName: "Nelson Araújo", status: "aguardando" },
+      { id: "wl-006", patientName: "Olívia Martins", status: "aguardando" },
     ]);
   });
 
@@ -110,6 +117,41 @@ describe("seed em memória", () => {
       expect(item.procedureType === "exame", item.id).toBe(
         typeof item.procedureName === "string" && item.procedureName.trim() !== "",
       );
+    }
+  });
+
+  it("todo preparo cadastrado tem exame na agenda ativa para a demonstração", () => {
+    const activeExamNames = new Set(
+      appointments
+        .filter((item) => isActiveBooking(item.status) && item.procedure.type === "exame")
+        .map((item) => (item.procedure.type === "exame" ? item.procedure.examName : "")),
+    );
+
+    for (const preparation of preparations) {
+      expect(activeExamNames.has(preparation.examName), preparation.examName).toBe(true);
+    }
+  });
+
+  it("itens de cada preparo estão em ordem, com posições 1, 2, ...", () => {
+    for (const preparation of preparations) {
+      expect(preparation.items.map((item) => item.position), preparation.id).toEqual(
+        preparation.items.map((_, index) => index + 1),
+      );
+    }
+  });
+
+  it("resposta de preparo gravada segue as check constraints e cita itens do próprio exame", () => {
+    for (const item of appointments.filter((appointment) => appointment.preparation)) {
+      const answer = item.preparation!;
+      const preparation = findExamPreparation(item.procedure, preparations);
+
+      expect(preparation, item.id).not.toBeNull();
+      expect(Date.parse(answer.answeredAt), item.id).not.toBeNaN();
+      expect(answer.result === "nao_cumprido", item.id).toBe(answer.missedItemIds.length > 0);
+      const itemIds = new Set(ids(preparation!.items));
+      for (const missedId of answer.missedItemIds) {
+        expect(itemIds.has(missedId), `${item.id}: ${missedId}`).toBe(true);
+      }
     }
   });
 });
@@ -181,5 +223,59 @@ describe("seed em memória x migrations", () => {
     );
 
     expect(jsonLeadDays).toEqual(sqlLeadDays);
+  });
+
+  describe("preparo de exames", () => {
+    const preparationSql = readFileSync(
+      join(migrationsDir, "20261007120100_seed_exam_preparations.sql"),
+      "utf8",
+    );
+
+    it("preparos e itens têm os mesmos dados nos dois seeds", () => {
+      const sqlPreparations = Array.from(
+        preparationSql.matchAll(/\('(prep-[\w-]+)', '([^']+)', '([^']+)'\)/g),
+        ([, id, examName, instructions]) => ({ id, examName, instructions }),
+      );
+      const sqlItems = Array.from(
+        preparationSql.matchAll(
+          /\('(prep-[\w-]+)', '(prep-[\w-]+)', (\d+), '([^']+)', '([^']+)'\)/g,
+        ),
+        ([, id, preparationId, position, label, question]) => ({
+          id,
+          preparationId,
+          position: Number(position),
+          label,
+          question,
+        }),
+      );
+
+      expect(
+        preparations.map(({ id, examName, instructions }) => ({ id, examName, instructions })),
+      ).toEqual(sqlPreparations);
+      expect(
+        preparations.flatMap((preparation) =>
+          preparation.items.map((item) => ({ ...item, preparationId: preparation.id })),
+        ),
+      ).toEqual(sqlItems);
+    });
+
+    it("respostas já gravadas são as mesmas nos dois seeds", () => {
+      const sqlAnswers = Array.from(
+        preparationSql.matchAll(
+          /set preparation_result = '(\w+)',\s+preparation_answered_at = '([^']+)'\s+where id = '(apt-\d+)'/g,
+        ),
+        ([, result, answeredAt, id]) => ({ id, result, answeredAt: Date.parse(answeredAt) }),
+      );
+      const jsonAnswers = appointments
+        .filter((item) => item.preparation)
+        .map((item) => ({
+          id: item.id,
+          result: item.preparation!.result,
+          answeredAt: Date.parse(item.preparation!.answeredAt),
+        }));
+
+      expect(sqlAnswers.length).toBeGreaterThan(0);
+      expect(jsonAnswers).toEqual(sqlAnswers);
+    });
   });
 });

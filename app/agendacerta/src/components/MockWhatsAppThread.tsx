@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import type { Appointment, ConfirmationAction } from "@/domain/appointment";
+import { formatDateTime, initials } from "@/lib/format";
 import { readResponseJson } from "@/lib/http";
 import { StatusBadge } from "./StatusBadge";
 
@@ -18,22 +19,6 @@ type MockWhatsAppThreadProps = {
   appointments: Appointment[];
   onConfirmed: (appointment: Appointment) => void;
 };
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 export function MockWhatsAppThread({
   appointments,

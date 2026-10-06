@@ -10,17 +10,20 @@ datasource db {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Appointment {
-  id            String             @id
-  specialty     String
-  scheduledAt   DateTime           @map("scheduled_at") @db.Timestamptz(6)
-  status        appointment_status @default(pendente)
-  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
-  patientId     String             @map("patient_id")
-  procedureType procedure_type     @default(consulta) @map("procedure_type")
-  procedureName String?            @map("procedure_name")
-  bookedAt      DateTime           @default(now()) @map("booked_at") @db.Timestamptz(6)
-  patient       Patient            @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  id                       String              @id
+  specialty                String
+  scheduledAt              DateTime            @map("scheduled_at") @db.Timestamptz(6)
+  status                   appointment_status  @default(pendente)
+  createdAt                DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patientId                String              @map("patient_id")
+  procedureType            procedure_type      @default(consulta) @map("procedure_type")
+  procedureName            String?             @map("procedure_name")
+  bookedAt                 DateTime            @default(now()) @map("booked_at") @db.Timestamptz(6)
+  preparationResult        preparation_result? @map("preparation_result")
+  preparationAnsweredAt    DateTime?           @map("preparation_answered_at") @db.Timestamptz(6)
+  preparationMissedItemIds String[]            @default([]) @map("preparation_missed_item_ids")
+  patient                  Patient             @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 
   @@index([scheduledAt])
   @@index([patientId])
@@ -140,6 +143,37 @@ model Patient {
   @@map("patients")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ExamPreparationItem {
+  id            String          @id
+  preparationId String          @map("preparation_id")
+  position      Int             @db.SmallInt
+  label         String
+  question      String
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  preparation   ExamPreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([preparationId, position], map: "exam_preparation_items_position_key")
+  @@map("exam_preparation_items")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ExamPreparation {
+  id           String                @id
+  examName     String                @unique @map("exam_name")
+  instructions String
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  items        ExamPreparationItem[]
+
+  @@map("exam_preparations")
+}
+
 enum appointment_status {
   pendente
   confirmado
@@ -157,4 +191,9 @@ enum waitlist_status {
 enum procedure_type {
   consulta
   exame
+}
+
+enum preparation_result {
+  ok
+  nao_cumprido
 }

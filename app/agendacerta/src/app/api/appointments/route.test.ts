@@ -35,6 +35,8 @@ function mockRepo(
     getById: vi.fn(),
     confirm: vi.fn(),
     saveOffered: vi.fn(),
+    savePreparationAnswer: vi.fn(),
+    saveReleased: vi.fn(),
     ...partial,
   };
 }

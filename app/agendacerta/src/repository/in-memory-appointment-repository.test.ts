@@ -57,4 +57,57 @@ describe("InMemoryAppointmentRepository", () => {
       ConfirmationError,
     );
   });
+
+  it("traz a resposta de preparo do seed", async () => {
+    const repo = new InMemoryAppointmentRepository();
+
+    expect((await repo.getById("apt-004"))?.preparation).toEqual({
+      result: "ok",
+      missedItemIds: [],
+      answeredAt: "2026-09-22T18:00:00-03:00",
+    });
+    expect((await repo.getById("apt-008"))?.preparation).toBeNull();
+  });
+
+  it("grava a resposta de preparo sem expor a lista interna do store", async () => {
+    const repo = new InMemoryAppointmentRepository();
+    const current = (await repo.getById("apt-008"))!;
+    const missedItemIds = ["prep-us-abdome-total-jejum"];
+
+    const saved = await repo.savePreparationAnswer({
+      ...current,
+      preparation: {
+        result: "nao_cumprido",
+        missedItemIds,
+        answeredAt: "2026-10-18T15:00:00.000Z",
+      },
+    });
+    missedItemIds.push("alterado-depois");
+    saved.preparation!.missedItemIds.push("alterado-no-retorno");
+
+    expect((await repo.getById("apt-008"))?.preparation).toEqual({
+      result: "nao_cumprido",
+      missedItemIds: ["prep-us-abdome-total-jejum"],
+      answeredAt: "2026-10-18T15:00:00.000Z",
+    });
+  });
+
+  it("grava a vaga liberada", async () => {
+    const repo = new InMemoryAppointmentRepository();
+    const current = (await repo.getById("apt-008"))!;
+
+    await repo.saveReleased({ ...current, status: "liberado" });
+
+    expect((await repo.getById("apt-008"))?.status).toBe("liberado");
+  });
+
+  it("não cria agendamento ao gravar id inexistente", async () => {
+    const repo = new InMemoryAppointmentRepository();
+    const current = (await repo.getById("apt-008"))!;
+
+    await expect(
+      repo.saveReleased({ ...current, id: "apt-999", status: "liberado" }),
+    ).rejects.toBeInstanceOf(AppointmentNotFoundError);
+    expect(await repo.getById("apt-999")).toBeNull();
+  });
 });

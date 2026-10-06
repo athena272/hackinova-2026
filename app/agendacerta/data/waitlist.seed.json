@@ -22,5 +22,17 @@
     "patientId": "pat-3699372f2877",
     "specialty": "Neurologia",
     "status": "aguardando"
+  },
+  {
+    "id": "wl-005",
+    "patientId": "pat-demo-03",
+    "specialty": "Ultrassonografia",
+    "status": "aguardando"
+  },
+  {
+    "id": "wl-006",
+    "patientId": "pat-demo-04",
+    "specialty": "Laboratório",
+    "status": "aguardando"
   }
 ]

@@ -33,6 +33,7 @@ const CONFIRMED: Appointment = {
   status: "confirmado",
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
+  preparation: null,
 };
 
 function mockRepo(confirm: AppointmentRepository["confirm"]): AppointmentRepository {
@@ -41,6 +42,8 @@ function mockRepo(confirm: AppointmentRepository["confirm"]): AppointmentReposit
     getById: vi.fn(),
     confirm,
     saveOffered: vi.fn(),
+    savePreparationAnswer: vi.fn(),
+    saveReleased: vi.fn(),
   };
 }
 

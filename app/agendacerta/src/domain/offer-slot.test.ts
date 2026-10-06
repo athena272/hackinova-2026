@@ -15,6 +15,7 @@ const baseAppointment: Appointment = {
   status: "liberado",
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
+  preparation: null,
 };
 
 const baseCandidate: WaitlistEntry = {
@@ -68,6 +69,22 @@ describe("offerSlot", () => {
 
     expect(result.appointment.procedure).toEqual(exam.procedure);
     expect(result.appointment.patientId).toBe("pat-helena");
+  });
+
+  it("zera o preparo: o novo paciente responde ao próprio checklist", () => {
+    const missedPreparation = {
+      ...baseAppointment,
+      procedure: { type: "exame", examName: "Glicemia em jejum" } as const,
+      preparation: {
+        result: "nao_cumprido" as const,
+        missedItemIds: ["prep-glicemia-jejum-jejum"],
+        answeredAt: "2026-09-20T12:00:00.000Z",
+      },
+    };
+
+    const result = offerSlot(missedPreparation, baseCandidate, OFFERED_AT);
+
+    expect(result.appointment.preparation).toBeNull();
   });
 
   it("aceita remarcacao_solicitada como vaga reaproveitável", () => {

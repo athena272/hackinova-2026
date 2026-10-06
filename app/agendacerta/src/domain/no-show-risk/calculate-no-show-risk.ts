@@ -1,4 +1,4 @@
-import type { AppointmentStatus } from "../appointment";
+import { isActiveBooking, type AppointmentStatus } from "../appointment";
 import {
   distanceFactor,
   historyFactor,
@@ -11,7 +11,7 @@ import type { NoShowRisk, NoShowRiskInput, RiskBand, RiskReason } from "./types"
 
 /** Só faz sentido prever falta de consulta que ainda vai acontecer com paciente marcado. */
 export function isRiskScorable(status: AppointmentStatus): boolean {
-  return status === "pendente" || status === "confirmado";
+  return isActiveBooking(status);
 }
 
 export function riskBandFor(

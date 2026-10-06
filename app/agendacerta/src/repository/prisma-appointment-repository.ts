@@ -1,4 +1,9 @@
-import type { Appointment, ConfirmationAction } from "@/domain/appointment";
+import type {
+  Appointment,
+  ConfirmationAction,
+  PreparationAnswer,
+  PreparationResult,
+} from "@/domain/appointment";
 import { applyConfirmationAction } from "@/domain/confirmation";
 import type { PrismaClient } from "@/generated/prisma/client";
 import {
@@ -12,9 +17,23 @@ import { appointmentSelect, mapRecordToAppointment } from "./mappers";
 
 type AppointmentClient = Pick<PrismaClient, "appointment">;
 
+type PreparationColumns = {
+  preparationResult: PreparationResult | null;
+  preparationAnsweredAt: string | null;
+  preparationMissedItemIds: string[];
+};
+
 type AppointmentUpdate = Partial<
-  Pick<Appointment, "patientId" | "bookedAt" | "status">
+  Pick<Appointment, "patientId" | "bookedAt" | "status"> & PreparationColumns
 >;
+
+function toPreparationColumns(preparation: PreparationAnswer | null): PreparationColumns {
+  return {
+    preparationResult: preparation?.result ?? null,
+    preparationAnsweredAt: preparation?.answeredAt ?? null,
+    preparationMissedItemIds: preparation ? [...preparation.missedItemIds] : [],
+  };
+}
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
   constructor(
@@ -62,8 +81,25 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         patientId: appointment.patientId,
         bookedAt: appointment.bookedAt,
         status: appointment.status,
+        ...toPreparationColumns(appointment.preparation),
       },
       "Falha ao oferecer vaga",
+    );
+  }
+
+  async savePreparationAnswer(appointment: Appointment): Promise<Appointment> {
+    return this.update(
+      appointment.id,
+      toPreparationColumns(appointment.preparation),
+      "Falha ao salvar preparo",
+    );
+  }
+
+  async saveReleased(appointment: Appointment): Promise<Appointment> {
+    return this.update(
+      appointment.id,
+      { status: appointment.status },
+      "Falha ao liberar vaga",
     );
   }
 

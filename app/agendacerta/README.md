@@ -8,16 +8,20 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Cadastro de pacientes com bairro, histórico de comparecimento (compareceu / faltou) e tipo de procedimento (consulta ou exame), base para o score de falta e as próximas funções do diferencial
 - Painel com a agenda ativa e o histórico de comparecimento em seções separadas
 - Score preditivo de falta explicável: cada consulta pendente ou confirmada mostra a chance de falta e os motivos (veja [Score de falta](#score-de-falta))
+- Checklist de preparo pré-exame: o paciente responde sim ou não no mock, o painel mostra o status do preparo e a clínica libera antes a vaga de quem não vai cumprir (veja [Checklist de preparo](#checklist-de-preparo))
 - Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/appointments/risk`
+- `GET /api/exam-preparations`
 - `GET /api/waitlist?specialty=...`
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
 - `POST /api/appointments/[id]/offer` com `{ "waitlistId": "..." }`
+- `POST /api/appointments/[id]/preparation` com `{ "answers": { "<id do item>": true | false } }`
+- `POST /api/appointments/[id]/release`
 - Páginas `/painel` e `/mock-whatsapp`
 - Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status, da oferta de vaga e do score de falta (Vitest)
+- Testes unitários da regra de status, da oferta de vaga, do score de falta e das regras de preparo (Vitest)
 
 ## O que fica de fora
 
@@ -60,8 +64,10 @@ Modelo de dados do agendamento:
 | --- | --- |
 | `patients` | Nome, telefone mascarado e bairro (sem endereço completo, por LGPD) |
 | `neighborhoods` | Bairros de Aracaju e região com coordenadas aproximadas, para distância estimada até a clínica (`src/domain/clinic.ts`) |
-| `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status e procedimento (`consulta` ou `exame` com nome) |
+| `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status, procedimento (`consulta` ou `exame` com nome) e a resposta ao checklist de preparo (`preparation_result`, `preparation_answered_at`, `preparation_missed_item_ids`) |
 | `waitlist` | Paciente (`patient_id`), especialidade e status na lista de espera |
+| `exam_preparations` | Preparo exigido por exame: nome do exame (único) e instruções |
+| `exam_preparation_items` | Itens do checklist de cada preparo, na ordem (`position`), com rótulo e pergunta de sim ou não |
 
 Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId`, `procedure` e `bookedAt`.
 
@@ -109,6 +115,28 @@ Os pesos são hipóteses iniciais para a demonstração, não valores calibrados
 
 O cálculo vem de `GET /api/appointments/risk`, separado da agenda. Se ele falhar, a agenda continua funcionando e o painel mostra um aviso com **Tentar de novo**. Vaga liberada ou com remarcação não recebe score.
 
+## Checklist de preparo
+
+Exame com preparo mal feito costuma virar exame remarcado no dia, com a vaga perdida. O checklist pergunta antes se o paciente vai conseguir cumprir o preparo e, se ele disser que não, a clínica libera a vaga com antecedência para a lista de espera.
+
+O cadastro de demonstração tem dois preparos:
+
+| Exame | Itens do checklist |
+| --- | --- |
+| Ultrassonografia de abdome total | Jejum de 8 horas; bexiga cheia |
+| Glicemia em jejum | Jejum de 8 a 12 horas; sem álcool por 3 dias |
+
+Como funciona:
+
+1. No mock WhatsApp, a aba **Checklist de preparo** lista os exames pendentes ou confirmados que têm preparo e ainda não foram respondidos. O paciente lê as instruções, responde sim ou não para cada item e envia.
+2. Todas as respostas sim deixam o preparo **ok**. Qualquer não deixa o preparo **não cumprido** e guarda quais itens falharam.
+3. No painel, cada exame mostra o status do preparo (**pendente**, **ok** ou **não cumprido**). Quem respondeu não cumprido e ainda ocupa a vaga aparece num alerta acima da agenda, com os itens que não vai cumprir e o botão **Liberar vaga**.
+4. A vaga liberada fica como **Liberado** e reaproveitável, com o motivo visível no badge, e entra no fluxo de **Oferecer vaga** que já existia. O novo paciente começa com o preparo pendente e responde ao próprio checklist.
+
+As regras ficam em `src/domain/exam-preparation/`: o checklist só aceita vaga pendente ou confirmada, exige resposta para todos os itens, recusa item que não é do exame e não deixa responder duas vezes. Exame do histórico (já realizado) nunca aparece com preparo pendente.
+
+Limitação conhecida: não existe tabela de exames, então o preparo é ligado ao agendamento pelo nome do exame (`appointments.procedure_name` igual a `exam_preparations.exam_name`). Se o nome mudar de um lado só, o exame deixa de pedir checklist. As respostas já gravadas continuam aparecendo, mesmo se o cadastro de preparo estiver fora do ar.
+
 ## Como rodar o app
 
 ```bash
@@ -146,6 +174,8 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 4. Volte em `/painel` e clique em **Atualizar**.
 5. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock). O risco da vaga é recalculado para o novo paciente.
 6. No mock WhatsApp, o novo paciente aparece nas pendentes; use SIM/NÃO/REMARCAR.
+7. No mock, abra a aba **Checklist de preparo**, escolha a ultrassonografia de Marina Costa, responda não para **Bexiga cheia** e clique em **Enviar respostas**.
+8. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para oferecê-la a Nelson Araújo, que está na lista de espera de Ultrassonografia.
 
 ## Variáveis de ambiente
 

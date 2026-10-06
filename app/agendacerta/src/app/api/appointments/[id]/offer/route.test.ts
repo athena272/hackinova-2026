@@ -64,6 +64,7 @@ describe("POST /api/appointments/[id]/offer", () => {
         status: "pendente",
         phoneMasked: "(79) 9****-5555",
         procedure: { type: "consulta" },
+        preparation: null,
       },
       candidate: {
         id: "wl-002",
