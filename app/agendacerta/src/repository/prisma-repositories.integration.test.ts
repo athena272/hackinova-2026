@@ -3,7 +3,9 @@ import { afterAll, describe, expect, it } from "vitest";
 import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import { getPrisma } from "@/lib/database/prisma";
+import { InMemoryExamPreparationRepository } from "./in-memory-exam-preparation-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
+import { PrismaExamPreparationRepository } from "./prisma-exam-preparation-repository";
 import { PrismaPatientRepository } from "./prisma-patient-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 
@@ -21,6 +23,7 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
   const appointments = new PrismaAppointmentRepository();
   const waitlist = new PrismaWaitlistRepository();
   const patients = new PrismaPatientRepository();
+  const preparations = new PrismaExamPreparationRepository();
 
   afterAll(async () => {
     await getPrisma().$disconnect();
@@ -106,5 +109,28 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
     expect(bandById["apt-001"]).toBe("alto");
     expect(bandById["apt-002"]).toBe("baixo");
     expect(bandById["apt-006"]).toBeUndefined();
+  });
+
+  it("lista o cadastro de preparo com os itens na ordem do checklist, igual ao seed", async () => {
+    const list = await preparations.list();
+
+    expect(list).toEqual(await new InMemoryExamPreparationRepository().list());
+    for (const preparation of list) {
+      const positions = preparation.items.map((item) => item.position);
+      expect(positions, preparation.id).toEqual([...positions].sort((a, b) => a - b));
+    }
+    await expect(preparations.findByExamName("Raio-X inexistente")).resolves.toBeNull();
+  });
+
+  it("monta a resposta de preparo gravada em ISO e deixa null quem não respondeu", async () => {
+    const answered = await appointments.getById("apt-004");
+    const unanswered = await appointments.getById("apt-008");
+
+    expect(answered?.preparation).toEqual({
+      result: "ok",
+      missedItemIds: [],
+      answeredAt: new Date("2026-09-22T18:00:00-03:00").toISOString(),
+    });
+    expect(unanswered?.preparation).toBeNull();
   });
 });
