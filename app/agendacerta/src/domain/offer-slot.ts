@@ -56,6 +56,7 @@ export function offerSlot(
   return {
     appointment: {
       ...appointment,
+      patientId: candidate.patientId,
       patientName: candidate.patientName,
       phoneMasked: candidate.phoneMasked,
       status: "pendente",

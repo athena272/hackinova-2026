@@ -7,6 +7,7 @@ import { StatusBadge } from "./StatusBadge";
 type AppointmentTableProps = {
   appointments: Appointment[];
   onOffered?: () => void;
+  emptyMessage?: string;
 };
 
 function formatDateTime(iso: string): string {
@@ -20,9 +21,10 @@ function formatDateTime(iso: string): string {
 export function AppointmentTable({
   appointments,
   onOffered,
+  emptyMessage = "Nenhum agendamento encontrado.",
 }: AppointmentTableProps) {
   if (appointments.length === 0) {
-    return <p className="muted">Nenhum agendamento encontrado.</p>;
+    return <p className="muted">{emptyMessage}</p>;
   }
 
   return (

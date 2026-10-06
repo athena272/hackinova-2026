@@ -1,9 +1,13 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { AppointmentStatus } from "@/domain/appointment";
+import type { AppointmentStatus, ProcedureType } from "@/domain/appointment";
 import type { WaitlistStatus } from "@/domain/waitlist";
-import { appointment_status, waitlist_status } from "@/generated/prisma/enums";
+import {
+  appointment_status,
+  procedure_type,
+  waitlist_status,
+} from "@/generated/prisma/enums";
 import { AUTH_TABLES } from "@/lib/auth/server";
 
 /**
@@ -17,10 +21,16 @@ const DOMAIN_APPOINTMENT_STATUSES: Record<AppointmentStatus, true> = {
   confirmado: true,
   liberado: true,
   remarcacao_solicitada: true,
+  compareceu: true,
+  faltou: true,
 };
 const DOMAIN_WAITLIST_STATUSES: Record<WaitlistStatus, true> = {
   aguardando: true,
   atribuido: true,
+};
+const DOMAIN_PROCEDURE_TYPES: Record<ProcedureType, true> = {
+  consulta: true,
+  exame: true,
 };
 
 const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
@@ -58,12 +68,22 @@ const migrationTables = Array.from(
   ([, table]) => table,
 );
 
+/** Valores de cada enum: os do `create type` mais os acrescentados por `alter type ... add value`. */
 const migrationEnums = new Map(
   Array.from(
     migrations.matchAll(/create type public\.(\w+) as enum \(([\s\S]*?)\);/gi),
     ([, name, values]) => [name, Array.from(values.matchAll(/'([^']+)'/g), ([, v]) => v)],
   ),
 );
+for (const [, name, value] of migrations.matchAll(
+  /alter type public\.(\w+) add value (?:if not exists )?'([^']+)'/gi,
+)) {
+  const values = migrationEnums.get(name);
+  if (!values) {
+    throw new Error(`alter type em enum inexistente nas migrations: ${name}`);
+  }
+  if (!values.includes(value)) values.push(value);
+}
 
 const sorted = (values: Iterable<string>) => Array.from(values).sort();
 
@@ -79,9 +99,17 @@ describe("prisma/schema.prisma", () => {
     }
   });
 
-  it("mapeia os models do domínio para appointments e waitlist", () => {
+  it("mapeia os models do domínio para appointments, waitlist, patients e neighborhoods", () => {
     expect(schemaTables.get("appointments")).toBe("Appointment");
     expect(schemaTables.get("waitlist")).toBe("WaitlistEntry");
+    expect(schemaTables.get("patients")).toBe("Patient");
+    expect(schemaTables.get("neighborhoods")).toBe("Neighborhood");
+  });
+
+  it("acrescenta compareceu e faltou ao enum de status via migration", () => {
+    expect(migrationEnums.get("appointment_status")).toEqual(
+      expect.arrayContaining(["compareceu", "faltou"]),
+    );
   });
 
   it.each(Object.values(AUTH_TABLES))(
@@ -100,6 +128,12 @@ describe("prisma/schema.prisma", () => {
   it("status da lista de espera do domínio batem com o enum do banco", () => {
     expect(sorted(Object.values(waitlist_status))).toEqual(
       sorted(Object.keys(DOMAIN_WAITLIST_STATUSES)),
+    );
+  });
+
+  it("tipos de procedimento do domínio batem com o enum do banco", () => {
+    expect(sorted(Object.values(procedure_type))).toEqual(
+      sorted(Object.keys(DOMAIN_PROCEDURE_TYPES)),
     );
   });
 });

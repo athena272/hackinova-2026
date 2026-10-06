@@ -1,0 +1,20 @@
+[
+  { "id": "nb-centro", "name": "Centro", "city": "Aracaju", "latitude": -10.9111, "longitude": -37.0517 },
+  { "id": "nb-jardins", "name": "Jardins", "city": "Aracaju", "latitude": -10.944, "longitude": -37.056 },
+  { "id": "nb-grageru", "name": "Grageru", "city": "Aracaju", "latitude": -10.935, "longitude": -37.061 },
+  { "id": "nb-treze-de-julho", "name": "Treze de Julho", "city": "Aracaju", "latitude": -10.929, "longitude": -37.048 },
+  { "id": "nb-salgado-filho", "name": "Salgado Filho", "city": "Aracaju", "latitude": -10.925, "longitude": -37.06 },
+  { "id": "nb-suissa", "name": "Suíssa", "city": "Aracaju", "latitude": -10.923, "longitude": -37.068 },
+  { "id": "nb-siqueira-campos", "name": "Siqueira Campos", "city": "Aracaju", "latitude": -10.918, "longitude": -37.072 },
+  { "id": "nb-ponto-novo", "name": "Ponto Novo", "city": "Aracaju", "latitude": -10.933, "longitude": -37.075 },
+  { "id": "nb-luzia", "name": "Luzia", "city": "Aracaju", "latitude": -10.944, "longitude": -37.07 },
+  { "id": "nb-inacio-barbosa", "name": "Inácio Barbosa", "city": "Aracaju", "latitude": -10.954, "longitude": -37.062 },
+  { "id": "nb-farolandia", "name": "Farolândia", "city": "Aracaju", "latitude": -10.97, "longitude": -37.058 },
+  { "id": "nb-coroa-do-meio", "name": "Coroa do Meio", "city": "Aracaju", "latitude": -10.96, "longitude": -37.043 },
+  { "id": "nb-atalaia", "name": "Atalaia", "city": "Aracaju", "latitude": -10.989, "longitude": -37.049 },
+  { "id": "nb-santa-maria", "name": "Santa Maria", "city": "Aracaju", "latitude": -11.008, "longitude": -37.1 },
+  { "id": "nb-bugio", "name": "Bugio", "city": "Aracaju", "latitude": -10.888, "longitude": -37.09 },
+  { "id": "nb-industrial", "name": "Industrial", "city": "Aracaju", "latitude": -10.89, "longitude": -37.056 },
+  { "id": "nb-socorro-centro", "name": "Centro", "city": "Nossa Senhora do Socorro", "latitude": -10.855, "longitude": -37.126 },
+  { "id": "nb-sao-cristovao-centro", "name": "Centro", "city": "São Cristóvão", "latitude": -11.015, "longitude": -37.206 }
+]

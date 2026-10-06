@@ -25,11 +25,13 @@ import { POST } from "./route";
 
 const CONFIRMED: Appointment = {
   id: "apt-001",
+  patientId: "pat-6f020c3c9b97",
   patientName: "Ana Souza",
   specialty: "Neurologia",
   scheduledAt: "2026-09-22T12:00:00.000Z",
   status: "confirmado",
   phoneMasked: "(79) 9****-1234",
+  procedure: { type: "consulta" },
 };
 
 function mockRepo(confirm: AppointmentRepository["confirm"]): AppointmentRepository {

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Appointment } from "@/domain/appointment";
 import { Prisma } from "@/generated/prisma/client";
 import { AppointmentNotFoundError } from "./errors";
 import { appointmentSelect } from "./mappers";
@@ -6,11 +7,27 @@ import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
 
 const record = {
   id: "apt-001",
-  patientName: "Ana Souza",
   specialty: "Neurologia",
   scheduledAt: new Date("2026-09-22T12:00:00.000Z"),
   status: "pendente" as const,
+  procedureType: "consulta" as const,
+  procedureName: null,
+  patient: {
+    id: "pat-ana",
+    fullName: "Ana Souza",
+    phoneMasked: "(79) 9****-1234",
+  },
+};
+
+const domainAppointment: Appointment = {
+  id: "apt-001",
+  patientId: "pat-ana",
+  patientName: "Ana Souza",
+  specialty: "Neurologia",
+  scheduledAt: "2026-09-22T12:00:00.000Z",
+  status: "pendente",
   phoneMasked: "(79) 9****-1234",
+  procedure: { type: "consulta" },
 };
 
 const notFound = new Prisma.PrismaClientKnownRequestError("Record not found", {
@@ -37,9 +54,7 @@ describe("PrismaAppointmentRepository", () => {
     const { appointment, repo } = setup();
     appointment.findMany.mockResolvedValue([record]);
 
-    await expect(repo.list()).resolves.toEqual([
-      { ...record, scheduledAt: "2026-09-22T12:00:00.000Z" },
-    ]);
+    await expect(repo.list()).resolves.toEqual([domainAppointment]);
     expect(appointment.findMany).toHaveBeenCalledWith({
       select: appointmentSelect,
       orderBy: { scheduledAt: "asc" },
@@ -93,47 +108,52 @@ describe("PrismaAppointmentRepository", () => {
     expect(appointment.update).not.toHaveBeenCalled();
   });
 
-  it("saveOffered grava paciente, telefone e status da vaga", async () => {
-    const { appointment, repo } = setup();
-    const offered = {
+  it("saveOffered grava só o novo paciente e o status, devolvendo nome e telefone dele", async () => {
+    const { appointment: client, repo } = setup();
+    client.update.mockResolvedValue({
       ...record,
-      patientName: "Helena Dias",
-      phoneMasked: "(79) 9****-4444",
-      status: "confirmado" as const,
-    };
-    appointment.update.mockResolvedValue(offered);
-
-    await repo.saveOffered({
-      ...offered,
-      scheduledAt: "2026-09-22T12:00:00.000Z",
+      status: "pendente",
+      patient: {
+        id: "pat-helena",
+        fullName: "Helena Dias",
+        phoneMasked: "(79) 9****-4444",
+      },
     });
 
-    expect(appointment.update).toHaveBeenCalledWith({
+    const saved = await repo.saveOffered({
+      ...domainAppointment,
+      patientId: "pat-helena",
+      patientName: "Helena Dias",
+      phoneMasked: "(79) 9****-4444",
+    });
+
+    expect(client.update).toHaveBeenCalledWith({
       where: { id: "apt-001" },
-      data: {
-        patientName: "Helena Dias",
-        phoneMasked: "(79) 9****-4444",
-        status: "confirmado",
-      },
+      data: { patientId: "pat-helena", status: "pendente" },
       select: appointmentSelect,
+    });
+    expect(saved).toMatchObject({
+      patientId: "pat-helena",
+      patientName: "Helena Dias",
+      phoneMasked: "(79) 9****-4444",
     });
   });
 
   it("saveOffered converte P2025 em AppointmentNotFoundError", async () => {
-    const { appointment, repo } = setup();
-    appointment.update.mockRejectedValue(notFound);
+    const { appointment: client, repo } = setup();
+    client.update.mockRejectedValue(notFound);
 
-    await expect(
-      repo.saveOffered({ ...record, scheduledAt: "2026-09-22T12:00:00.000Z" }),
-    ).rejects.toBeInstanceOf(AppointmentNotFoundError);
+    await expect(repo.saveOffered(domainAppointment)).rejects.toBeInstanceOf(
+      AppointmentNotFoundError,
+    );
   });
 
   it("saveOffered propaga outros erros com contexto", async () => {
-    const { appointment, repo } = setup();
-    appointment.update.mockRejectedValue(new Error("timeout"));
+    const { appointment: client, repo } = setup();
+    client.update.mockRejectedValue(new Error("timeout"));
 
-    await expect(
-      repo.saveOffered({ ...record, scheduledAt: "2026-09-22T12:00:00.000Z" }),
-    ).rejects.toThrow("Falha ao oferecer vaga: timeout");
+    await expect(repo.saveOffered(domainAppointment)).rejects.toThrow(
+      "Falha ao oferecer vaga: timeout",
+    );
   });
 });

@@ -12,6 +12,8 @@ import { appointmentSelect, mapRecordToAppointment } from "./mappers";
 
 type AppointmentClient = Pick<PrismaClient, "appointment">;
 
+type AppointmentUpdate = Partial<Pick<Appointment, "patientId" | "status">>;
+
 export class PrismaAppointmentRepository implements AppointmentRepository {
   constructor(
     private readonly getClient: () => AppointmentClient = getPrisma,
@@ -55,8 +57,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     return this.update(
       appointment.id,
       {
-        patientName: appointment.patientName,
-        phoneMasked: appointment.phoneMasked,
+        patientId: appointment.patientId,
         status: appointment.status,
       },
       "Falha ao oferecer vaga",
@@ -65,7 +66,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
 
   private async update(
     id: string,
-    data: Partial<Pick<Appointment, "patientName" | "phoneMasked" | "status">>,
+    data: AppointmentUpdate,
     errorContext: string,
   ): Promise<Appointment> {
     try {
