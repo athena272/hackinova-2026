@@ -2,10 +2,12 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { AppointmentStatus, ProcedureType } from "@/domain/appointment";
+import type { SlotOfferStatus } from "@/domain/slot-offer";
 import type { WaitlistStatus } from "@/domain/waitlist";
 import {
   appointment_status,
   procedure_type,
+  slot_offer_status,
   waitlist_status,
 } from "@/generated/prisma/enums";
 import { AUTH_TABLES } from "@/lib/auth/server";
@@ -31,6 +33,12 @@ const DOMAIN_WAITLIST_STATUSES: Record<WaitlistStatus, true> = {
 const DOMAIN_PROCEDURE_TYPES: Record<ProcedureType, true> = {
   consulta: true,
   exame: true,
+};
+const DOMAIN_SLOT_OFFER_STATUSES: Record<SlotOfferStatus, true> = {
+  pendente: true,
+  aceita: true,
+  recusada: true,
+  expirada: true,
 };
 
 const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
@@ -106,6 +114,16 @@ describe("prisma/schema.prisma", () => {
     expect(schemaTables.get("neighborhoods")).toBe("Neighborhood");
   });
 
+  it("SlotOffer é 1:N com vaga e candidato (índices únicos parciais ficam só na migration)", () => {
+    const models = new Map(blocks(schema, "model").map(({ name, body }) => [name, body]));
+
+    expect(schemaTables.get("slot_offers")).toBe("SlotOffer");
+    expect(models.get("SlotOffer")).not.toMatch(/@unique/);
+    expect(models.get("Appointment")).toMatch(/slotOffers\s+SlotOffer\[\]/);
+    expect(models.get("WaitlistEntry")).toMatch(/slotOffers\s+SlotOffer\[\]/);
+    expect(migrations).toMatch(/create unique index slot_offers_one_pending_per_appointment/i);
+  });
+
   it("acrescenta compareceu e faltou ao enum de status via migration", () => {
     expect(migrationEnums.get("appointment_status")).toEqual(
       expect.arrayContaining(["compareceu", "faltou"]),
@@ -134,6 +152,12 @@ describe("prisma/schema.prisma", () => {
   it("tipos de procedimento do domínio batem com o enum do banco", () => {
     expect(sorted(Object.values(procedure_type))).toEqual(
       sorted(Object.keys(DOMAIN_PROCEDURE_TYPES)),
+    );
+  });
+
+  it("status da oferta de vaga do domínio batem com o enum do banco", () => {
+    expect(sorted(Object.values(slot_offer_status))).toEqual(
+      sorted(Object.keys(DOMAIN_SLOT_OFFER_STATUSES)),
     );
   });
 });

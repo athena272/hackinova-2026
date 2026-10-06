@@ -24,6 +24,7 @@ model Appointment {
   preparationAnsweredAt    DateTime?           @map("preparation_answered_at") @db.Timestamptz(6)
   preparationMissedItemIds String[]            @default([]) @map("preparation_missed_item_ids")
   patient                  Patient             @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  slotOffers               SlotOffer[]
 
   @@index([scheduledAt])
   @@index([patientId])
@@ -97,13 +98,15 @@ model auth_verification {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model WaitlistEntry {
-  id        String          @id
-  specialty String
-  status    waitlist_status @default(aguardando)
-  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
-  patientId String          @map("patient_id")
-  patient   Patient         @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  id          String          @id
+  specialty   String
+  status      waitlist_status @default(aguardando)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patientId   String          @map("patient_id")
+  requestedAt DateTime        @default(now()) @map("requested_at") @db.Timestamptz(6)
+  slotOffers  SlotOffer[]
+  patient     Patient         @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 
   @@index([specialty, status])
   @@index([patientId])
@@ -174,6 +177,30 @@ model ExamPreparation {
   @@map("exam_preparations")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// Os índices únicos parciais (uma oferta pendente por vaga e por candidato) ficam só na migration.
+/// Declarados aqui com @unique, o Prisma trataria a relação como 1:1, e uma vaga tem várias ofertas.
+model SlotOffer {
+  id             String            @id
+  appointmentId  String            @map("appointment_id")
+  waitlistId     String            @map("waitlist_id")
+  status         slot_offer_status @default(pendente)
+  offeredAt      DateTime          @map("offered_at") @db.Timestamptz(6)
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(6)
+  closedAt       DateTime?         @map("closed_at") @db.Timestamptz(6)
+  timeoutMinutes Int               @map("timeout_minutes") @db.SmallInt
+  distanceKm     Decimal?          @map("distance_km") @db.Decimal(6, 2)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  appointment    Appointment       @relation(fields: [appointmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidate      WaitlistEntry     @relation(fields: [waitlistId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([appointmentId, offeredAt], map: "slot_offers_appointment_offered_at_idx")
+  @@map("slot_offers")
+}
+
 enum appointment_status {
   pendente
   confirmado
@@ -196,4 +223,11 @@ enum procedure_type {
 enum preparation_result {
   ok
   nao_cumprido
+}
+
+enum slot_offer_status {
+  pendente
+  aceita
+  recusada
+  expirada
 }
