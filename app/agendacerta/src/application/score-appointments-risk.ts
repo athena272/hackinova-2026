@@ -2,13 +2,12 @@ import type { Appointment } from "@/domain/appointment";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import {
   calculateNoShowRisk,
-  distanceInKm,
   isRiskScorable,
   type NoShowRisk,
 } from "@/domain/no-show-risk";
-import type { Neighborhood } from "@/domain/patient";
 import type { AppointmentRepository } from "@/repository/appointment-repository";
 import type { PatientRepository } from "@/repository/patient-repository";
+import { loadPatientDistances } from "./patient-distance";
 
 function groupByPatient(
   appointments: readonly Appointment[],
@@ -34,27 +33,12 @@ export async function scoreAppointmentsRisk(
   patientRepo: PatientRepository,
   clinicNeighborhoodId: string = CLINIC_NEIGHBORHOOD_ID,
 ): Promise<NoShowRisk[]> {
-  const [appointments, locations, clinic] = await Promise.all([
+  const [appointments, distanceFor] = await Promise.all([
     appointmentRepo.list(),
-    patientRepo.listLocations(),
-    patientRepo.getNeighborhood(clinicNeighborhoodId),
+    loadPatientDistances(patientRepo, clinicNeighborhoodId, "scoreAppointmentsRisk"),
   ]);
 
-  if (!clinic) {
-    console.error(
-      `[scoreAppointmentsRisk] bairro da clínica "${clinicNeighborhoodId}" não encontrado; distância tratada como desconhecida.`,
-    );
-  }
-
-  const neighborhoodByPatient = new Map<string, Neighborhood | null>(
-    locations.map((location) => [location.patientId, location.neighborhood]),
-  );
   const historyByPatient = groupByPatient(appointments);
-
-  const distanceFor = (patientId: string): number | null => {
-    const home = neighborhoodByPatient.get(patientId);
-    return clinic && home ? distanceInKm(home, clinic) : null;
-  };
 
   return appointments
     .filter((appointment) => isRiskScorable(appointment.status))
