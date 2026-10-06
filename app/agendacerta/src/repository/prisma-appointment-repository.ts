@@ -12,7 +12,9 @@ import { appointmentSelect, mapRecordToAppointment } from "./mappers";
 
 type AppointmentClient = Pick<PrismaClient, "appointment">;
 
-type AppointmentUpdate = Partial<Pick<Appointment, "patientId" | "status">>;
+type AppointmentUpdate = Partial<
+  Pick<Appointment, "patientId" | "bookedAt" | "status">
+>;
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
   constructor(
@@ -58,6 +60,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       appointment.id,
       {
         patientId: appointment.patientId,
+        bookedAt: appointment.bookedAt,
         status: appointment.status,
       },
       "Falha ao oferecer vaga",

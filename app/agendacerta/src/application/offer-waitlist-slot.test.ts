@@ -21,12 +21,13 @@ describe("offerWaitlistSlot (memória)", () => {
     const appointments = new InMemoryAppointmentRepository();
     const waitlist = new InMemoryWaitlistRepository();
 
-    // apt-006 já vem liberado (Endocrinologia) no seed
+    // apt-006 já vem liberado (Endocrinologia) no seed, marcado para 2026-09-23
     const result = await offerWaitlistSlot(
       appointments,
       waitlist,
       "apt-006",
       "wl-002",
+      () => new Date("2026-09-20T15:00:00.000Z"),
     );
 
     expect(result.appointment.status).toBe("pendente");
@@ -36,6 +37,7 @@ describe("offerWaitlistSlot (memória)", () => {
 
     const saved = await appointments.getById("apt-006");
     expect(saved?.patientId).toBe(result.candidate.patientId);
+    expect(saved?.bookedAt).toBe("2026-09-20T15:00:00.000Z");
 
     const remaining = await waitlist.listBySpecialty("Endocrinologia");
     expect(remaining.some((item) => item.id === "wl-002")).toBe(false);

@@ -19,6 +19,7 @@ model Appointment {
   patientId     String             @map("patient_id")
   procedureType procedure_type     @default(consulta) @map("procedure_type")
   procedureName String?            @map("procedure_name")
+  bookedAt      DateTime           @default(now()) @map("booked_at") @db.Timestamptz(6)
   patient       Patient            @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 
   @@index([scheduledAt])

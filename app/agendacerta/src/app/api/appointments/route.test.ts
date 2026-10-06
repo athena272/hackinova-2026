@@ -69,6 +69,7 @@ describe("GET /api/appointments", () => {
             patientName: "Ana Souza",
             specialty: "Neurologia",
             scheduledAt: "2026-09-22T12:00:00.000Z",
+            bookedAt: "2026-08-13T12:00:00.000Z",
             status: "pendente",
             phoneMasked: "(79) 9****-1234",
             procedure: { type: "consulta" },

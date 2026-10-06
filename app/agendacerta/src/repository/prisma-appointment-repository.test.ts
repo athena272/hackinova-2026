@@ -9,6 +9,7 @@ const record = {
   id: "apt-001",
   specialty: "Neurologia",
   scheduledAt: new Date("2026-09-22T12:00:00.000Z"),
+  bookedAt: new Date("2026-08-13T12:00:00.000Z"),
   status: "pendente" as const,
   procedureType: "consulta" as const,
   procedureName: null,
@@ -25,6 +26,7 @@ const domainAppointment: Appointment = {
   patientName: "Ana Souza",
   specialty: "Neurologia",
   scheduledAt: "2026-09-22T12:00:00.000Z",
+  bookedAt: "2026-08-13T12:00:00.000Z",
   status: "pendente",
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
@@ -108,10 +110,11 @@ describe("PrismaAppointmentRepository", () => {
     expect(appointment.update).not.toHaveBeenCalled();
   });
 
-  it("saveOffered grava só o novo paciente e o status, devolvendo nome e telefone dele", async () => {
+  it("saveOffered grava paciente, data da nova marcação e status, devolvendo nome e telefone do paciente", async () => {
     const { appointment: client, repo } = setup();
     client.update.mockResolvedValue({
       ...record,
+      bookedAt: new Date("2026-09-20T15:00:00.000Z"),
       status: "pendente",
       patient: {
         id: "pat-helena",
@@ -125,17 +128,23 @@ describe("PrismaAppointmentRepository", () => {
       patientId: "pat-helena",
       patientName: "Helena Dias",
       phoneMasked: "(79) 9****-4444",
+      bookedAt: "2026-09-20T15:00:00.000Z",
     });
 
     expect(client.update).toHaveBeenCalledWith({
       where: { id: "apt-001" },
-      data: { patientId: "pat-helena", status: "pendente" },
+      data: {
+        patientId: "pat-helena",
+        bookedAt: "2026-09-20T15:00:00.000Z",
+        status: "pendente",
+      },
       select: appointmentSelect,
     });
     expect(saved).toMatchObject({
       patientId: "pat-helena",
       patientName: "Helena Dias",
       phoneMasked: "(79) 9****-4444",
+      bookedAt: "2026-09-20T15:00:00.000Z",
     });
   });
 

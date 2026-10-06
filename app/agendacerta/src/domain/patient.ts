@@ -14,3 +14,9 @@ export type Patient = {
   phoneMasked: string;
   neighborhoodId: string | null;
 };
+
+/** Onde o paciente mora, já resolvido; null quando o bairro não foi informado. */
+export type PatientLocation = {
+  patientId: string;
+  neighborhood: Neighborhood | null;
+};
