@@ -14,6 +14,13 @@ export function loadWaitlistSeed(): WaitlistEntry[] {
       );
     }
 
+    const requestedAtMs = Date.parse(item.requestedAt);
+    if (Number.isNaN(requestedAtMs)) {
+      throw new SeedIntegrityError(
+        `Data de entrada "${item.requestedAt}" inválida na lista de espera "${item.id}".`,
+      );
+    }
+
     const patient = findPatient(item.patientId);
     return {
       id: item.id,
@@ -22,6 +29,7 @@ export function loadWaitlistSeed(): WaitlistEntry[] {
       specialty: item.specialty,
       phoneMasked: patient.phoneMasked,
       status: item.status,
+      requestedAt: new Date(requestedAtMs).toISOString(),
     };
   });
 }
