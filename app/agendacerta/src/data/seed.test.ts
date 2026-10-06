@@ -1,0 +1,155 @@
+import { createHash } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import rawAppointments from "../../data/appointments.seed.json";
+import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
+import { isAttendanceOutcome } from "@/domain/appointment";
+import { loadNeighborhoodSeed, loadPatientSeed } from "./patient-seed";
+import { loadAppointmentSeed } from "./seed";
+import { loadWaitlistSeed } from "./waitlist-seed";
+
+/**
+ * O seed em memória (CI, testes, deploy sem banco) precisa espelhar as migrations.
+ * Estes testes acusam referência quebrada ou divergência entre JSON e SQL.
+ */
+const migrationsDir = join(process.cwd(), "../../supabase/migrations");
+const migrations = readdirSync(migrationsDir)
+  .filter((file) => file.endsWith(".sql"))
+  .map((file) => readFileSync(join(migrationsDir, file), "utf8"))
+  .join("\n");
+
+const appointments = loadAppointmentSeed();
+const waitlist = loadWaitlistSeed();
+const patients = loadPatientSeed();
+const neighborhoods = loadNeighborhoodSeed();
+
+const ids = (items: readonly { id: string }[]) => items.map((item) => item.id);
+const sorted = (values: Iterable<string>) => Array.from(values).sort();
+
+describe("seed em memória", () => {
+  it.each([
+    ["agendamentos", ids(appointments)],
+    ["lista de espera", ids(waitlist)],
+    ["pacientes", ids(patients)],
+    ["bairros", ids(neighborhoods)],
+  ])("não repete ids de %s", (_, values) => {
+    expect(new Set(values).size).toBe(values.length);
+  });
+
+  it("todo paciente aponta para um bairro existente, e a clínica também", () => {
+    const neighborhoodIds = new Set(ids(neighborhoods));
+
+    expect(neighborhoodIds.has(CLINIC_NEIGHBORHOOD_ID)).toBe(true);
+    for (const patient of patients) {
+      if (patient.neighborhoodId !== null) {
+        expect(neighborhoodIds.has(patient.neighborhoodId), patient.id).toBe(true);
+      }
+    }
+  });
+
+  it("preserva os agendamentos e a lista de espera de antes, com os mesmos status", () => {
+    const statusById = Object.fromEntries(
+      appointments.map((item) => [item.id, item.status]),
+    );
+
+    expect(statusById).toMatchObject({
+      "apt-001": "pendente",
+      "apt-002": "pendente",
+      "apt-003": "pendente",
+      "apt-004": "confirmado",
+      "apt-005": "pendente",
+      "apt-006": "liberado",
+    });
+    expect(
+      waitlist.map(({ id, patientName, status }) => ({ id, patientName, status })),
+    ).toEqual([
+      { id: "wl-001", patientName: "Helena Dias", status: "aguardando" },
+      { id: "wl-002", patientName: "Igor Santos", status: "aguardando" },
+      { id: "wl-003", patientName: "Juliana Prado", status: "aguardando" },
+      { id: "wl-004", patientName: "Karen Oliveira", status: "aguardando" },
+    ]);
+  });
+
+  it("histórico de comparecimento é anterior a toda a agenda ativa", () => {
+    const history = appointments.filter((item) => isAttendanceOutcome(item.status));
+    const agenda = appointments.filter((item) => !isAttendanceOutcome(item.status));
+    const latestHistory = Math.max(...history.map((item) => Date.parse(item.scheduledAt)));
+    const earliestAgenda = Math.min(...agenda.map((item) => Date.parse(item.scheduledAt)));
+
+    expect(history.length).toBeGreaterThan(0);
+    expect(latestHistory).toBeLessThan(earliestAgenda);
+  });
+
+  it("tem perfis faltosos e assíduos para o score usar", () => {
+    const noShowsByPatient = new Map<string, number>();
+    for (const item of appointments) {
+      if (item.status === "faltou") {
+        noShowsByPatient.set(item.patientId, (noShowsByPatient.get(item.patientId) ?? 0) + 1);
+      }
+    }
+    const withHistory = new Set(
+      appointments.filter((item) => isAttendanceOutcome(item.status)).map((item) => item.patientId),
+    );
+
+    expect(Math.max(...noShowsByPatient.values())).toBeGreaterThanOrEqual(2);
+    expect([...withHistory].some((id) => !noShowsByPatient.has(id))).toBe(true);
+  });
+
+  it("exame sempre tem nome e consulta nunca tem (mesma regra da check constraint)", () => {
+    for (const item of rawAppointments) {
+      expect(item.procedureType === "exame", item.id).toBe(
+        typeof item.procedureName === "string" && item.procedureName.trim() !== "",
+      );
+    }
+  });
+});
+
+describe("seed em memória x migrations", () => {
+  it("pacientes vindos do backfill usam o mesmo id determinístico da migration", () => {
+    for (const patient of patients.filter((item) => !item.id.startsWith("pat-demo-"))) {
+      const hash = createHash("md5")
+        .update(`${patient.fullName}|${patient.phoneMasked}`, "utf8")
+        .digest("hex")
+        .slice(0, 12);
+      expect(patient.id, patient.fullName).toBe(`pat-${hash}`);
+    }
+  });
+
+  it("agendamentos e lista de espera têm os mesmos ids nos dois seeds", () => {
+    const sqlAppointmentIds = new Set(
+      Array.from(migrations.matchAll(/'((?:apt|hist)-\d+)'/g), ([, id]) => id),
+    );
+    const sqlWaitlistIds = new Set(
+      Array.from(migrations.matchAll(/'(wl-\d+)'/g), ([, id]) => id),
+    );
+
+    expect(sorted(ids(appointments))).toEqual(sorted(sqlAppointmentIds));
+    expect(sorted(ids(waitlist))).toEqual(sorted(sqlWaitlistIds));
+  });
+
+  it("pacientes de demonstração existem na migration com o mesmo nome e bairro", () => {
+    for (const patient of patients.filter((item) => item.id.startsWith("pat-demo-"))) {
+      expect(migrations).toContain(
+        `('${patient.id}', '${patient.fullName}', '${patient.phoneMasked}', '${patient.neighborhoodId}')`,
+      );
+    }
+  });
+
+  it("bairros têm os mesmos dados e coordenadas nos dois seeds", () => {
+    const sqlNeighborhoods = Array.from(
+      migrations.matchAll(
+        /\('(nb-[\w-]+)', '([^']+)', '([^']+)', (-?\d+\.\d+), (-?\d+\.\d+)\)/g,
+      ),
+      ([, id, name, city, latitude, longitude]) => ({
+        id,
+        name,
+        city,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+      }),
+    );
+
+    expect(sqlNeighborhoods).toEqual(neighborhoods);
+  });
+});

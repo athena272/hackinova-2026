@@ -61,6 +61,7 @@ describe("GET /api/waitlist", () => {
     const entries: WaitlistEntry[] = [
       {
         id: "wl-001",
+        patientId: "pat-77fc801524e6",
         patientName: "Helena Dias",
         specialty: "Neurologia",
         phoneMasked: "(79) 9****-4444",
