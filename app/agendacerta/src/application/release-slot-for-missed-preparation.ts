@@ -5,7 +5,7 @@ import { AppointmentNotFoundError } from "@/repository/errors";
 
 /**
  * Libera a vaga de quem não vai cumprir o preparo. Depois disso ela aparece
- * como reaproveitável e entra no fluxo de "Oferecer vaga".
+ * como reaproveitável e pode entrar na oferta em cascata.
  */
 export async function releaseSlotForMissedPreparation(
   appointmentRepo: AppointmentRepository,
