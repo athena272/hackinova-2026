@@ -25,6 +25,7 @@ const baseCandidate: WaitlistEntry = {
   specialty: "Neurologia",
   phoneMasked: "(79) 9****-4444",
   status: "aguardando",
+  requestedAt: "2026-08-20T13:00:00.000Z",
 };
 
 describe("offerSlot", () => {
