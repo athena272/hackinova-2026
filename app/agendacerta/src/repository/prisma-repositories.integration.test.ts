@@ -1,7 +1,10 @@
 import { existsSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
+import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
+import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import { getPrisma } from "@/lib/database/prisma";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
+import { PrismaPatientRepository } from "./prisma-patient-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 
 /**
@@ -17,6 +20,7 @@ if (runDbTests && !process.env.DATABASE_URL && existsSync(".env.local")) {
 describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
   const appointments = new PrismaAppointmentRepository();
   const waitlist = new PrismaWaitlistRepository();
+  const patients = new PrismaPatientRepository();
 
   afterAll(async () => {
     await getPrisma().$disconnect();
@@ -66,5 +70,41 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
     for (const entry of entries) {
       expect(entry).toMatchObject({ specialty: "Neurologia", status: "aguardando" });
     }
+  });
+
+  it("toda consulta tem bookedAt em ISO, nunca depois do horário", async () => {
+    const list = await appointments.list();
+
+    for (const item of list) {
+      expect(new Date(item.bookedAt).toISOString(), item.id).toBe(item.bookedAt);
+      expect(Date.parse(item.bookedAt), item.id).toBeLessThanOrEqual(
+        Date.parse(item.scheduledAt),
+      );
+    }
+  });
+
+  it("devolve bairros com coordenadas numéricas e o bairro da clínica", async () => {
+    const locations = await patients.listLocations();
+    const clinic = await patients.getNeighborhood(CLINIC_NEIGHBORHOOD_ID);
+
+    expect(locations.length).toBeGreaterThan(0);
+    for (const { neighborhood } of locations) {
+      if (neighborhood) {
+        expect(typeof neighborhood.latitude).toBe("number");
+        expect(typeof neighborhood.longitude).toBe("number");
+      }
+    }
+    expect(clinic).toMatchObject({ id: CLINIC_NEIGHBORHOOD_ID, latitude: -10.944 });
+  });
+
+  it("calcula o risco a partir do banco com os mesmos resultados do seed", async () => {
+    const risks = await scoreAppointmentsRisk(appointments, patients);
+    const bandById = Object.fromEntries(
+      risks.map((risk) => [risk.appointmentId, risk.band]),
+    );
+
+    expect(bandById["apt-001"]).toBe("alto");
+    expect(bandById["apt-002"]).toBe("baixo");
+    expect(bandById["apt-006"]).toBeUndefined();
   });
 });

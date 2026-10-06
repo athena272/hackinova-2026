@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppointmentRepository } from "./create-appointment-repository";
+import { createPatientRepository } from "./create-patient-repository";
 import { createWaitlistRepository } from "./create-waitlist-repository";
 import { InMemoryAppointmentRepository } from "./in-memory-appointment-repository";
+import { InMemoryPatientRepository } from "./in-memory-patient-repository";
 import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
+import { PrismaPatientRepository } from "./prisma-patient-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 
 const LOCAL_DB = "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
@@ -20,6 +23,7 @@ describe("factories de repositório", () => {
       PrismaAppointmentRepository,
     );
     expect(createWaitlistRepository()).toBeInstanceOf(PrismaWaitlistRepository);
+    expect(createPatientRepository()).toBeInstanceOf(PrismaPatientRepository);
   });
 
   it("usam memória quando DATABASE_URL não está definida", () => {
@@ -31,5 +35,6 @@ describe("factories de repositório", () => {
     expect(createWaitlistRepository()).toBeInstanceOf(
       InMemoryWaitlistRepository,
     );
+    expect(createPatientRepository()).toBeInstanceOf(InMemoryPatientRepository);
   });
 });
