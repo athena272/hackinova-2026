@@ -57,14 +57,37 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   }
 
   async saveOffered(appointment: Appointment): Promise<Appointment> {
-    const { appointments } = getStore();
-    if (!appointments.has(appointment.id)) {
-      throw new AppointmentNotFoundError(appointment.id);
-    }
-    const saved: Appointment = { ...appointment };
-    appointments.set(appointment.id, saved);
-    return { ...saved };
+    return save(appointment);
   }
+
+  async savePreparationAnswer(appointment: Appointment): Promise<Appointment> {
+    return save(appointment);
+  }
+
+  async saveReleased(appointment: Appointment): Promise<Appointment> {
+    return save(appointment);
+  }
+}
+
+/** Os casos de uso já validaram no domínio; aqui só grava a versão nova. */
+function save(appointment: Appointment): Appointment {
+  const { appointments } = getStore();
+  if (!appointments.has(appointment.id)) {
+    throw new AppointmentNotFoundError(appointment.id);
+  }
+  const saved = cloneAppointment(appointment);
+  appointments.set(appointment.id, saved);
+  return cloneAppointment(saved);
+}
+
+/** Copia também a lista de itens do preparo, para quem chama não alterar o store. */
+function cloneAppointment(appointment: Appointment): Appointment {
+  return {
+    ...appointment,
+    preparation: appointment.preparation
+      ? { ...appointment.preparation, missedItemIds: [...appointment.preparation.missedItemIds] }
+      : null,
+  };
 }
 
 /** Apenas para testes: reinicia o store a partir do seed. */

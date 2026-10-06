@@ -1,5 +1,6 @@
-import type { Appointment } from "@/domain/appointment";
+import type { Appointment, PreparationAnswer } from "@/domain/appointment";
 import { createProcedure } from "@/domain/appointment";
+import type { ExamPreparation } from "@/domain/exam-preparation";
 import type { Neighborhood, PatientLocation } from "@/domain/patient";
 import type { WaitlistEntry } from "@/domain/waitlist";
 import type { Prisma } from "@/generated/prisma/client";
@@ -19,6 +20,9 @@ export const appointmentSelect = {
   status: true,
   procedureType: true,
   procedureName: true,
+  preparationResult: true,
+  preparationAnsweredAt: true,
+  preparationMissedItemIds: true,
   patient: { select: patientSummarySelect },
 } satisfies Prisma.AppointmentSelect;
 
@@ -37,6 +41,18 @@ export type WaitlistRecord = Prisma.WaitlistEntryGetPayload<{
   select: typeof waitlistSelect;
 }>;
 
+/** O banco garante (check) que resultado e data de resposta andam juntos. */
+function mapPreparationAnswer(record: AppointmentRecord): PreparationAnswer | null {
+  if (record.preparationResult === null || record.preparationAnsweredAt === null) {
+    return null;
+  }
+  return {
+    result: record.preparationResult,
+    missedItemIds: [...record.preparationMissedItemIds],
+    answeredAt: record.preparationAnsweredAt.toISOString(),
+  };
+}
+
 export function mapRecordToAppointment(record: AppointmentRecord): Appointment {
   return {
     id: record.id,
@@ -48,6 +64,7 @@ export function mapRecordToAppointment(record: AppointmentRecord): Appointment {
     status: record.status,
     phoneMasked: record.patient.phoneMasked,
     procedure: createProcedure(record.procedureType, record.procedureName),
+    preparation: mapPreparationAnswer(record),
   };
 }
 
@@ -91,6 +108,31 @@ export function mapRecordToNeighborhood(record: NeighborhoodRecord): Neighborhoo
     city: record.city,
     latitude: record.latitude.toNumber(),
     longitude: record.longitude.toNumber(),
+  };
+}
+
+export const examPreparationSelect = {
+  id: true,
+  examName: true,
+  instructions: true,
+  items: {
+    select: { id: true, position: true, label: true, question: true },
+    orderBy: { position: "asc" },
+  },
+} satisfies Prisma.ExamPreparationSelect;
+
+export type ExamPreparationRecord = Prisma.ExamPreparationGetPayload<{
+  select: typeof examPreparationSelect;
+}>;
+
+export function mapRecordToExamPreparation(
+  record: ExamPreparationRecord,
+): ExamPreparation {
+  return {
+    id: record.id,
+    examName: record.examName,
+    instructions: record.instructions,
+    items: record.items.map((item) => ({ ...item })),
   };
 }
 

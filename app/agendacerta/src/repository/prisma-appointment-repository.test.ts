@@ -13,6 +13,9 @@ const record = {
   status: "pendente" as const,
   procedureType: "consulta" as const,
   procedureName: null,
+  preparationResult: null,
+  preparationAnsweredAt: null,
+  preparationMissedItemIds: [] as string[],
   patient: {
     id: "pat-ana",
     fullName: "Ana Souza",
@@ -30,6 +33,7 @@ const domainAppointment: Appointment = {
   status: "pendente",
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
+  preparation: null,
 };
 
 const notFound = new Prisma.PrismaClientKnownRequestError("Record not found", {
@@ -110,7 +114,7 @@ describe("PrismaAppointmentRepository", () => {
     expect(appointment.update).not.toHaveBeenCalled();
   });
 
-  it("saveOffered grava paciente, data da nova marcação e status, devolvendo nome e telefone do paciente", async () => {
+  it("saveOffered grava paciente, data da nova marcação, status e preparo zerado, devolvendo nome e telefone do paciente", async () => {
     const { appointment: client, repo } = setup();
     client.update.mockResolvedValue({
       ...record,
@@ -137,6 +141,9 @@ describe("PrismaAppointmentRepository", () => {
         patientId: "pat-helena",
         bookedAt: "2026-09-20T15:00:00.000Z",
         status: "pendente",
+        preparationResult: null,
+        preparationAnsweredAt: null,
+        preparationMissedItemIds: [],
       },
       select: appointmentSelect,
     });
@@ -163,6 +170,73 @@ describe("PrismaAppointmentRepository", () => {
 
     await expect(repo.saveOffered(domainAppointment)).rejects.toThrow(
       "Falha ao oferecer vaga: timeout",
+    );
+  });
+
+  it("savePreparationAnswer grava só as colunas do preparo", async () => {
+    const { appointment: client, repo } = setup();
+    const answeredAt = "2026-09-23T21:00:00.000Z";
+    client.update.mockResolvedValue({
+      ...record,
+      preparationResult: "nao_cumprido",
+      preparationAnsweredAt: new Date(answeredAt),
+      preparationMissedItemIds: ["prep-glicemia-jejum-jejum"],
+    });
+
+    const saved = await repo.savePreparationAnswer({
+      ...domainAppointment,
+      preparation: {
+        result: "nao_cumprido",
+        missedItemIds: ["prep-glicemia-jejum-jejum"],
+        answeredAt,
+      },
+    });
+
+    expect(client.update).toHaveBeenCalledWith({
+      where: { id: "apt-001" },
+      data: {
+        preparationResult: "nao_cumprido",
+        preparationAnsweredAt: answeredAt,
+        preparationMissedItemIds: ["prep-glicemia-jejum-jejum"],
+      },
+      select: appointmentSelect,
+    });
+    expect(saved.preparation).toEqual({
+      result: "nao_cumprido",
+      missedItemIds: ["prep-glicemia-jejum-jejum"],
+      answeredAt,
+    });
+  });
+
+  it("savePreparationAnswer propaga erro com contexto", async () => {
+    const { appointment: client, repo } = setup();
+    client.update.mockRejectedValue(new Error("violates check constraint"));
+
+    await expect(repo.savePreparationAnswer(domainAppointment)).rejects.toThrow(
+      "Falha ao salvar preparo: violates check constraint",
+    );
+  });
+
+  it("saveReleased grava só o status", async () => {
+    const { appointment: client, repo } = setup();
+    client.update.mockResolvedValue({ ...record, status: "liberado" });
+
+    const saved = await repo.saveReleased({ ...domainAppointment, status: "liberado" });
+
+    expect(client.update).toHaveBeenCalledWith({
+      where: { id: "apt-001" },
+      data: { status: "liberado" },
+      select: appointmentSelect,
+    });
+    expect(saved.status).toBe("liberado");
+  });
+
+  it("saveReleased converte P2025 em AppointmentNotFoundError", async () => {
+    const { appointment: client, repo } = setup();
+    client.update.mockRejectedValue(notFound);
+
+    await expect(repo.saveReleased(domainAppointment)).rejects.toBeInstanceOf(
+      AppointmentNotFoundError,
     );
   });
 });
