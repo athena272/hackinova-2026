@@ -2,11 +2,26 @@ import { describe, expect, it } from "vitest";
 import {
   createProcedure,
   InvalidProcedureError,
+  isActiveBooking,
   isAppointmentStatus,
   isAttendanceOutcome,
+  isPreparationResult,
   isProcedureType,
   isSlotReusable,
 } from "./appointment";
+
+describe("isActiveBooking", () => {
+  it.each(["pendente", "confirmado"] as const)("%s ainda ocupa a vaga", (status) => {
+    expect(isActiveBooking(status)).toBe(true);
+  });
+
+  it.each(["liberado", "remarcacao_solicitada", "compareceu", "faltou"] as const)(
+    "%s não ocupa mais a vaga",
+    (status) => {
+      expect(isActiveBooking(status)).toBe(false);
+    },
+  );
+});
 
 describe("isAttendanceOutcome", () => {
   it.each(["compareceu", "faltou"] as const)("%s compõe o histórico", (status) => {
@@ -59,5 +74,13 @@ describe("guards de valores do domínio", () => {
     expect(isProcedureType("exame")).toBe(true);
     expect(isProcedureType("cirurgia")).toBe(false);
     expect(isProcedureType(null)).toBe(false);
+  });
+
+  it("isPreparationResult aceita só ok e nao_cumprido", () => {
+    expect(isPreparationResult("ok")).toBe(true);
+    expect(isPreparationResult("nao_cumprido")).toBe(true);
+    expect(isPreparationResult("pendente")).toBe(false);
+    expect(isPreparationResult("toString")).toBe(false);
+    expect(isPreparationResult(null)).toBe(false);
   });
 });
