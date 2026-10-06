@@ -3,17 +3,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { MessageCircle } from "lucide-react";
+import { ClipboardList, MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
+import { MockPreparationChecklist } from "@/components/MockPreparationChecklist";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
+import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
+
+type MockTab = "confirmacao" | "preparo";
 
 export default function MockWhatsAppPage() {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<MockTab>("confirmacao");
+  const { state: preparations, reload: reloadPreparations } = useExamPreparations();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,7 +50,7 @@ export default function MockWhatsAppPage() {
     void load();
   }, [load]);
 
-  function handleConfirmed(updated: Appointment) {
+  function handleUpdated(updated: Appointment) {
     setAppointments((current) =>
       current.map((item) => (item.id === updated.id ? updated : item)),
     );
@@ -64,15 +70,43 @@ export default function MockWhatsAppPage() {
         <h1>Mock WhatsApp</h1>
       </div>
       <p className="lead">
-        Simula o lembrete e a resposta do paciente. Ao confirmar, o status muda
-        na API (memória ou Supabase). Abra o painel para ver o resultado.
+        Simula as mensagens e as respostas do paciente. Cada resposta muda o
+        agendamento na API (memória ou Supabase). Abra o painel para ver o resultado.
       </p>
+      <div className="wa-tabs" role="tablist" aria-label="Tipo de mensagem">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "confirmacao"}
+          onClick={() => setTab("confirmacao")}
+        >
+          <MessageCircle size={15} aria-hidden />
+          Confirmação de presença
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "preparo"}
+          onClick={() => setTab("preparo")}
+        >
+          <ClipboardList size={15} aria-hidden />
+          Checklist de preparo
+        </button>
+      </div>
       {loading ? <p className="muted">Carregando…</p> : null}
       {error ? <p className="error">{error}</p> : null}
-      {!loading && !error ? (
+      {!loading && !error && tab === "confirmacao" ? (
         <MockWhatsAppThread
           appointments={appointments}
-          onConfirmed={handleConfirmed}
+          onConfirmed={handleUpdated}
+        />
+      ) : null}
+      {!loading && !error && tab === "preparo" ? (
+        <MockPreparationChecklist
+          appointments={appointments}
+          preparations={preparations}
+          onRetryPreparations={() => void reloadPreparations()}
+          onAnswered={handleUpdated}
         />
       ) : null}
     </motion.main>
