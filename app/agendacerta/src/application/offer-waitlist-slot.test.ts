@@ -31,7 +31,11 @@ describe("offerWaitlistSlot (memória)", () => {
 
     expect(result.appointment.status).toBe("pendente");
     expect(result.appointment.patientName).toBe("Igor Santos");
+    expect(result.appointment.patientId).toBe(result.candidate.patientId);
     expect(result.candidate.status).toBe("atribuido");
+
+    const saved = await appointments.getById("apt-006");
+    expect(saved?.patientId).toBe(result.candidate.patientId);
 
     const remaining = await waitlist.listBySpecialty("Endocrinologia");
     expect(remaining.some((item) => item.id === "wl-002")).toBe(false);

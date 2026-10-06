@@ -18,6 +18,24 @@ describe("InMemoryAppointmentRepository", () => {
     expect(list.some((a) => a.id === "apt-001")).toBe(true);
   });
 
+  it("monta nome e telefone a partir do cadastro de pacientes e inclui o histórico", async () => {
+    const repo = new InMemoryAppointmentRepository();
+    const list = await repo.list();
+
+    expect(list.find((a) => a.id === "apt-001")).toMatchObject({
+      patientId: "pat-6f020c3c9b97",
+      patientName: "Ana Souza",
+      phoneMasked: "(79) 9****-1234",
+      procedure: { type: "consulta" },
+    });
+    expect(list.find((a) => a.id === "apt-004")?.procedure).toEqual({
+      type: "exame",
+      examName: "Ultrassonografia de abdome total",
+    });
+    expect(list.some((a) => a.status === "faltou")).toBe(true);
+    expect(list.some((a) => a.status === "compareceu")).toBe(true);
+  });
+
   it("confirma SIM e atualiza status", async () => {
     const repo = new InMemoryAppointmentRepository();
     const updated = await repo.confirm("apt-001", "SIM");

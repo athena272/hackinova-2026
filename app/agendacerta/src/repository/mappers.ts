@@ -1,14 +1,23 @@
 import type { Appointment } from "@/domain/appointment";
+import { createProcedure } from "@/domain/appointment";
 import type { WaitlistEntry } from "@/domain/waitlist";
 import type { Prisma } from "@/generated/prisma/client";
 
+/** Nome e telefone vivem em patients; os mappers devolvem o formato plano de sempre. */
+const patientSummarySelect = {
+  id: true,
+  fullName: true,
+  phoneMasked: true,
+} satisfies Prisma.PatientSelect;
+
 export const appointmentSelect = {
   id: true,
-  patientName: true,
   specialty: true,
   scheduledAt: true,
   status: true,
-  phoneMasked: true,
+  procedureType: true,
+  procedureName: true,
+  patient: { select: patientSummarySelect },
 } satisfies Prisma.AppointmentSelect;
 
 export type AppointmentRecord = Prisma.AppointmentGetPayload<{
@@ -17,10 +26,9 @@ export type AppointmentRecord = Prisma.AppointmentGetPayload<{
 
 export const waitlistSelect = {
   id: true,
-  patientName: true,
   specialty: true,
-  phoneMasked: true,
   status: true,
+  patient: { select: patientSummarySelect },
 } satisfies Prisma.WaitlistEntrySelect;
 
 export type WaitlistRecord = Prisma.WaitlistEntryGetPayload<{
@@ -30,20 +38,23 @@ export type WaitlistRecord = Prisma.WaitlistEntryGetPayload<{
 export function mapRecordToAppointment(record: AppointmentRecord): Appointment {
   return {
     id: record.id,
-    patientName: record.patientName,
+    patientId: record.patient.id,
+    patientName: record.patient.fullName,
     specialty: record.specialty,
     scheduledAt: record.scheduledAt.toISOString(),
     status: record.status,
-    phoneMasked: record.phoneMasked,
+    phoneMasked: record.patient.phoneMasked,
+    procedure: createProcedure(record.procedureType, record.procedureName),
   };
 }
 
 export function mapRecordToWaitlistEntry(record: WaitlistRecord): WaitlistEntry {
   return {
     id: record.id,
-    patientName: record.patientName,
+    patientId: record.patient.id,
+    patientName: record.patient.fullName,
     specialty: record.specialty,
-    phoneMasked: record.phoneMasked,
+    phoneMasked: record.patient.phoneMasked,
     status: record.status,
   };
 }

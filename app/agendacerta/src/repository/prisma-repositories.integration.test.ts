@@ -40,6 +40,24 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
     await expect(appointments.getById("apt-inexistente")).resolves.toBeNull();
   });
 
+  it("monta paciente e procedimento pelo join com patients", async () => {
+    const list = await appointments.list();
+
+    for (const item of list) {
+      expect(item.patientId).toMatch(/^pat-/);
+      expect(item.patientName.trim()).not.toBe("");
+      expect(item.phoneMasked).toMatch(/\*{4}/);
+      if (item.procedure.type === "exame") {
+        expect(item.procedure.examName.trim()).not.toBe("");
+      }
+    }
+    expect(list.some((item) => item.status === "faltou")).toBe(true);
+    expect(list.find((item) => item.id === "apt-004")?.procedure).toEqual({
+      type: "exame",
+      examName: "Ultrassonografia de abdome total",
+    });
+  });
+
   it("lista de espera traz só quem aguarda na especialidade, por id", async () => {
     const entries = await waitlist.listBySpecialty("Neurologia");
 

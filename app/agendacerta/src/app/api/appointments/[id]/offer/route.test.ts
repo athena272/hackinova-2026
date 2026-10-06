@@ -56,14 +56,17 @@ describe("POST /api/appointments/[id]/offer", () => {
     vi.mocked(offerWaitlistSlot).mockResolvedValue({
       appointment: {
         id: "apt-006",
+        patientId: "pat-52ed793dcb17",
         patientName: "Igor Santos",
         specialty: "Endocrinologia",
         scheduledAt: "2026-09-23T18:45:00.000Z",
         status: "pendente",
         phoneMasked: "(79) 9****-5555",
+        procedure: { type: "consulta" },
       },
       candidate: {
         id: "wl-002",
+        patientId: "pat-52ed793dcb17",
         patientName: "Igor Santos",
         specialty: "Endocrinologia",
         phoneMasked: "(79) 9****-5555",

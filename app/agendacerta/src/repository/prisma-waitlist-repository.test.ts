@@ -1,15 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { WaitlistEntry } from "@/domain/waitlist";
 import { Prisma } from "@/generated/prisma/client";
 import { WaitlistNotFoundError } from "./errors";
 import { waitlistSelect } from "./mappers";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 
-const entry = {
+const record = {
   id: "wl-001",
+  specialty: "Neurologia",
+  status: "aguardando" as const,
+  patient: {
+    id: "pat-helena",
+    fullName: "Helena Dias",
+    phoneMasked: "(79) 9****-4444",
+  },
+};
+
+const entry: WaitlistEntry = {
+  id: "wl-001",
+  patientId: "pat-helena",
   patientName: "Helena Dias",
   specialty: "Neurologia",
   phoneMasked: "(79) 9****-4444",
-  status: "aguardando" as const,
+  status: "aguardando",
 };
 
 function setup() {
@@ -29,7 +42,7 @@ describe("PrismaWaitlistRepository", () => {
 
   it("lista só quem está aguardando na especialidade, por ordem de id", async () => {
     const { waitlistEntry, repo } = setup();
-    waitlistEntry.findMany.mockResolvedValue([entry]);
+    waitlistEntry.findMany.mockResolvedValue([record]);
 
     await expect(repo.listBySpecialty("Neurologia")).resolves.toEqual([entry]);
     expect(waitlistEntry.findMany).toHaveBeenCalledWith({
@@ -58,7 +71,7 @@ describe("PrismaWaitlistRepository", () => {
   it("saveAssigned grava apenas o novo status", async () => {
     const { waitlistEntry, repo } = setup();
     const assigned = { ...entry, status: "atribuido" as const };
-    waitlistEntry.update.mockResolvedValue(assigned);
+    waitlistEntry.update.mockResolvedValue({ ...record, status: "atribuido" });
 
     await expect(repo.saveAssigned(assigned)).resolves.toEqual(assigned);
     expect(waitlistEntry.update).toHaveBeenCalledWith({
