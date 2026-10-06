@@ -46,6 +46,7 @@ describe("NoShowRiskCell", () => {
     const details = render(ready([risk])).split("<details")[1];
 
     expect(details).toContain("ver todos os motivos");
+    expect(details).toContain("ocultar motivos");
     expect(details).toContain("Mora a cerca de 9 km da clínica");
     expect(details).toContain("+25 pts");
     expect(details).toContain("0 pts");
