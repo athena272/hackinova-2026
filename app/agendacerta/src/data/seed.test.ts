@@ -75,6 +75,8 @@ describe("seed em memória", () => {
       { id: "wl-004", patientName: "Karen Oliveira", status: "aguardando" },
       { id: "wl-005", patientName: "Nelson Araújo", status: "aguardando" },
       { id: "wl-006", patientName: "Olívia Martins", status: "aguardando" },
+      { id: "wl-007", patientName: "Lucas Ferreira", status: "aguardando" },
+      { id: "wl-008", patientName: "Elena Rocha", status: "aguardando" },
     ]);
   });
 
@@ -223,6 +225,24 @@ describe("seed em memória x migrations", () => {
     );
 
     expect(jsonLeadDays).toEqual(sqlLeadDays);
+  });
+
+  it("entrada na lista de espera é a mesma no JSON e na migration da oferta em cascata", () => {
+    const slotOfferSql = readFileSync(
+      join(migrationsDir, "20261008120100_seed_slot_offer_demo.sql"),
+      "utf8",
+    );
+    const sqlRequestedAt = Object.fromEntries(
+      Array.from(
+        slotOfferSql.matchAll(/\('(wl-\d+)', '(\d{4}-\d{2}-\d{2}T[^']+)'\)/g),
+        ([, id, requestedAt]) => [id, Date.parse(requestedAt)],
+      ),
+    );
+    const jsonRequestedAt = Object.fromEntries(
+      waitlist.map((item) => [item.id, Date.parse(item.requestedAt)]),
+    );
+
+    expect(jsonRequestedAt).toEqual(sqlRequestedAt);
   });
 
   describe("preparo de exames", () => {

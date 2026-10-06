@@ -1,6 +1,15 @@
 import { Prisma } from "@/generated/prisma/client";
 
 const RECORD_NOT_FOUND = "P2025";
+const UNIQUE_CONSTRAINT_FAILED = "P2002";
+
+/** Prisma lança P2002 quando o insert/update fere um índice único. */
+export function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === UNIQUE_CONSTRAINT_FAILED
+  );
+}
 
 /** Prisma lança P2025 quando update/delete não encontra o registro. */
 export function isRecordNotFoundError(error: unknown): boolean {

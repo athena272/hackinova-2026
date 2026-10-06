@@ -9,26 +9,29 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Painel com a agenda ativa e o histórico de comparecimento em seções separadas
 - Score preditivo de falta explicável: cada consulta pendente ou confirmada mostra a chance de falta e os motivos (veja [Score de falta](#score-de-falta))
 - Checklist de preparo pré-exame: o paciente responde sim ou não no mock, o painel mostra o status do preparo e a clínica libera antes a vaga de quem não vai cumprir (veja [Checklist de preparo](#checklist-de-preparo))
-- Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
+- Oferta de vaga em cascata: a vaga liberada vai primeiro para quem mora mais perto e espera há mais tempo; com recusa ou sem resposta no prazo, passa para o próximo da fila (veja [Oferta de vaga em cascata](#oferta-de-vaga-em-cascata))
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/appointments/risk`
 - `GET /api/exam-preparations`
 - `GET /api/waitlist?specialty=...`
+- `GET /api/slot-offers` (histórico das ofertas por vaga)
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
-- `POST /api/appointments/[id]/offer` com `{ "waitlistId": "..." }`
 - `POST /api/appointments/[id]/preparation` com `{ "answers": { "<id do item>": true | false } }`
 - `POST /api/appointments/[id]/release`
+- `POST /api/appointments/[id]/slot-offers` com `{ "timeoutMinutes": 2 | 5 | 15 | 30 }`
+- `POST /api/slot-offers/[id]/response` com `{ "response": "aceitar" | "recusar" }`
 - Páginas `/painel` e `/mock-whatsapp`
 - Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status, da oferta de vaga, do score de falta e das regras de preparo (Vitest)
+- Testes unitários da regra de status, da oferta em cascata, do score de falta e das regras de preparo (Vitest)
 
 ## O que fica de fora
 
 - WhatsApp Cloud API / Meta
 - Recuperação de senha e múltiplas clínicas
 - Modelo de machine learning treinado com dados reais (o score atual é uma regra com pesos ajustáveis)
-- Fila de espera automática sem ação da clínica
+- Oferta que começa sozinha, sem a clínica iniciar, e job em segundo plano para os prazos
+- Uso do score de falta na ordem da fila de espera
 
 ## Requisitos
 
@@ -65,13 +68,14 @@ Modelo de dados do agendamento:
 | `patients` | Nome, telefone mascarado e bairro (sem endereço completo, por LGPD) |
 | `neighborhoods` | Bairros de Aracaju e região com coordenadas aproximadas, para distância estimada até a clínica (`src/domain/clinic.ts`) |
 | `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status, procedimento (`consulta` ou `exame` com nome) e a resposta ao checklist de preparo (`preparation_result`, `preparation_answered_at`, `preparation_missed_item_ids`) |
-| `waitlist` | Paciente (`patient_id`), especialidade e status na lista de espera |
+| `waitlist` | Paciente (`patient_id`), especialidade, status na lista de espera e quando entrou nela (`requested_at`) |
+| `slot_offers` | Cada oferta de vaga: vaga (`appointment_id`), candidato (`waitlist_id`), status (`pendente`, `aceita`, `recusada`, `expirada`), quando foi oferecida, prazo, quando encerrou e a distância usada na ordem |
 | `exam_preparations` | Preparo exigido por exame: nome do exame (único) e instruções |
 | `exam_preparation_items` | Itens do checklist de cada preparo, na ordem (`position`), com rótulo e pergunta de sim ou não |
 
 Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId`, `procedure` e `bookedAt`.
 
-`booked_at` nunca passa do horário da consulta (check constraint). Quando a vaga é oferecida a outro paciente, ele conta como uma nova marcação; se a oferta acontece depois do horário (agenda de demonstração no passado), a marcação fica no próprio horário.
+`booked_at` nunca passa do horário da consulta (check constraint). Quando outro paciente aceita a vaga, ele conta como uma nova marcação; se o aceite acontece depois do horário (agenda de demonstração no passado), a marcação fica no próprio horário.
 
 O seed em memória (`data/*.seed.json`) espelha as migrations. O `src/data/seed.test.ts` acusa se os ids dos dois seeds divergirem.
 
@@ -131,11 +135,35 @@ Como funciona:
 1. No mock WhatsApp, a aba **Checklist de preparo** lista os exames pendentes ou confirmados que têm preparo e ainda não foram respondidos. O paciente lê as instruções, responde sim ou não para cada item e envia.
 2. Todas as respostas sim deixam o preparo **ok**. Qualquer não deixa o preparo **não cumprido** e guarda quais itens falharam.
 3. No painel, cada exame mostra o status do preparo (**pendente**, **ok** ou **não cumprido**). Quem respondeu não cumprido e ainda ocupa a vaga aparece num alerta acima da agenda, com os itens que não vai cumprir e o botão **Liberar vaga**.
-4. A vaga liberada fica como **Liberado** e reaproveitável, com o motivo visível no badge, e entra no fluxo de **Oferecer vaga** que já existia. O novo paciente começa com o preparo pendente e responde ao próprio checklist.
+4. A vaga liberada fica como **Liberado** e reaproveitável, com o motivo visível no badge, e pode entrar na [oferta em cascata](#oferta-de-vaga-em-cascata). O novo paciente começa com o preparo pendente e responde ao próprio checklist.
 
 As regras ficam em `src/domain/exam-preparation/`: o checklist só aceita vaga pendente ou confirmada, exige resposta para todos os itens, recusa item que não é do exame e não deixa responder duas vezes. Exame do histórico (já realizado) nunca aparece com preparo pendente.
 
 Limitação conhecida: não existe tabela de exames, então o preparo é ligado ao agendamento pelo nome do exame (`appointments.procedure_name` igual a `exam_preparations.exam_name`). Se o nome mudar de um lado só, o exame deixa de pedir checklist. As respostas já gravadas continuam aparecendo, mesmo se o cadastro de preparo estiver fora do ar.
+
+## Oferta de vaga em cascata
+
+Vaga liberada em cima da hora costuma ficar vazia porque ligar para a lista de espera, um por um, leva tempo. A oferta em cascata faz isso sozinha: a clínica só escolhe o prazo e inicia.
+
+Quem recebe primeiro:
+
+1. Entra na fila só quem é da mesma especialidade, está aguardando, ainda não recebeu oferta desta vaga e não tem outra oferta em aberto. Um paciente nunca tem duas ofertas abertas ao mesmo tempo.
+2. A fila é dividida em faixas de distância entre o bairro do paciente e o da clínica: perto (até 5 km), médio (até 10 km), longe (acima de 10 km) e, por último, distância desconhecida.
+3. Dentro da mesma faixa, vem primeiro quem espera há mais tempo (`requested_at`). O desempate final é pelo id, para a ordem não mudar entre uma consulta e outra.
+
+Com faixas, a distância e o tempo de espera pesam os dois. As faixas e as opções de prazo ficam em `src/domain/slot-offer/offer-rules.ts`, e a ordem é uma função pura (`rankCandidates`).
+
+Como funciona:
+
+1. No painel, a vaga reaproveitável mostra o seletor de **Prazo** (2, 5, 15 ou 30 minutos, padrão 15) e o botão **Iniciar oferta**. A oferta vai para o primeiro da fila e a linha passa a mostrar para quem foi e quanto falta para o prazo acabar.
+2. No mock WhatsApp, a aba **Ofertas de vaga** mostra a mensagem para o candidato, com a contagem regressiva e os botões **Aceitar** e **Recusar**.
+3. Aceitar já confirma a vaga para o candidato (status **Confirmado**) e o tira da lista de espera. Recusar passa a vaga para o próximo da fila, com o mesmo prazo.
+4. Sem resposta no prazo, a oferta expira e a vaga também passa para o próximo. Quando a fila acaba, a cascata termina e a vaga continua liberada.
+5. A seção **Ofertas de vaga** do painel mostra o histórico de cada vaga: quem recebeu, a que distância, quando, o prazo e o que respondeu.
+
+Não existe job em segundo plano (na Vercel não há processo rodando o tempo todo). Os prazos vencidos são aplicados sempre que alguém lê ou responde as ofertas: o painel consulta `GET /api/slot-offers` a cada 10 segundos enquanto houver oferta em aberto, e também assim que a contagem zera. A oferta do próximo candidato conta o prazo a partir desse momento.
+
+O banco garante as regras mesmo com duas requisições ao mesmo tempo: índices únicos parciais deixam só uma oferta aberta por vaga e por candidato, e encerrar uma oferta só funciona se ela ainda estiver aberta. Assim, a vaga não é repassada em dobro.
 
 ## Como rodar o app
 
@@ -172,10 +200,14 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 2. Na coluna **Risco de falta**, Ana Souza aparece com 64% (alto) e Bruno Lima com 10% (baixo). Clique em **ver todos os motivos** para ver quanto cada fator pesou.
 3. Abra `/mock-whatsapp`, escolha uma vaga pendente e clique SIM, NÃO ou REMARCAR.
 4. Volte em `/painel` e clique em **Atualizar**.
-5. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock). O risco da vaga é recalculado para o novo paciente.
-6. No mock WhatsApp, o novo paciente aparece nas pendentes; use SIM/NÃO/REMARCAR.
-7. No mock, abra a aba **Checklist de preparo**, escolha a ultrassonografia de Marina Costa, responda não para **Bexiga cheia** e clique em **Enviar respostas**.
-8. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para oferecê-la a Nelson Araújo, que está na lista de espera de Ultrassonografia.
+5. Na vaga liberada de Endocrinologia (Fábio Nunes), escolha o prazo de **2 min** e clique em **Iniciar oferta**. A oferta vai para Igor Santos, que mora perto e espera há mais tempo.
+6. No mock WhatsApp, abra a aba **Ofertas de vaga** e clique em **Recusar**. A vaga passa para Lucas Ferreira, também perto, mas na lista há menos tempo. Elena Rocha espera há mais tempo, mas mora longe, então fica por último.
+7. Deixe o prazo de Lucas acabar. No painel, a seção **Ofertas de vaga** mostra que ele não respondeu a tempo e que a vaga foi para Elena.
+8. No mock, clique em **Aceitar** na oferta de Elena. No painel, a vaga aparece **Confirmada** para ela e o risco de falta é recalculado.
+9. No mock, abra a aba **Checklist de preparo**, escolha a ultrassonografia de Marina Costa, responda não para **Bexiga cheia** e clique em **Enviar respostas**.
+10. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para iniciar a oferta, que vai para Nelson Araújo, da lista de espera de Ultrassonografia.
+
+Para repetir a demonstração do zero no banco local, rode `npx supabase db reset` na raiz e depois `pnpm auth:create-user`.
 
 ## Variáveis de ambiente
 

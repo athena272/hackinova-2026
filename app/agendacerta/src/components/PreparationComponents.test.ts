@@ -66,7 +66,7 @@ describe("AppointmentTable com preparo", () => {
     const html = renderToStaticMarkup(
       createElement(AppointmentTable, {
         appointments: [released],
-        onOffered: vi.fn(),
+        slotOffers: { cascadeByAppointment: new Map(), loading: false, onChanged: vi.fn() },
         preparationStatusById: new Map([[released.id, "nao_cumprido" as const]]),
       }),
     );

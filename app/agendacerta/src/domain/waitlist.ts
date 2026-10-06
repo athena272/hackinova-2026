@@ -7,6 +7,8 @@ export type WaitlistEntry = {
   specialty: string;
   phoneMasked: string;
   status: WaitlistStatus;
+  /** Quando entrou na lista de espera (ISO); quem espera há mais tempo tem prioridade. */
+  requestedAt: string;
 };
 
 const WAITLIST_STATUSES: Record<WaitlistStatus, true> = {

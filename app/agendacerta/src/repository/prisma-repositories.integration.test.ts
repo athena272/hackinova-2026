@@ -1,12 +1,16 @@
 import { existsSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
+import { loadPatientDistances } from "@/application/patient-distance";
 import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
+import { rankCandidates, SLOT_OFFER_TIMEOUT_OPTIONS } from "@/domain/slot-offer";
 import { getPrisma } from "@/lib/database/prisma";
 import { InMemoryExamPreparationRepository } from "./in-memory-exam-preparation-repository";
+import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
 import { PrismaExamPreparationRepository } from "./prisma-exam-preparation-repository";
 import { PrismaPatientRepository } from "./prisma-patient-repository";
+import { PrismaSlotOfferRepository } from "./prisma-slot-offer-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
 
 /**
@@ -120,6 +124,41 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
       expect(positions, preparation.id).toEqual([...positions].sort((a, b) => a - b));
     }
     await expect(preparations.findByExamName("Raio-X inexistente")).resolves.toBeNull();
+  });
+
+  it("lista de espera traz a data de entrada igual ao seed", async () => {
+    const fromDb = await waitlist.listBySpecialty("Endocrinologia");
+
+    expect(fromDb).toEqual(
+      await new InMemoryWaitlistRepository().listBySpecialty("Endocrinologia"),
+    );
+  });
+
+  it("ordena a fila da vaga apt-006 como na demonstração: Igor, Lucas e depois Elena", async () => {
+    const distanceFor = await loadPatientDistances(patients, CLINIC_NEIGHBORHOOD_ID, "teste");
+    const ranked = rankCandidates(
+      (await waitlist.listBySpecialty("Endocrinologia")).map((entry) => ({
+        ...entry,
+        distanceKm: distanceFor(entry.patientId),
+      })),
+      { specialty: "Endocrinologia", alreadyOfferedWaitlistIds: new Set(), busyPatientIds: new Set() },
+    );
+
+    expect(ranked.map(({ id, band }) => [id, band])).toEqual([
+      ["wl-002", "perto"],
+      ["wl-007", "perto"],
+      ["wl-008", "longe"],
+    ]);
+  });
+
+  it("lê as ofertas de vaga com datas em ISO e prazo entre as opções", async () => {
+    const offers = await new PrismaSlotOfferRepository().listRecent();
+
+    expect(Array.isArray(offers)).toBe(true);
+    for (const offer of offers) {
+      expect(new Date(offer.offeredAt).toISOString(), offer.id).toBe(offer.offeredAt);
+      expect(SLOT_OFFER_TIMEOUT_OPTIONS, offer.id).toContain(offer.timeoutMinutes);
+    }
   });
 
   it("monta a resposta de preparo gravada em ISO e deixa null quem não respondeu", async () => {

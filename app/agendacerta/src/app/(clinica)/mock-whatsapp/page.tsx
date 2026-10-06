@@ -3,15 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ClipboardList, MessageCircle } from "lucide-react";
+import { ClipboardList, Megaphone, MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
 import { MockPreparationChecklist } from "@/components/MockPreparationChecklist";
+import { MockSlotOfferThread } from "@/components/MockSlotOfferThread";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
 import { useExamPreparations } from "@/hooks/use-exam-preparations";
+import { type SlotOfferResponseResult, useSlotOffers } from "@/hooks/use-slot-offers";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
-type MockTab = "confirmacao" | "preparo";
+type MockTab = "confirmacao" | "preparo" | "ofertas";
 
 export default function MockWhatsAppPage() {
   const router = useRouter();
@@ -20,6 +22,11 @@ export default function MockWhatsAppPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<MockTab>("confirmacao");
   const { state: preparations, reload: reloadPreparations } = useExamPreparations();
+  const {
+    state: slotOffers,
+    reload: reloadSlotOffers,
+    refresh: refreshSlotOffers,
+  } = useSlotOffers();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,6 +61,11 @@ export default function MockWhatsAppPage() {
     setAppointments((current) =>
       current.map((item) => (item.id === updated.id ? updated : item)),
     );
+  }
+
+  function handleOfferResponded(result: SlotOfferResponseResult) {
+    if (result.appointment) handleUpdated(result.appointment);
+    void refreshSlotOffers();
   }
 
   return (
@@ -92,6 +104,18 @@ export default function MockWhatsAppPage() {
           <ClipboardList size={15} aria-hidden />
           Checklist de preparo
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "ofertas"}
+          onClick={() => {
+            setTab("ofertas");
+            void refreshSlotOffers();
+          }}
+        >
+          <Megaphone size={15} aria-hidden />
+          Ofertas de vaga
+        </button>
       </div>
       {loading ? <p className="muted">Carregando…</p> : null}
       {error ? <p className="error">{error}</p> : null}
@@ -107,6 +131,15 @@ export default function MockWhatsAppPage() {
           preparations={preparations}
           onRetryPreparations={() => void reloadPreparations()}
           onAnswered={handleUpdated}
+        />
+      ) : null}
+      {!loading && !error && tab === "ofertas" ? (
+        <MockSlotOfferThread
+          offers={slotOffers}
+          appointments={appointments}
+          onRetry={() => void reloadSlotOffers()}
+          onRefresh={() => void refreshSlotOffers()}
+          onResponded={handleOfferResponded}
         />
       ) : null}
     </motion.main>

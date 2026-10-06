@@ -2,6 +2,7 @@ import type { Appointment, PreparationAnswer } from "@/domain/appointment";
 import { createProcedure } from "@/domain/appointment";
 import type { ExamPreparation } from "@/domain/exam-preparation";
 import type { Neighborhood, PatientLocation } from "@/domain/patient";
+import { assertSlotOfferTimeout, type SlotOffer } from "@/domain/slot-offer";
 import type { WaitlistEntry } from "@/domain/waitlist";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -34,6 +35,7 @@ export const waitlistSelect = {
   id: true,
   specialty: true,
   status: true,
+  requestedAt: true,
   patient: { select: patientSummarySelect },
 } satisfies Prisma.WaitlistEntrySelect;
 
@@ -76,6 +78,7 @@ export function mapRecordToWaitlistEntry(record: WaitlistRecord): WaitlistEntry 
     specialty: record.specialty,
     phoneMasked: record.patient.phoneMasked,
     status: record.status,
+    requestedAt: record.requestedAt.toISOString(),
   };
 }
 
@@ -133,6 +136,44 @@ export function mapRecordToExamPreparation(
     examName: record.examName,
     instructions: record.instructions,
     items: record.items.map((item) => ({ ...item })),
+  };
+}
+
+export const slotOfferSelect = {
+  id: true,
+  appointmentId: true,
+  status: true,
+  offeredAt: true,
+  expiresAt: true,
+  closedAt: true,
+  timeoutMinutes: true,
+  distanceKm: true,
+  candidate: {
+    select: { id: true, patient: { select: { id: true, fullName: true } } },
+  },
+} satisfies Prisma.SlotOfferSelect;
+
+export type SlotOfferRecord = Prisma.SlotOfferGetPayload<{
+  select: typeof slotOfferSelect;
+}>;
+
+/** O check do banco limita timeout_minutes às opções; a asserção só tipa o valor. */
+export function mapRecordToSlotOffer(record: SlotOfferRecord): SlotOffer {
+  assertSlotOfferTimeout(record.timeoutMinutes);
+  return {
+    id: record.id,
+    appointmentId: record.appointmentId,
+    candidate: {
+      waitlistId: record.candidate.id,
+      patientId: record.candidate.patient.id,
+      patientName: record.candidate.patient.fullName,
+    },
+    status: record.status,
+    offeredAt: record.offeredAt.toISOString(),
+    expiresAt: record.expiresAt.toISOString(),
+    closedAt: record.closedAt ? record.closedAt.toISOString() : null,
+    timeoutMinutes: record.timeoutMinutes,
+    distanceKm: record.distanceKm ? record.distanceKm.toNumber() : null,
   };
 }
 

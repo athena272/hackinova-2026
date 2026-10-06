@@ -3,36 +3,56 @@
     "id": "wl-001",
     "patientId": "pat-77fc801524e6",
     "specialty": "Neurologia",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-08-20T10:00:00-03:00"
   },
   {
     "id": "wl-002",
     "patientId": "pat-52ed793dcb17",
     "specialty": "Endocrinologia",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-08-10T10:00:00-03:00"
   },
   {
     "id": "wl-003",
     "patientId": "pat-a321196d2a69",
     "specialty": "Oftalmologia",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-08-25T10:00:00-03:00"
   },
   {
     "id": "wl-004",
     "patientId": "pat-3699372f2877",
     "specialty": "Neurologia",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-09-01T10:00:00-03:00"
   },
   {
     "id": "wl-005",
     "patientId": "pat-demo-03",
     "specialty": "Ultrassonografia",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-09-15T10:00:00-03:00"
   },
   {
     "id": "wl-006",
     "patientId": "pat-demo-04",
     "specialty": "Laboratório",
-    "status": "aguardando"
+    "status": "aguardando",
+    "requestedAt": "2026-09-18T10:00:00-03:00"
+  },
+  {
+    "id": "wl-007",
+    "patientId": "pat-demo-01",
+    "specialty": "Endocrinologia",
+    "status": "aguardando",
+    "requestedAt": "2026-09-20T10:00:00-03:00"
+  },
+  {
+    "id": "wl-008",
+    "patientId": "pat-dca67cc350e3",
+    "specialty": "Endocrinologia",
+    "status": "aguardando",
+    "requestedAt": "2026-07-15T10:00:00-03:00"
   }
 ]

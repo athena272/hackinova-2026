@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { Prisma } from "@/generated/prisma/client";
-import { describeDatabaseError, isRecordNotFoundError } from "./errors";
+import {
+  describeDatabaseError,
+  isRecordNotFoundError,
+  isUniqueConstraintError,
+} from "./errors";
 
 function knownError(code: string) {
   return new Prisma.PrismaClientKnownRequestError("erro do Prisma", {
@@ -21,6 +25,17 @@ describe("isRecordNotFoundError", () => {
   it("ignora erros que não são do Prisma", () => {
     expect(isRecordNotFoundError(new Error("P2025"))).toBe(false);
     expect(isRecordNotFoundError({ code: "P2025" })).toBe(false);
+  });
+});
+
+describe("isUniqueConstraintError", () => {
+  it("reconhece P2002 (índice único violado)", () => {
+    expect(isUniqueConstraintError(knownError("P2002"))).toBe(true);
+  });
+
+  it("ignora outros códigos e erros que não são do Prisma", () => {
+    expect(isUniqueConstraintError(knownError("P2025"))).toBe(false);
+    expect(isUniqueConstraintError({ code: "P2002" })).toBe(false);
   });
 });
 
