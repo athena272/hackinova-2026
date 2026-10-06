@@ -1,12 +1,32 @@
 import seedData from "../../data/appointments.seed.json";
-import type { Appointment } from "@/domain/appointment";
+import type { Appointment, PreparationAnswer } from "@/domain/appointment";
 import {
   createProcedure,
   isAppointmentStatus,
+  isPreparationResult,
   isProcedureType,
 } from "@/domain/appointment";
 import { createSeedPatientLookup } from "./patient-seed";
 import { SeedIntegrityError } from "./seed-integrity-error";
+
+type SeedPreparation = (typeof seedData)[number]["preparation"];
+
+function toPreparationAnswer(
+  appointmentId: string,
+  preparation: SeedPreparation,
+): PreparationAnswer | null {
+  if (preparation === null) return null;
+  if (!isPreparationResult(preparation.result)) {
+    throw new SeedIntegrityError(
+      `Resultado de preparo "${preparation.result}" inválido no agendamento "${appointmentId}".`,
+    );
+  }
+  return {
+    result: preparation.result,
+    missedItemIds: [...preparation.missedItemIds],
+    answeredAt: preparation.answeredAt,
+  };
+}
 
 export function loadAppointmentSeed(): Appointment[] {
   const findPatient = createSeedPatientLookup();
@@ -34,6 +54,7 @@ export function loadAppointmentSeed(): Appointment[] {
       status: item.status,
       phoneMasked: patient.phoneMasked,
       procedure: createProcedure(item.procedureType, item.procedureName),
+      preparation: toPreparationAnswer(item.id, item.preparation),
     };
   });
 }
