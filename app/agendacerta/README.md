@@ -7,21 +7,24 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Seed de agendamentos (JSON + migration Supabase)
 - Cadastro de pacientes com bairro, histórico de comparecimento (compareceu / faltou) e tipo de procedimento (consulta ou exame), base para o score de falta e as próximas funções do diferencial
 - Painel com a agenda ativa e o histórico de comparecimento em seções separadas
+- Score preditivo de falta explicável: cada consulta pendente ou confirmada mostra a chance de falta e os motivos (veja [Score de falta](#score-de-falta))
 - Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
+- `GET /api/appointments/risk`
 - `GET /api/waitlist?specialty=...`
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
 - `POST /api/appointments/[id]/offer` com `{ "waitlistId": "..." }`
 - Páginas `/painel` e `/mock-whatsapp`
 - Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status e da oferta de vaga (Vitest)
+- Testes unitários da regra de status, da oferta de vaga e do score de falta (Vitest)
 
 ## O que fica de fora
 
 - WhatsApp Cloud API / Meta
 - Recuperação de senha e múltiplas clínicas
-- Score de risco (IA) e fila de espera automática sem ação da clínica
+- Modelo de machine learning treinado com dados reais (o score atual é uma regra com pesos ajustáveis)
+- Fila de espera automática sem ação da clínica
 
 ## Requisitos
 
@@ -57,10 +60,12 @@ Modelo de dados do agendamento:
 | --- | --- |
 | `patients` | Nome, telefone mascarado e bairro (sem endereço completo, por LGPD) |
 | `neighborhoods` | Bairros de Aracaju e região com coordenadas aproximadas, para distância estimada até a clínica (`src/domain/clinic.ts`) |
-| `appointments` | Paciente (`patient_id`), especialidade, horário, status e procedimento (`consulta` ou `exame` com nome) |
+| `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status e procedimento (`consulta` ou `exame` com nome) |
 | `waitlist` | Paciente (`patient_id`), especialidade e status na lista de espera |
 
-Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId` e `procedure`.
+Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId`, `procedure` e `bookedAt`.
+
+`booked_at` nunca passa do horário da consulta (check constraint). Quando a vaga é oferecida a outro paciente, ele conta como uma nova marcação; se a oferta acontece depois do horário (agenda de demonstração no passado), a marcação fica no próprio horário.
 
 O seed em memória (`data/*.seed.json`) espelha as migrations. O `src/data/seed.test.ts` acusa se os ids dos dois seeds divergirem.
 
@@ -83,6 +88,26 @@ Teste de integração opcional, somente leitura, com o Supabase local rodando (P
 ```powershell
 $env:RUN_DB_TESTS="1"; pnpm test; Remove-Item Env:RUN_DB_TESTS
 ```
+
+## Score de falta
+
+O painel mostra, para cada consulta pendente ou confirmada, a chance estimada de o paciente faltar, a faixa (baixo, médio ou alto) e os motivos. A ideia é a recepção saber quem vale lembrar primeiro, antes que a vaga vire prejuízo.
+
+É uma regra explicável, não uma caixa preta: a chance começa em 15% e cada fator soma ou subtrai pontos.
+
+| Fator | Como pesa |
+| --- | --- |
+| Histórico | Faltas nas últimas 3 consultas do paciente. Muitas faltas aumentam bastante; ter comparecido a todas (pelo menos 2) diminui |
+| Especialidade | Algumas especialidades costumam ter mais faltas (Oftalmologia, Neurologia, Endocrinologia, Ultrassonografia) |
+| Dia e horário | Segunda, sexta, antes das 8h ou a partir das 17h, no fuso da clínica (`America/Maceio`) |
+| Antecedência | Marcado há 30 dias ou mais pesa mais; marcado com até 2 dias pesa menos |
+| Distância | Distância estimada entre o bairro do paciente e o da clínica. Bairro desconhecido não pesa |
+
+O resultado fica entre 3% e 95%. Faixas: alto a partir de 50%, médio a partir de 25%.
+
+Os pesos são hipóteses iniciais para a demonstração, não valores calibrados. Todos ficam em um único arquivo, `src/domain/no-show-risk/risk-weights.ts`; os testes leem os limites de lá, então dá para ajustar sem reescrever teste.
+
+O cálculo vem de `GET /api/appointments/risk`, separado da agenda. Se ele falhar, a agenda continua funcionando e o painel mostra um aviso com **Tentar de novo**. Vaga liberada ou com remarcação não recebe score.
 
 ## Como rodar o app
 
@@ -116,10 +141,11 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 ## Demo rápida
 
 1. Entre em `/login` com o usuário da clínica, abra `/painel` e veja os status. Abaixo da agenda fica o histórico de comparecimento (por exemplo, Ana Souza faltou 2 das últimas 3 consultas e Bruno Lima compareceu a todas).
-2. Abra `/mock-whatsapp`, escolha uma vaga pendente e clique SIM, NÃO ou REMARCAR.
-3. Volte em `/painel` e clique em **Atualizar**.
-4. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock).
-5. No mock WhatsApp, o novo paciente aparece nas pendentes; use SIM/NÃO/REMARCAR.
+2. Na coluna **Risco de falta**, Ana Souza aparece com 64% (alto) e Bruno Lima com 10% (baixo). Clique em **ver todos os motivos** para ver quanto cada fator pesou.
+3. Abra `/mock-whatsapp`, escolha uma vaga pendente e clique SIM, NÃO ou REMARCAR.
+4. Volte em `/painel` e clique em **Atualizar**.
+5. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock). O risco da vaga é recalculado para o novo paciente.
+6. No mock WhatsApp, o novo paciente aparece nas pendentes; use SIM/NÃO/REMARCAR.
 
 ## Variáveis de ambiente
 
