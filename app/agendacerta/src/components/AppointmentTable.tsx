@@ -2,16 +2,24 @@ import type { Appointment } from "@/domain/appointment";
 import { isSlotReusable } from "@/domain/appointment";
 import { Recycle } from "lucide-react";
 import type { PreparationStatus } from "@/domain/exam-preparation";
+import type { SlotOfferCascade } from "@/domain/slot-offer";
 import type { NoShowRisksState } from "@/hooks/use-no-show-risks";
 import { formatDateTime } from "@/lib/format";
 import { NoShowRiskCell } from "./NoShowRiskCell";
 import { PreparationBadge } from "./PreparationBadge";
-import { ReusableSlotActions } from "./ReusableSlotActions";
+import { SlotOfferActions } from "./SlotOfferActions";
 import { StatusBadge } from "./StatusBadge";
+
+/** Quando informado, as vagas reaproveitáveis ganham a oferta em cascata. */
+export type AppointmentTableSlotOffers = {
+  cascadeByAppointment: ReadonlyMap<string, SlotOfferCascade>;
+  loading: boolean;
+  onChanged: () => void;
+};
 
 type AppointmentTableProps = {
   appointments: Appointment[];
-  onOffered?: () => void;
+  slotOffers?: AppointmentTableSlotOffers;
   emptyMessage?: string;
   /** Quando informado, mostra a coluna "Risco de falta". */
   risks?: NoShowRisksState;
@@ -21,7 +29,7 @@ type AppointmentTableProps = {
 
 export function AppointmentTable({
   appointments,
-  onOffered,
+  slotOffers,
   emptyMessage = "Nenhum agendamento encontrado.",
   risks,
   preparationStatusById,
@@ -67,10 +75,12 @@ export function AppointmentTable({
                         <Recycle size={12} aria-hidden />
                         Vaga reaproveitável
                       </div>
-                      {onOffered ? (
-                        <ReusableSlotActions
+                      {slotOffers ? (
+                        <SlotOfferActions
                           appointment={appointment}
-                          onOffered={onOffered}
+                          cascade={slotOffers.cascadeByAppointment.get(appointment.id)}
+                          loading={slotOffers.loading}
+                          onChanged={slotOffers.onChanged}
                         />
                       ) : null}
                     </div>

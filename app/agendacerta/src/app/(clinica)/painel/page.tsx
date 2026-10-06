@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -10,6 +10,7 @@ import {
   CircleAlert,
   History,
   LayoutDashboard,
+  Megaphone,
   RefreshCw,
   UserCheck,
   UserX,
@@ -25,10 +26,16 @@ import {
   type PreparationStatus,
   preparationStatusFor,
 } from "@/domain/exam-preparation";
-import { AppointmentTable } from "@/components/AppointmentTable";
+import type { SlotOfferCascade } from "@/domain/slot-offer";
+import {
+  AppointmentTable,
+  type AppointmentTableSlotOffers,
+} from "@/components/AppointmentTable";
 import { PreparationAlerts } from "@/components/PreparationAlerts";
+import { SlotOfferHistory } from "@/components/SlotOfferHistory";
 import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { useNoShowRisks } from "@/hooks/use-no-show-risks";
+import { acceptedOfferIds, useSlotOffers } from "@/hooks/use-slot-offers";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
@@ -88,11 +95,49 @@ export default function PainelPage() {
   const { state: risks, reload: reloadRisks } = useNoShowRisks();
   const { state: preparations, reload: reloadPreparations } = useExamPreparations();
 
+  const {
+    state: slotOffers,
+    reload: reloadSlotOffers,
+    refresh: refreshSlotOffers,
+    refreshing: slotOffersRefreshing,
+    refreshError: slotOffersRefreshError,
+  } = useSlotOffers();
+
   /** Oferta e liberação mudam o paciente ou o status da vaga, e com isso o risco: recarrega os dois. */
   const reloadAll = useCallback(() => {
     void load();
     void reloadRisks();
   }, [load, reloadRisks]);
+
+  const refreshEverything = useCallback(() => {
+    reloadAll();
+    void refreshSlotOffers();
+  }, [reloadAll, refreshSlotOffers]);
+
+  /** O aceite acontece no mock (outra tela); quando o histórico mostra um aceite novo, a agenda muda. */
+  const seenAcceptedOffers = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (slotOffers.status !== "ready") return;
+    const accepted = acceptedOfferIds(slotOffers.data);
+    const previous = seenAcceptedOffers.current;
+    seenAcceptedOffers.current = accepted;
+    if (previous && [...accepted].some((id) => !previous.has(id))) {
+      reloadAll();
+    }
+  }, [slotOffers, reloadAll]);
+
+  const tableSlotOffers = useMemo<AppointmentTableSlotOffers>(() => {
+    const cascadeByAppointment = new Map<string, SlotOfferCascade>(
+      slotOffers.status === "ready"
+        ? slotOffers.data.map((cascade) => [cascade.appointmentId, cascade])
+        : [],
+    );
+    return {
+      cascadeByAppointment,
+      loading: slotOffers.status === "loading",
+      onChanged: () => void refreshSlotOffers(),
+    };
+  }, [slotOffers, refreshSlotOffers]);
 
   const stats = useMemo(() => countByStatus(appointments), [appointments]);
   const { agenda, history } = useMemo(
@@ -137,11 +182,15 @@ export default function PainelPage() {
           </p>
         </div>
         <div className="toolbar" style={{ marginBottom: 0 }}>
-          <button type="button" onClick={reloadAll}>
+          <button type="button" onClick={refreshEverything}>
             <RefreshCw
               size={16}
               className={
-                loading || risks.status === "loading" || preparations.status === "loading"
+                loading ||
+                risks.status === "loading" ||
+                preparations.status === "loading" ||
+                slotOffers.status === "loading" ||
+                slotOffersRefreshing
                   ? "spin"
                   : undefined
               }
@@ -208,10 +257,28 @@ export default function PainelPage() {
             />
             <AppointmentTable
               appointments={agenda}
-              onOffered={reloadAll}
+              slotOffers={tableSlotOffers}
               emptyMessage="Nenhum agendamento na agenda."
               risks={risks}
               preparationStatusById={preparationStatusById}
+            />
+          </section>
+
+          <section className="panel-section" aria-labelledby="slot-offers-title">
+            <h2 className="section-title" id="slot-offers-title">
+              <Megaphone size={18} aria-hidden /> Ofertas de vaga
+            </h2>
+            <p className="muted section-lead">
+              A vaga vai primeiro para quem mora mais perto e espera há mais tempo.
+              Se a pessoa recusar ou o prazo acabar, passa para a próxima da fila.
+            </p>
+            <SlotOfferHistory
+              offers={slotOffers}
+              refreshing={slotOffersRefreshing}
+              refreshError={slotOffersRefreshError}
+              appointments={appointments}
+              onRetry={() => void reloadSlotOffers()}
+              onRefresh={() => void refreshSlotOffers()}
             />
           </section>
 
