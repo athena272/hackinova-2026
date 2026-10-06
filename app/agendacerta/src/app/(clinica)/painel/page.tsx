@@ -5,15 +5,37 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   CalendarClock,
+  CalendarDays,
   CheckCircle2,
   CircleAlert,
+  History,
   LayoutDashboard,
   RefreshCw,
+  UserCheck,
+  UserX,
+  type LucideIcon,
 } from "lucide-react";
-import type { Appointment } from "@/domain/appointment";
+import type { Appointment, AppointmentStatus } from "@/domain/appointment";
+import {
+  countByStatus,
+  splitAgendaAndHistory,
+} from "@/domain/appointment-summary";
 import { AppointmentTable } from "@/components/AppointmentTable";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
+
+const STAT_CARDS: readonly {
+  status: AppointmentStatus;
+  label: string;
+  Icon: LucideIcon;
+}[] = [
+  { status: "pendente", label: "Pendente", Icon: CalendarClock },
+  { status: "confirmado", label: "Confirmado", Icon: CheckCircle2 },
+  { status: "liberado", label: "Liberado", Icon: CircleAlert },
+  { status: "remarcacao_solicitada", label: "Remarcação", Icon: RefreshCw },
+  { status: "compareceu", label: "Compareceu", Icon: UserCheck },
+  { status: "faltou", label: "Faltou", Icon: UserX },
+];
 
 export default function PainelPage() {
   const router = useRouter();
@@ -53,17 +75,11 @@ export default function PainelPage() {
     void load();
   }, [load]);
 
-  const stats = useMemo(() => {
-    const pendente = appointments.filter((a) => a.status === "pendente").length;
-    const confirmado = appointments.filter(
-      (a) => a.status === "confirmado",
-    ).length;
-    const liberado = appointments.filter((a) => a.status === "liberado").length;
-    const remarcacao = appointments.filter(
-      (a) => a.status === "remarcacao_solicitada",
-    ).length;
-    return { pendente, confirmado, liberado, remarcacao };
-  }, [appointments]);
+  const stats = useMemo(() => countByStatus(appointments), [appointments]);
+  const { agenda, history } = useMemo(
+    () => splitAgendaAndHistory(appointments),
+    [appointments],
+  );
 
   return (
     <motion.main
@@ -103,40 +119,49 @@ export default function PainelPage() {
 
       {!loading && !error ? (
         <div className="stats-row">
-          <div className="stat">
-            <div className="stat-label">
-              <CalendarClock size={14} aria-hidden /> Pendente
+          {STAT_CARDS.map(({ status, label, Icon }) => (
+            <div className="stat" key={status}>
+              <div className="stat-label">
+                <Icon size={14} aria-hidden /> {label}
+              </div>
+              <div className="stat-value">{stats[status]}</div>
             </div>
-            <div className="stat-value">{stats.pendente}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">
-              <CheckCircle2 size={14} aria-hidden /> Confirmado
-            </div>
-            <div className="stat-value">{stats.confirmado}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">
-              <CircleAlert size={14} aria-hidden /> Liberado
-            </div>
-            <div className="stat-value">{stats.liberado}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">
-              <RefreshCw size={14} aria-hidden /> Remarcação
-            </div>
-            <div className="stat-value">{stats.remarcacao}</div>
-          </div>
+          ))}
         </div>
       ) : null}
 
-      {loading ? <p className="muted">Carregando…</p> : null}
+      {loading ? <p className="muted">Carregando agenda e histórico…</p> : null}
       {error ? <p className="error">{error}</p> : null}
       {!loading && !error ? (
-        <AppointmentTable
-          appointments={appointments}
-          onOffered={() => void load()}
-        />
+        <>
+          <section className="panel-section" aria-labelledby="agenda-title">
+            <h2 className="section-title" id="agenda-title">
+              <CalendarDays size={18} aria-hidden /> Agenda
+            </h2>
+            <p className="muted section-lead">
+              Confirmações em andamento e vagas que podem ser reaproveitadas.
+            </p>
+            <AppointmentTable
+              appointments={agenda}
+              onOffered={() => void load()}
+              emptyMessage="Nenhum agendamento na agenda."
+            />
+          </section>
+
+          <section className="panel-section" aria-labelledby="history-title">
+            <h2 className="section-title" id="history-title">
+              <History size={18} aria-hidden /> Histórico de comparecimento
+            </h2>
+            <p className="muted section-lead">
+              Consultas e exames que já aconteceram, do mais recente para o mais
+              antigo.
+            </p>
+            <AppointmentTable
+              appointments={history}
+              emptyMessage="Ainda não há histórico de comparecimento."
+            />
+          </section>
+        </>
       ) : null}
     </motion.main>
   );

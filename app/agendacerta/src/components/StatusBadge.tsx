@@ -4,6 +4,9 @@ import {
   CheckCircle2,
   CircleAlert,
   RefreshCcw,
+  UserCheck,
+  UserX,
+  type LucideIcon,
 } from "lucide-react";
 
 const LABELS: Record<AppointmentStatus, string> = {
@@ -11,14 +14,18 @@ const LABELS: Record<AppointmentStatus, string> = {
   confirmado: "Confirmado",
   liberado: "Liberado",
   remarcacao_solicitada: "Remarcação",
+  compareceu: "Compareceu",
+  faltou: "Faltou",
 };
 
-const ICONS = {
+const ICONS: Record<AppointmentStatus, LucideIcon> = {
   pendente: CalendarClock,
   confirmado: CheckCircle2,
   liberado: CircleAlert,
   remarcacao_solicitada: RefreshCcw,
-} as const;
+  compareceu: UserCheck,
+  faltou: UserX,
+};
 
 type StatusBadgeProps = {
   status: AppointmentStatus;

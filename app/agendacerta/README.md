@@ -5,6 +5,8 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 ## O que esta fatia inclui
 
 - Seed de agendamentos (JSON + migration Supabase)
+- Cadastro de pacientes com bairro, histórico de comparecimento (compareceu / faltou) e tipo de procedimento (consulta ou exame), base para o score de falta e as próximas funções do diferencial
+- Painel com a agenda ativa e o histórico de comparecimento em seções separadas
 - Lista de espera simples: oferecer vaga liberada a candidato da mesma especialidade
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
@@ -47,7 +49,20 @@ Sem `DATABASE_URL`, a API usa o seed em memória (CI e smoke sem Docker).
 
 ## Banco e Prisma
 
-O app acessa o Postgres do Supabase pelo Prisma 7 (agendamentos, lista de espera e as tabelas `auth_*` do login). As migrations continuam em `supabase/migrations/` e são a fonte da verdade; o `prisma/schema.prisma` é gerado a partir do banco, sem `prisma migrate`.
+O app acessa o Postgres do Supabase pelo Prisma 7 (agendamentos, lista de espera, pacientes, bairros e as tabelas `auth_*` do login). As migrations continuam em `supabase/migrations/` e são a fonte da verdade; o `prisma/schema.prisma` é gerado a partir do banco, sem `prisma migrate`.
+
+Modelo de dados do agendamento:
+
+| Tabela | O que guarda |
+| --- | --- |
+| `patients` | Nome, telefone mascarado e bairro (sem endereço completo, por LGPD) |
+| `neighborhoods` | Bairros de Aracaju e região com coordenadas aproximadas, para distância estimada até a clínica (`src/domain/clinic.ts`) |
+| `appointments` | Paciente (`patient_id`), especialidade, horário, status e procedimento (`consulta` ou `exame` com nome) |
+| `waitlist` | Paciente (`patient_id`), especialidade e status na lista de espera |
+
+Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId` e `procedure`.
+
+O seed em memória (`data/*.seed.json`) espelha as migrations. O `src/data/seed.test.ts` acusa se os ids dos dois seeds divergirem.
 
 - `pnpm install` roda `prisma generate` (postinstall) e cria o client em `src/generated/prisma` (fora do git). Não precisa de banco.
 - `prisma.config.ts` lê o `DATABASE_URL` do `.env.local`.
@@ -58,6 +73,10 @@ Para mudar uma tabela:
 2. Aplique no local: `npx supabase db reset`
 3. Atualize o schema: `pnpm db:pull` (mantém os renomes `@map` / `@@map`) e, se precisar, ajuste o domínio
 4. Rode `pnpm test` (o `prisma-schema.test.ts` acusa tabela ou enum fora de sincronia) e commite a migration junto com o `schema.prisma`
+
+O `db reset` recria o banco do zero e apaga o usuário local da clínica. Depois dele, rode `pnpm auth:create-user` de novo.
+
+Valor novo em enum (`alter type ... add value`) fica numa migration própria: o Postgres não deixa usar o valor na mesma transação em que ele foi criado.
 
 Teste de integração opcional, somente leitura, com o Supabase local rodando (PowerShell):
 
@@ -96,7 +115,7 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 
 ## Demo rápida
 
-1. Entre em `/login` com o usuário da clínica, abra `/painel` e veja os status.
+1. Entre em `/login` com o usuário da clínica, abra `/painel` e veja os status. Abaixo da agenda fica o histórico de comparecimento (por exemplo, Ana Souza faltou 2 das últimas 3 consultas e Bruno Lima compareceu a todas).
 2. Abra `/mock-whatsapp`, escolha uma vaga pendente e clique SIM, NÃO ou REMARCAR.
 3. Volte em `/painel` e clique em **Atualizar**.
 4. Em vagas liberadas, use **Oferecer vaga** para atribuir um candidato (fica **pendente** para ele confirmar no mock).
