@@ -81,11 +81,12 @@ describe("mapRecordToAppointment", () => {
 });
 
 describe("mapRecordToWaitlistEntry", () => {
-  it("achata o paciente aninhado", () => {
+  it("achata o paciente aninhado e devolve a data de entrada em ISO", () => {
     const record: WaitlistRecord = {
       id: "wl-001",
       specialty: "Laboratório",
       status: "aguardando",
+      requestedAt: new Date("2026-08-20T13:00:00.000Z"),
       patient,
     };
 
@@ -96,6 +97,7 @@ describe("mapRecordToWaitlistEntry", () => {
       specialty: "Laboratório",
       phoneMasked: "(79) 9****-8181",
       status: "aguardando",
+      requestedAt: "2026-08-20T13:00:00.000Z",
     });
   });
 });

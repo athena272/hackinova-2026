@@ -9,6 +9,7 @@ const record = {
   id: "wl-001",
   specialty: "Neurologia",
   status: "aguardando" as const,
+  requestedAt: new Date("2026-08-20T13:00:00.000Z"),
   patient: {
     id: "pat-helena",
     fullName: "Helena Dias",
@@ -23,6 +24,7 @@ const entry: WaitlistEntry = {
   specialty: "Neurologia",
   phoneMasked: "(79) 9****-4444",
   status: "aguardando",
+  requestedAt: "2026-08-20T13:00:00.000Z",
 };
 
 function setup() {
