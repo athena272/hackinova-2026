@@ -1,5 +1,35 @@
 import { describe, expect, it, vi } from "vitest";
-import { getApiJson, readResponseJson } from "./http";
+import { getApiJson, postApiJson, readResponseJson } from "./http";
+
+describe("postApiJson", () => {
+  const jsonResponse = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status });
+
+  it("envia o corpo como JSON e devolve a resposta", async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ ok: true }, 201));
+
+    await expect(postApiJson("/api/x", { a: 1 }, "Falha.", fetcher)).resolves.toEqual({
+      ok: true,
+    });
+    expect(fetcher).toHaveBeenCalledWith("/api/x", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"a":1}',
+    });
+  });
+
+  it("usa a mensagem da API e, sem ela, a padrão", async () => {
+    const withMessage = vi.fn().mockResolvedValue(jsonResponse({ error: "Prazo inválido." }, 400));
+    const withoutMessage = vi.fn().mockResolvedValue(jsonResponse({}, 500));
+
+    await expect(postApiJson("/api/x", {}, "Falha.", withMessage)).rejects.toThrow(
+      "Prazo inválido.",
+    );
+    await expect(postApiJson("/api/x", {}, "Falha padrão.", withoutMessage)).rejects.toThrow(
+      "Falha padrão.",
+    );
+  });
+});
 
 describe("getApiJson", () => {
   const jsonResponse = (body: unknown, status = 200) =>

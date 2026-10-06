@@ -17,6 +17,25 @@ export async function readResponseJson<T>(response: Response): Promise<T> {
 
 export type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
+/** POST com corpo JSON. Resposta de erro vira Error com a mensagem que a API mandou. */
+export async function postApiJson<T extends object>(
+  url: string,
+  body: unknown,
+  fallbackError: string,
+  fetcher: Fetcher = fetch,
+): Promise<T> {
+  const response = await fetcher(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = await readResponseJson<T & { error?: string }>(response);
+  if (!response.ok) {
+    throw new Error(payload.error ?? fallbackError);
+  }
+  return payload;
+}
+
 /** GET sem cache. Resposta de erro vira Error com a mensagem que a API mandou. */
 export async function getApiJson<T extends object>(
   url: string,

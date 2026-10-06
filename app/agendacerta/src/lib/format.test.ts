@@ -1,5 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { formatDateTime, initials } from "./format";
+import {
+  formatCountdown,
+  formatDateTime,
+  formatDistance,
+  formatTime,
+  initials,
+  remainingMs,
+} from "./format";
+
+describe("formatTime", () => {
+  it("formata só a hora em pt-BR", () => {
+    expect(formatTime("2026-10-20T12:34:00.000Z")).toMatch(/^\d{2}:34$/);
+  });
+});
+
+describe("remainingMs e formatCountdown", () => {
+  const until = "2026-10-06T15:15:00.000Z";
+
+  it("conta o tempo até o prazo e nunca fica negativo", () => {
+    expect(remainingMs(until, Date.parse("2026-10-06T15:10:00.000Z"))).toBe(5 * 60_000);
+    expect(remainingMs(until, Date.parse("2026-10-06T15:20:00.000Z"))).toBe(0);
+  });
+
+  it("mostra mm:ss, arredondando o segundo para cima", () => {
+    expect(formatCountdown(5 * 60_000)).toBe("05:00");
+    expect(formatCountdown(61_500)).toBe("01:02");
+    expect(formatCountdown(999)).toBe("00:01");
+    expect(formatCountdown(0)).toBe("00:00");
+    expect(formatCountdown(-10)).toBe("00:00");
+  });
+
+  it("passa de 60 minutos sem virar hora", () => {
+    expect(formatCountdown(90 * 60_000)).toBe("90:00");
+  });
+});
+
+describe("formatDistance", () => {
+  it("usa vírgula e uma casa, ou avisa quando não sabe", () => {
+    expect(formatDistance(3.74)).toBe("3,7 km");
+    expect(formatDistance(13)).toBe("13 km");
+    expect(formatDistance(null)).toBe("distância desconhecida");
+  });
+});
 
 describe("formatDateTime", () => {
   it("formata data e hora curtas em pt-BR", () => {
