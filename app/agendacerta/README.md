@@ -11,6 +11,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Checklist de preparo pré-exame: o paciente responde sim ou não no mock, o painel mostra o status do preparo e a clínica libera antes a vaga de quem não vai cumprir (veja [Checklist de preparo](#checklist-de-preparo))
 - Oferta de vaga em cascata: a vaga liberada vai primeiro para quem mora mais perto e espera há mais tempo; com recusa ou sem resposta no prazo, passa para o próximo da fila (veja [Oferta de vaga em cascata](#oferta-de-vaga-em-cascata))
 - Overbooking guiado pelo score: nos horários com risco alto de falta, o painel sugere um encaixe para a lista de espera e a recepção aceita ou recusa (veja [Overbooking guiado pelo score](#overbooking-guiado-pelo-score))
+- Detecção de booking duplo: o painel avisa quando o mesmo paciente tem dois horários do mesmo serviço em datas próximas, mesmo em unidades diferentes da rede; a confirmação reforçada pelo mock pergunta qual manter e o outro vira vaga reaproveitável (veja [Detecção de booking duplo](#detecção-de-booking-duplo))
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/appointments/risk`
@@ -18,15 +19,18 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - `GET /api/waitlist?specialty=...`
 - `GET /api/slot-offers` (histórico das ofertas por vaga)
 - `GET /api/overbookings` (sugestões de encaixe e quais vagas já têm encaixe)
+- `GET /api/duplicate-bookings` (possíveis duplicidades e confirmações reforçadas em andamento)
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
 - `POST /api/appointments/[id]/preparation` com `{ "answers": { "<id do item>": true | false } }`
 - `POST /api/appointments/[id]/release`
 - `POST /api/appointments/[id]/slot-offers` com `{ "timeoutMinutes": 2 | 5 | 15 | 30 }`
 - `POST /api/slot-offers/[id]/response` com `{ "response": "aceitar" | "recusar" }`
 - `POST /api/appointments/[id]/overbooking` com `{ "decision": "aceitar" | "recusar" }`
+- `POST /api/duplicate-bookings` com `{ "appointmentIds": ["<id>", "<id>"] }` (envia a confirmação reforçada)
+- `POST /api/duplicate-bookings/[id]/choice` com `{ "keepAppointmentId": "<id>" }`
 - Páginas `/painel` e `/mock-whatsapp`
 - Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status, da oferta em cascata, do score de falta, das regras de preparo e do overbooking (Vitest)
+- Testes unitários da regra de status, da oferta em cascata, do score de falta, das regras de preparo, do overbooking e da detecção de booking duplo (Vitest)
 
 ## O que fica de fora
 
@@ -36,6 +40,8 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Oferta que começa sozinha, sem a clínica iniciar, e job em segundo plano para os prazos
 - Uso do score de falta na ordem da fila de espera
 - Tela para mudar o limite de encaixes por horário (hoje é uma constante no código)
+- Detecção de booking duplo entre clínicas diferentes (só olha a clínica e as unidades da rede dela)
+- Opção "não vou a nenhum" na confirmação reforçada (o paciente ainda pode responder NÃO na confirmação de presença de cada horário)
 
 ## Requisitos
 
@@ -71,14 +77,17 @@ Modelo de dados do agendamento:
 | --- | --- |
 | `patients` | Nome, telefone mascarado e bairro (sem endereço completo, por LGPD) |
 | `neighborhoods` | Bairros de Aracaju e região com coordenadas aproximadas, para distância estimada até a clínica (`src/domain/clinic.ts`) |
-| `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status, procedimento (`consulta` ou `exame` com nome) e a resposta ao checklist de preparo (`preparation_result`, `preparation_answered_at`, `preparation_missed_item_ids`) |
+| `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status, procedimento (`consulta` ou `exame` com nome), a resposta ao checklist de preparo (`preparation_result`, `preparation_answered_at`, `preparation_missed_item_ids`), a unidade (`unit_id`, opcional) e, quando é retorno, o agendamento de origem (`return_of_appointment_id`, opcional) |
+| `clinic_units` | Unidades da rede da clínica, com nome (único) e bairro |
+| `duplicate_booking_checks` | Cada confirmação reforçada: paciente, grupo de horários (`group_key`), status (`aguardando` ou `resolvida`), quando foi enviada, o horário que o paciente manteve (`kept_appointment_id`) e quando respondeu |
+| `duplicate_booking_check_appointments` | Os horários perguntados em cada confirmação reforçada |
 | `waitlist` | Paciente (`patient_id`), especialidade, status na lista de espera e quando entrou nela (`requested_at`) |
 | `slot_offers` | Cada oferta de vaga: vaga (`appointment_id`), candidato (`waitlist_id`), status (`pendente`, `aceita`, `recusada`, `expirada`), quando foi oferecida, prazo, quando encerrou e a distância usada na ordem |
 | `overbookings` | Cada decisão da recepção sobre um encaixe: horário (`specialty` + `scheduled_at`), agendamento de risco alto que motivou a sugestão (`anchor_appointment_id`), decisão (`aceita` ou `recusada`), o agendamento criado como encaixe (`encaixe_appointment_id`, só no aceite), a posição do encaixe no horário (`sequence`) e a chance de falta no momento da decisão |
 | `exam_preparations` | Preparo exigido por exame: nome do exame (único) e instruções |
 | `exam_preparation_items` | Itens do checklist de cada preparo, na ordem (`position`), com rótulo e pergunta de sim ou não |
 
-Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId`, `procedure` e `bookedAt`.
+Status do agendamento: `pendente`, `confirmado`, `liberado` (o paciente avisou que não vai), `remarcacao_solicitada`, `compareceu` e `faltou` (não apareceu e não avisou). As APIs continuam devolvendo `patientName` e `phoneMasked` no agendamento e na lista de espera; agora também vêm `patientId`, `procedure`, `bookedAt`, `unit` (id e nome, ou `null`) e `returnOfAppointmentId`.
 
 `booked_at` nunca passa do horário da consulta (check constraint). Quando outro paciente aceita a vaga, ele conta como uma nova marcação; se o aceite acontece depois do horário (agenda de demonstração no passado), a marcação fica no próprio horário.
 
@@ -195,6 +204,34 @@ O banco garante as regras mesmo com duas recepções clicando ao mesmo tempo. Ac
 
 Erros que a API devolve com código (400): `NOT_HIGH_RISK`, `LIMIT_REACHED`, `ALREADY_REFUSED`, `NO_CANDIDATES`, `ANCHOR_NOT_ACTIVE` e `ANCHOR_IS_ENCAIXE` (um encaixe não motiva outro encaixe).
 
+## Detecção de booking duplo
+
+Às vezes o paciente marca a mesma consulta duas vezes, por exemplo uma em cada unidade da rede, e só vai a uma. A outra vira falta. O painel avisa a recepção, que pergunta ao paciente pelo WhatsApp qual horário ele quer manter. O horário que ele descarta volta a ser uma vaga reaproveitável.
+
+Quando dois horários contam como duplicidade:
+
+1. São do mesmo paciente e do mesmo serviço. Consulta é comparada pela especialidade e exame, pelo nome do exame, sem diferenciar maiúsculas de minúsculas.
+2. Os dois estão ativos (pendente ou confirmado). Horário liberado, remarcado ou já realizado não entra.
+3. Estão a até `DUPLICATE_WINDOW_DAYS = 30` dias um do outro, em `src/domain/duplicate-booking/duplicate-rules.ts`. Horários em sequência formam um grupo só: se A e B estão a 20 dias e B e C também, os três ficam juntos.
+4. Unidades diferentes não impedem a detecção. É justamente o caso mais comum.
+
+Retorno legítimo nunca é marcado. O agendamento de retorno guarda o horário de origem em `return_of_appointment_id`, e um retorno do mesmo paciente e do mesmo serviço fica fora da detecção, mesmo dentro da janela e mesmo que a consulta de origem ainda não tenha acontecido. Se o vínculo apontar para outro paciente ou outro serviço, o dado está errado e o horário volta a ser analisado normalmente. A regra é uma função pura (`findDuplicateGroups`) com testes para esses casos.
+
+Unidades: a tabela `clinic_units` guarda as unidades da rede e cada agendamento pode apontar para uma (`unit_id`). Agendamentos antigos continuam sem unidade. A agenda mostra a unidade abaixo da especialidade e o encaixe herda a unidade do horário que motivou a sugestão.
+
+Como funciona:
+
+1. No painel, o alerta **Possível booking duplo** aparece acima da agenda com o paciente, o serviço e cada horário com a unidade. Na agenda, as linhas do grupo ganham o selo **Possível duplicidade**.
+2. **Enviar confirmação reforçada** registra a pergunta para o paciente. Enquanto grava, o botão mostra **Enviando…** e fica bloqueado. Depois, o alerta mostra **Aguardando o paciente escolher no WhatsApp**.
+3. No mock WhatsApp, a aba **Confirmação reforçada** mostra a mensagem com os horários e um botão **Manter** para cada um. Enquanto a escolha é gravada, o botão escolhido mostra **Enviando…** e os outros ficam bloqueados.
+4. O horário mantido fica **Confirmado**. Os outros ficam **Liberados**, com o selo **Liberado por duplicidade** na agenda, e o alerta some.
+
+Convivência com o resto do fluxo: o horário descartado é uma vaga liberada como qualquer outra, então pode entrar na [oferta em cascata](#oferta-de-vaga-em-cascata) e respeita a cobertura por [encaixe](#overbooking-guiado-pelo-score). Se o paciente já respondeu NÃO em um dos horários pela confirmação de presença, o grupo se desfaz: o alerta some e uma escolha pendente responde 400 com o código `GROUP_DISSOLVED`.
+
+O banco garante as regras mesmo com cliques ao mesmo tempo. Um índice único parcial deixa só uma confirmação aguardando por grupo. A escolha grava a confirmação, o horário mantido e os liberados em uma única transação, e só funciona se a confirmação ainda estiver aguardando e os horários continuarem ativos. Se outra requisição chegou antes, nada é gravado, a API responde 409 (`DUPLICATE_CHECK_CONFLICT`) e a tela mostra o aviso.
+
+Erros que a API devolve com código (400): `NOT_A_DUPLICATE_GROUP` (os horários não formam mais uma duplicidade), `ALREADY_SENT`, `CHECK_NOT_OPEN` (o paciente já escolheu), `APPOINTMENT_NOT_IN_CHECK`, `APPOINTMENT_NOT_ACTIVE` e `GROUP_DISSOLVED`.
+
 ## Como rodar o app
 
 ```bash
@@ -239,6 +276,10 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 11. Na seção **Encaixes sugeridos**, veja a consulta de Neurologia de Ana Souza (64%, risco alto) com os motivos e a sugestão de encaixe para Helena Dias. Clique em **Aceitar encaixe**: Helena entra na agenda no mesmo horário, com o selo **Encaixe**, e a sugestão some.
 12. No mock WhatsApp, responda **NÃO** na consulta de Ana Souza em Neurologia (se você usou essa consulta no passo 3, comece do zero com o reset abaixo).
 13. Volte ao painel e clique em **Atualizar**. A vaga de Ana fica liberada, mas mostra **Vaga coberta pelo encaixe; não abre leilão**: Helena já ocupa o horário, então nenhuma oferta é iniciada.
+14. Acima da agenda, o alerta **Possível booking duplo** mostra Bruno Lima com duas consultas de Endocrinologia, em 22/09 na Unidade Jardins e em 24/09 na Unidade Centro (se você respondeu NÃO em uma delas no passo 3, o alerta não aparece; comece do zero com o reset abaixo). Diego Alves também tem duas consultas de Cardiologia, mas a segunda é o retorno da primeira, então não gera alerta.
+15. Clique em **Enviar confirmação reforçada**. O alerta passa a mostrar que aguarda a escolha do paciente.
+16. No mock WhatsApp, abra a aba **Confirmação reforçada** e clique em **Manter** no horário de 22/09.
+17. No painel, clique em **Atualizar**. A consulta de 22/09 fica **Confirmada**, a de 24/09 fica **Liberada** com o selo **Liberado por duplicidade** e já dá para iniciar a oferta em cascata para a lista de espera de Endocrinologia.
 
 Para repetir a demonstração do zero no banco local, rode `npx supabase db reset` na raiz e depois `pnpm auth:create-user`.
 
