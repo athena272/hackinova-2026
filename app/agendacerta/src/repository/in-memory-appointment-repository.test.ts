@@ -110,4 +110,14 @@ describe("InMemoryAppointmentRepository", () => {
     ).rejects.toBeInstanceOf(AppointmentNotFoundError);
     expect(await repo.getById("apt-999")).toBeNull();
   });
+
+  it("create grava um agendamento novo e recusa id repetido", async () => {
+    const repo = new InMemoryAppointmentRepository();
+    const anchor = (await repo.getById("apt-001"))!;
+    const encaixe = { ...anchor, id: "apt-enc-1", patientId: "pat-x", patientName: "Paciente X" };
+
+    await expect(repo.create(encaixe)).resolves.toEqual(encaixe);
+    expect(await repo.getById("apt-enc-1")).toEqual(encaixe);
+    await expect(repo.create(encaixe)).rejects.toThrow(/já existe/);
+  });
 });

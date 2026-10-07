@@ -5,7 +5,7 @@ import type {
   PreparationResult,
 } from "@/domain/appointment";
 import { applyConfirmationAction } from "@/domain/confirmation";
-import type { PrismaClient } from "@/generated/prisma/client";
+import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import {
   describeDatabaseError,
   isRecordNotFoundError,
@@ -35,6 +35,24 @@ function toPreparationColumns(preparation: PreparationAnswer | null): Preparatio
   };
 }
 
+/** Colunas de um agendamento novo; também usado na transação do encaixe. */
+export function toAppointmentCreateData(
+  appointment: Appointment,
+): Prisma.AppointmentUncheckedCreateInput {
+  return {
+    id: appointment.id,
+    patientId: appointment.patientId,
+    specialty: appointment.specialty,
+    scheduledAt: appointment.scheduledAt,
+    bookedAt: appointment.bookedAt,
+    status: appointment.status,
+    procedureType: appointment.procedure.type,
+    procedureName:
+      appointment.procedure.type === "exame" ? appointment.procedure.examName : null,
+    ...toPreparationColumns(appointment.preparation),
+  };
+}
+
 export class PrismaAppointmentRepository implements AppointmentRepository {
   constructor(
     private readonly getClient: () => AppointmentClient = getPrisma,
@@ -61,6 +79,18 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       return record ? mapRecordToAppointment(record) : null;
     } catch (error) {
       throw describeDatabaseError("Falha ao buscar agendamento", error);
+    }
+  }
+
+  async create(appointment: Appointment): Promise<Appointment> {
+    try {
+      const record = await this.getClient().appointment.create({
+        data: toAppointmentCreateData(appointment),
+        select: appointmentSelect,
+      });
+      return mapRecordToAppointment(record);
+    } catch (error) {
+      throw describeDatabaseError("Falha ao criar agendamento", error);
     }
   }
 

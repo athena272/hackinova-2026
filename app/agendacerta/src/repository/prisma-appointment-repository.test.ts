@@ -45,6 +45,7 @@ function setup() {
   const appointment = {
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    create: vi.fn(),
     update: vi.fn(),
   };
   const repo = new PrismaAppointmentRepository(() => ({ appointment }) as never);
@@ -237,6 +238,48 @@ describe("PrismaAppointmentRepository", () => {
 
     await expect(repo.saveReleased(domainAppointment)).rejects.toBeInstanceOf(
       AppointmentNotFoundError,
+    );
+  });
+
+  it("create grava o paciente pelo id e o procedimento nas duas colunas", async () => {
+    const { appointment: client, repo } = setup();
+    client.create.mockResolvedValue({
+      ...record,
+      procedureType: "exame",
+      procedureName: "Eletroencefalograma",
+    });
+    const exam: Appointment = {
+      ...domainAppointment,
+      procedure: { type: "exame", examName: "Eletroencefalograma" },
+    };
+
+    await expect(repo.create(exam)).resolves.toEqual(exam);
+    expect(client.create).toHaveBeenCalledWith({
+      data: {
+        id: "apt-001",
+        patientId: "pat-ana",
+        specialty: "Neurologia",
+        scheduledAt: "2026-09-22T12:00:00.000Z",
+        bookedAt: "2026-08-13T12:00:00.000Z",
+        status: "pendente",
+        procedureType: "exame",
+        procedureName: "Eletroencefalograma",
+        preparationResult: null,
+        preparationAnsweredAt: null,
+        preparationMissedItemIds: [],
+      },
+      select: appointmentSelect,
+    });
+  });
+
+  it("create de consulta grava procedure_name nulo e propaga erro com contexto", async () => {
+    const { appointment: client, repo } = setup();
+    client.create.mockResolvedValueOnce(record).mockRejectedValueOnce(new Error("violates foreign key"));
+
+    await repo.create(domainAppointment);
+    expect(client.create.mock.calls[0][0].data.procedureName).toBeNull();
+    await expect(repo.create(domainAppointment)).rejects.toThrow(
+      "Falha ao criar agendamento: violates foreign key",
     );
   });
 });
