@@ -4,7 +4,8 @@ export type SlotOfferErrorCode =
   | "NO_CANDIDATES"
   | "INVALID_TIMEOUT"
   | "OFFER_NOT_PENDING"
-  | "OFFER_EXPIRED";
+  | "OFFER_EXPIRED"
+  | "SLOT_COVERED_BY_OVERBOOKING";
 
 export class SlotOfferError extends Error {
   readonly code: SlotOfferErrorCode;

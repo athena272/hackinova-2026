@@ -72,6 +72,7 @@ describe("POST /api/appointments/[id]/slot-offers", () => {
     ["INVALID_TIMEOUT", "Prazo de resposta inválido: 7."],
     ["NO_CANDIDATES", "Ninguém na lista de espera."],
     ["CASCADE_ALREADY_ACTIVE", "A vaga já tem uma oferta aguardando resposta."],
+    ["SLOT_COVERED_BY_OVERBOOKING", "Este horário já tem encaixe."],
   ] as const)("responde 400 com o código %s", async (code, message) => {
     vi.mocked(startSlotOffer).mockRejectedValue(new SlotOfferError(code, message));
 

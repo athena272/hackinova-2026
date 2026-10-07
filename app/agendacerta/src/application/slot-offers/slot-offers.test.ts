@@ -7,6 +7,10 @@ import {
   InMemoryAppointmentRepository,
   resetAppointmentStoreForTests,
 } from "@/repository/in-memory-appointment-repository";
+import {
+  InMemoryOverbookingRepository,
+  resetOverbookingStoreForTests,
+} from "@/repository/in-memory-overbooking-repository";
 import { InMemoryPatientRepository } from "@/repository/in-memory-patient-repository";
 import {
   InMemorySlotOfferRepository,
@@ -35,6 +39,7 @@ function setup() {
     waitlist: new InMemoryWaitlistRepository(),
     patients: new InMemoryPatientRepository(),
     offers: new InMemorySlotOfferRepository(),
+    overbookings: new InMemoryOverbookingRepository(),
     now: () => current,
     newOfferId: () => `offer-${++sequence}`,
     clinicNeighborhoodId: CLINIC_NEIGHBORHOOD_ID,
@@ -60,6 +65,7 @@ describe("casos de uso da oferta em cascata", () => {
     resetAppointmentStoreForTests();
     resetWaitlistStoreForTests();
     resetSlotOfferStoreForTests();
+    resetOverbookingStoreForTests();
   });
 
   describe("startSlotOffer", () => {

@@ -7,6 +7,7 @@ import {
 import { AppointmentNotFoundError } from "@/repository/errors";
 import type { SlotOfferDeps } from "./deps";
 import { offerToNextCandidate } from "./offer-to-next-candidate";
+import { isCoveredByOverbooking } from "./overbooking-coverage";
 import { syncSlotOffers } from "./sync-slot-offers";
 
 /** Começa a cascata da vaga liberada com o prazo escolhido pela clínica. */
@@ -24,6 +25,12 @@ export async function startSlotOffer(
   }
 
   assertCanStartCascade(appointment, await deps.offers.listByAppointment(appointmentId));
+  if (await isCoveredByOverbooking(deps, appointment)) {
+    throw new SlotOfferError(
+      "SLOT_COVERED_BY_OVERBOOKING",
+      "Este horário já tem encaixe: o cancelamento só libera o encaixe e não abre leilão.",
+    );
+  }
 
   const offer = await offerToNextCandidate(
     deps,
