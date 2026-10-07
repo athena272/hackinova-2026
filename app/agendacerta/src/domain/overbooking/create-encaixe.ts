@@ -51,6 +51,8 @@ export function createEncaixe({
       status: "pendente",
       procedure: anchor.procedure,
       preparation: null,
+      unit: anchor.unit,
+      returnOfAppointmentId: null,
     },
     candidate: { ...candidate, status: "atribuido" },
     overbooking: {
