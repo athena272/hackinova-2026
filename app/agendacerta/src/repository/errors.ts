@@ -37,6 +37,27 @@ export class OverbookingConflictError extends Error {
   }
 }
 
+export class DuplicateCheckNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Confirmação reforçada não encontrada: ${id}`);
+    this.name = "DuplicateCheckNotFoundError";
+  }
+}
+
+/**
+ * Outra requisição chegou antes: a mesma confirmação já foi enviada (índice
+ * único parcial) ou já foi respondida, ou um dos horários mudou nesse meio tempo.
+ */
+export class DuplicateCheckConflictError extends Error {
+  constructor(checkId: string, options?: { cause?: unknown }) {
+    super(
+      `Não foi possível registrar a confirmação "${checkId}": ela acabou de ser enviada ou respondida.`,
+      options,
+    );
+    this.name = "DuplicateCheckConflictError";
+  }
+}
+
 export class WaitlistNotFoundError extends Error {
   constructor(id: string) {
     super(`Candidato da lista de espera não encontrado: ${id}`);
