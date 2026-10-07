@@ -25,6 +25,12 @@ export type PreparationAnswer = {
   answeredAt: string;
 };
 
+/** Unidade da rede onde o atendimento acontece. */
+export type ClinicUnit = {
+  id: string;
+  name: string;
+};
+
 export type Appointment = {
   id: string;
   patientId: string;
@@ -38,6 +44,10 @@ export type Appointment = {
   procedure: Procedure;
   /** null enquanto o paciente não respondeu (ou quando não há checklist). */
   preparation: PreparationAnswer | null;
+  /** null em agendamentos anteriores ao cadastro de unidades. */
+  unit: ClinicUnit | null;
+  /** Consulta de origem quando este agendamento é um retorno; retorno nunca é booking duplo. */
+  returnOfAppointmentId: string | null;
 };
 
 // Record força listar todos os valores do tipo em tempo de compilação.

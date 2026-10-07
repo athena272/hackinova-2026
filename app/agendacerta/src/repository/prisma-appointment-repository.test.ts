@@ -16,11 +16,13 @@ const record = {
   preparationResult: null,
   preparationAnsweredAt: null,
   preparationMissedItemIds: [] as string[],
+  returnOfAppointmentId: null,
   patient: {
     id: "pat-ana",
     fullName: "Ana Souza",
     phoneMasked: "(79) 9****-1234",
   },
+  unit: null,
 };
 
 const domainAppointment: Appointment = {
@@ -34,6 +36,8 @@ const domainAppointment: Appointment = {
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
   preparation: null,
+  unit: null,
+  returnOfAppointmentId: null,
 };
 
 const notFound = new Prisma.PrismaClientKnownRequestError("Record not found", {
@@ -267,7 +271,22 @@ describe("PrismaAppointmentRepository", () => {
         preparationResult: null,
         preparationAnsweredAt: null,
         preparationMissedItemIds: [],
+        unitId: null,
+        returnOfAppointmentId: null,
       },
+      select: appointmentSelect,
+    });
+  });
+
+  it("create grava a unidade pelo id e o vínculo de retorno", async () => {
+    const { appointment: client, repo } = setup();
+    const unit = { id: "unit-centro", name: "Unidade Centro" };
+    client.create.mockResolvedValue({ ...record, unit, returnOfAppointmentId: "apt-000" });
+    const returnVisit: Appointment = { ...domainAppointment, unit, returnOfAppointmentId: "apt-000" };
+
+    await expect(repo.create(returnVisit)).resolves.toEqual(returnVisit);
+    expect(client.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ unitId: "unit-centro", returnOfAppointmentId: "apt-000" }),
       select: appointmentSelect,
     });
   });

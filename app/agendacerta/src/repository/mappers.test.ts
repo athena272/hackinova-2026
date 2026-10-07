@@ -24,7 +24,9 @@ const consultaRecord: AppointmentRecord = {
   preparationResult: null,
   preparationAnsweredAt: null,
   preparationMissedItemIds: [],
+  returnOfAppointmentId: null,
   patient,
+  unit: null,
 };
 
 describe("mapRecordToAppointment", () => {
@@ -40,7 +42,21 @@ describe("mapRecordToAppointment", () => {
       phoneMasked: "(79) 9****-8181",
       procedure: { type: "consulta" },
       preparation: null,
+      unit: null,
+      returnOfAppointmentId: null,
     });
+  });
+
+  it("mapeia a unidade e o vínculo de retorno", () => {
+    const appointment = mapRecordToAppointment({
+      ...consultaRecord,
+      id: "apt-011",
+      returnOfAppointmentId: "apt-010",
+      unit: { id: "unit-jardins", name: "Unidade Jardins" },
+    });
+
+    expect(appointment.unit).toEqual({ id: "unit-jardins", name: "Unidade Jardins" });
+    expect(appointment.returnOfAppointmentId).toBe("apt-010");
   });
 
   it("monta a resposta do preparo com a data em ISO", () => {
