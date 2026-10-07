@@ -102,6 +102,7 @@ describe("scoreAppointmentsRisk com repositórios simulados", () => {
     return {
       list,
       getById: vi.fn(),
+      create: vi.fn(),
       confirm: vi.fn(),
       saveOffered: vi.fn(),
       savePreparationAnswer: vi.fn(),
