@@ -30,12 +30,15 @@ import {
 import type { SlotOfferCascade } from "@/domain/slot-offer";
 import {
   AppointmentTable,
+  type AppointmentTableDuplicates,
   type AppointmentTableOverbooking,
   type AppointmentTableSlotOffers,
 } from "@/components/AppointmentTable";
+import { DuplicateBookingAlerts } from "@/components/DuplicateBookingAlerts";
 import { OverbookingSuggestions } from "@/components/OverbookingSuggestions";
 import { PreparationAlerts } from "@/components/PreparationAlerts";
 import { SlotOfferHistory } from "@/components/SlotOfferHistory";
+import { useDuplicateBookings } from "@/hooks/use-duplicate-bookings";
 import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { useNoShowRisks } from "@/hooks/use-no-show-risks";
 import { useOverbookings } from "@/hooks/use-overbookings";
@@ -115,15 +118,24 @@ export default function PainelPage() {
     refreshError: overbookingsRefreshError,
   } = useOverbookings();
 
+  const {
+    state: duplicates,
+    reload: reloadDuplicates,
+    refresh: refreshDuplicates,
+    refreshing: duplicatesRefreshing,
+    refreshError: duplicatesRefreshError,
+  } = useDuplicateBookings();
+
   /**
    * Oferta, liberação e encaixe mudam o paciente ou o status da vaga, e com
-   * isso o risco e as sugestões de encaixe: recarrega tudo isso junto.
+   * isso o risco, as sugestões de encaixe e as duplicidades: recarrega tudo isso junto.
    */
   const reloadAll = useCallback(() => {
     void load();
     void reloadRisks();
     void refreshOverbookings();
-  }, [load, reloadRisks, refreshOverbookings]);
+    void refreshDuplicates();
+  }, [load, reloadRisks, refreshOverbookings, refreshDuplicates]);
 
   const refreshEverything = useCallback(() => {
     reloadAll();
@@ -165,6 +177,17 @@ export default function PainelPage() {
           }
         : { encaixeIds: new Set(), coveredIds: new Set() },
     [overbookings],
+  );
+
+  const tableDuplicates = useMemo<AppointmentTableDuplicates>(
+    () =>
+      duplicates.status === "ready"
+        ? {
+            flaggedIds: new Set(duplicates.data.flaggedAppointmentIds),
+            releasedIds: new Set(duplicates.data.releasedAppointmentIds),
+          }
+        : { flaggedIds: new Set(), releasedIds: new Set() },
+    [duplicates],
   );
 
   const stats = useMemo(() => countByStatus(appointments), [appointments]);
@@ -220,7 +243,9 @@ export default function PainelPage() {
                 slotOffers.status === "loading" ||
                 slotOffersRefreshing ||
                 overbookings.status === "loading" ||
-                overbookingsRefreshing
+                overbookingsRefreshing ||
+                duplicates.status === "loading" ||
+                duplicatesRefreshing
                   ? "spin"
                   : undefined
               }
@@ -297,6 +322,12 @@ export default function PainelPage() {
                 </button>
               </div>
             ) : null}
+            <DuplicateBookingAlerts
+              duplicates={duplicates}
+              refreshError={duplicatesRefreshError}
+              onRetry={() => void reloadDuplicates()}
+              onSent={() => void refreshDuplicates()}
+            />
             <PreparationAlerts
               appointments={agenda}
               preparations={catalog}
@@ -306,6 +337,7 @@ export default function PainelPage() {
               appointments={agenda}
               slotOffers={tableSlotOffers}
               overbooking={tableOverbooking}
+              duplicates={tableDuplicates}
               emptyMessage="Nenhum agendamento na agenda."
               risks={risks}
               preparationStatusById={preparationStatusById}

@@ -23,10 +23,17 @@ export type AppointmentTableOverbooking = {
   coveredIds: ReadonlySet<string>;
 };
 
+/** Quando informado, marca as possíveis duplicidades e os horários descartados pelo paciente. */
+export type AppointmentTableDuplicates = {
+  flaggedIds: ReadonlySet<string>;
+  releasedIds: ReadonlySet<string>;
+};
+
 type AppointmentTableProps = {
   appointments: Appointment[];
   slotOffers?: AppointmentTableSlotOffers;
   overbooking?: AppointmentTableOverbooking;
+  duplicates?: AppointmentTableDuplicates;
   emptyMessage?: string;
   /** Quando informado, mostra a coluna "Risco de falta". */
   risks?: NoShowRisksState;
@@ -38,6 +45,7 @@ export function AppointmentTable({
   appointments,
   slotOffers,
   overbooking,
+  duplicates,
   emptyMessage = "Nenhum agendamento encontrado.",
   risks,
   preparationStatusById,
@@ -69,8 +77,19 @@ export function AppointmentTable({
                   {overbooking?.encaixeIds.has(appointment.id) ? (
                     <span className="badge encaixe-badge">Encaixe</span>
                   ) : null}
+                  {duplicates?.flaggedIds.has(appointment.id) ? (
+                    <span className="badge duplicate-badge">Possível duplicidade</span>
+                  ) : null}
+                  {duplicates?.releasedIds.has(appointment.id) ? (
+                    <span className="badge duplicate-released-badge">Liberado por duplicidade</span>
+                  ) : null}
                 </td>
-                <td>{appointment.specialty}</td>
+                <td>
+                  {appointment.specialty}
+                  {appointment.unit ? (
+                    <div className="muted table-unit">{appointment.unit.name}</div>
+                  ) : null}
+                </td>
                 <td>{formatDateTime(appointment.scheduledAt)}</td>
                 <td>{appointment.phoneMasked}</td>
                 <td>
