@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
+import { listOverbookings } from "@/application/overbooking/list-overbookings";
 import { loadPatientDistances } from "@/application/patient-distance";
 import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
@@ -9,6 +10,7 @@ import { InMemoryExamPreparationRepository } from "./in-memory-exam-preparation-
 import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
 import { PrismaExamPreparationRepository } from "./prisma-exam-preparation-repository";
+import { PrismaOverbookingRepository } from "./prisma-overbooking-repository";
 import { PrismaPatientRepository } from "./prisma-patient-repository";
 import { PrismaSlotOfferRepository } from "./prisma-slot-offer-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
@@ -159,6 +161,43 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
       expect(new Date(offer.offeredAt).toISOString(), offer.id).toBe(offer.offeredAt);
       expect(SLOT_OFFER_TIMEOUT_OPTIONS, offer.id).toContain(offer.timeoutMinutes);
     }
+  });
+
+  it("lê as decisões de encaixe com datas em ISO e o tipo amarrado à decisão", async () => {
+    const overbookings = await new PrismaOverbookingRepository().list();
+
+    expect(Array.isArray(overbookings)).toBe(true);
+    for (const overbooking of overbookings) {
+      expect(new Date(overbooking.scheduledAt).toISOString(), overbooking.id).toBe(
+        overbooking.scheduledAt,
+      );
+      expect(overbooking.encaixeAppointmentId === null, overbooking.id).toBe(
+        overbooking.decision === "recusada",
+      );
+    }
+  });
+
+  it("sugere encaixe no bloco da Ana Souza (apt-001, risco alto) sem gravar nada", async () => {
+    const notExpected = () => {
+      throw new Error("a listagem não deveria gerar ids");
+    };
+    const overview = await listOverbookings({
+      appointments,
+      waitlist,
+      patients,
+      offers: new PrismaSlotOfferRepository(),
+      overbookings: new PrismaOverbookingRepository(),
+      now: () => new Date(),
+      clinicNeighborhoodId: CLINIC_NEIGHBORHOOD_ID,
+      newEncaixeId: notExpected,
+      newOverbookingId: notExpected,
+    });
+
+    const suggestion = overview.suggestions.find((item) => item.anchor.id === "apt-001");
+    expect(suggestion?.risk.band).toBe("alto");
+    expect(suggestion?.risk.reasons.length).toBeGreaterThan(0);
+    expect(["wl-001", "wl-004"]).toContain(suggestion?.candidate.waitlistId);
+    expect(overview.suggestions.every((item) => item.risk.band === "alto")).toBe(true);
   });
 
   it("monta a resposta de preparo gravada em ISO e deixa null quem não respondeu", async () => {
