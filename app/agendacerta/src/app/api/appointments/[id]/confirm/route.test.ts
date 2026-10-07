@@ -34,6 +34,8 @@ const CONFIRMED: Appointment = {
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
   preparation: null,
+  unit: null,
+  returnOfAppointmentId: null,
 };
 
 function mockRepo(confirm: AppointmentRepository["confirm"]): AppointmentRepository {

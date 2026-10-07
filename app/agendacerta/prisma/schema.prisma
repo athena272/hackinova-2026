@@ -10,26 +10,35 @@ datasource db {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Appointment {
-  id                       String              @id
+  id                       String                             @id
   specialty                String
-  scheduledAt              DateTime            @map("scheduled_at") @db.Timestamptz(6)
-  status                   appointment_status  @default(pendente)
-  createdAt                DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
-  patientId                String              @map("patient_id")
-  procedureType            procedure_type      @default(consulta) @map("procedure_type")
-  procedureName            String?             @map("procedure_name")
-  bookedAt                 DateTime            @default(now()) @map("booked_at") @db.Timestamptz(6)
-  preparationResult        preparation_result? @map("preparation_result")
-  preparationAnsweredAt    DateTime?           @map("preparation_answered_at") @db.Timestamptz(6)
-  preparationMissedItemIds String[]            @default([]) @map("preparation_missed_item_ids")
-  patient                  Patient             @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  scheduledAt              DateTime                           @map("scheduled_at") @db.Timestamptz(6)
+  status                   appointment_status                 @default(pendente)
+  createdAt                DateTime                           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime                           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patientId                String                             @map("patient_id")
+  procedureType            procedure_type                     @default(consulta) @map("procedure_type")
+  procedureName            String?                            @map("procedure_name")
+  bookedAt                 DateTime                           @default(now()) @map("booked_at") @db.Timestamptz(6)
+  preparationResult        preparation_result?                @map("preparation_result")
+  preparationAnsweredAt    DateTime?                          @map("preparation_answered_at") @db.Timestamptz(6)
+  preparationMissedItemIds String[]                           @default([]) @map("preparation_missed_item_ids")
+  unitId                   String?                            @map("unit_id")
+  returnOfAppointmentId    String?                            @map("return_of_appointment_id")
+  patient                  Patient                            @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  unit                     ClinicUnit?                        @relation(fields: [unitId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  returnOf                 Appointment?                       @relation("AppointmentReturn", fields: [returnOfAppointmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  returns                  Appointment[]                      @relation("AppointmentReturn")
   slotOffers               SlotOffer[]
-  anchoredOverbookings     Overbooking[]       @relation("OverbookingAnchor")
-  encaixeOverbooking       Overbooking?        @relation("OverbookingEncaixe")
+  anchoredOverbookings     Overbooking[]                      @relation("OverbookingAnchor")
+  encaixeOverbooking       Overbooking?                       @relation("OverbookingEncaixe")
+  duplicateCheckItems      DuplicateBookingCheckAppointment[]
+  keptInDuplicateChecks    DuplicateBookingCheck[]
 
   @@index([scheduledAt])
   @@index([patientId])
+  @@index([unitId])
+  @@index([returnOfAppointmentId])
   @@map("appointments")
 }
 
@@ -118,14 +127,15 @@ model WaitlistEntry {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Neighborhood {
-  id        String    @id
+  id        String       @id
   name      String
   city      String
-  latitude  Decimal   @db.Decimal(9, 6)
-  longitude Decimal   @db.Decimal(9, 6)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  latitude  Decimal      @db.Decimal(9, 6)
+  longitude Decimal      @db.Decimal(9, 6)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
   patients  Patient[]
+  units     ClinicUnit[]
 
   @@unique([name, city])
   @@map("neighborhoods")
@@ -134,15 +144,16 @@ model Neighborhood {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Patient {
-  id              String          @id
-  fullName        String          @map("full_name")
-  phoneMasked     String          @map("phone_masked")
-  neighborhoodId  String?         @map("neighborhood_id")
-  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id              String                  @id
+  fullName        String                  @map("full_name")
+  phoneMasked     String                  @map("phone_masked")
+  neighborhoodId  String?                 @map("neighborhood_id")
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   appointments    Appointment[]
-  neighborhood    Neighborhood?   @relation(fields: [neighborhoodId], references: [id], onUpdate: NoAction)
+  neighborhood    Neighborhood?           @relation(fields: [neighborhoodId], references: [id], onUpdate: NoAction)
   waitlistEntries WaitlistEntry[]
+  duplicateChecks DuplicateBookingCheck[]
 
   @@index([neighborhoodId])
   @@map("patients")
@@ -226,6 +237,56 @@ model Overbooking {
   @@map("overbookings")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ClinicUnit {
+  id             String        @id
+  name           String        @unique
+  neighborhoodId String?       @map("neighborhood_id")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  appointments   Appointment[]
+
+  @@map("clinic_units")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// O índice único parcial (uma confirmação aguardando por grupo de horários) fica só na migration.
+model DuplicateBookingCheck {
+  id                String                             @id
+  patientId         String                             @map("patient_id")
+  groupKey          String                             @map("group_key")
+  status            duplicate_check_status             @default(aguardando)
+  keptAppointmentId String?                            @map("kept_appointment_id")
+  sentAt            DateTime                           @map("sent_at") @db.Timestamptz(6)
+  resolvedAt        DateTime?                          @map("resolved_at") @db.Timestamptz(6)
+  createdAt         DateTime                           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime                           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  patient           Patient                            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  keptAppointment   Appointment?                       @relation(fields: [keptAppointmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items             DuplicateBookingCheckAppointment[]
+
+  @@index([patientId], map: "duplicate_booking_checks_patient_idx")
+  @@map("duplicate_booking_checks")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model DuplicateBookingCheckAppointment {
+  checkId       String                @map("check_id")
+  appointmentId String                @map("appointment_id")
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  check         DuplicateBookingCheck @relation(fields: [checkId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  appointment   Appointment           @relation(fields: [appointmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([checkId, appointmentId])
+  @@index([appointmentId], map: "duplicate_booking_check_appointments_appointment_idx")
+  @@map("duplicate_booking_check_appointments")
+}
+
 enum appointment_status {
   pendente
   confirmado
@@ -260,4 +321,9 @@ enum slot_offer_status {
 enum overbooking_decision {
   aceita
   recusada
+}
+
+enum duplicate_check_status {
+  aguardando
+  resolvida
 }

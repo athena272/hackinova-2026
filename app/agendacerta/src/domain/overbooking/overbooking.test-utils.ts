@@ -18,6 +18,8 @@ export function appointment(overrides: Partial<Appointment> = {}): Appointment {
     phoneMasked: "(79) 9****-1111",
     procedure: { type: "consulta" },
     preparation: null,
+    unit: null,
+    returnOfAppointmentId: null,
     ...overrides,
   };
 }

@@ -3,17 +3,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ClipboardList, Megaphone, MessageCircle } from "lucide-react";
+import { ClipboardList, CopyX, Megaphone, MessageCircle } from "lucide-react";
 import type { Appointment } from "@/domain/appointment";
+import type { DuplicateCheckResolution } from "@/domain/duplicate-booking";
+import { MockDuplicateBookingThread } from "@/components/MockDuplicateBookingThread";
 import { MockPreparationChecklist } from "@/components/MockPreparationChecklist";
 import { MockSlotOfferThread } from "@/components/MockSlotOfferThread";
 import { MockWhatsAppThread } from "@/components/MockWhatsAppThread";
+import { useDuplicateBookings } from "@/hooks/use-duplicate-bookings";
 import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { type SlotOfferResponseResult, useSlotOffers } from "@/hooks/use-slot-offers";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
 
-type MockTab = "confirmacao" | "preparo" | "ofertas";
+type MockTab = "confirmacao" | "preparo" | "ofertas" | "duplicidade";
 
 export default function MockWhatsAppPage() {
   const router = useRouter();
@@ -27,6 +30,11 @@ export default function MockWhatsAppPage() {
     reload: reloadSlotOffers,
     refresh: refreshSlotOffers,
   } = useSlotOffers();
+  const {
+    state: duplicates,
+    reload: reloadDuplicates,
+    refresh: refreshDuplicates,
+  } = useDuplicateBookings();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +74,14 @@ export default function MockWhatsAppPage() {
   function handleOfferResponded(result: SlotOfferResponseResult) {
     if (result.appointment) handleUpdated(result.appointment);
     void refreshSlotOffers();
+  }
+
+  function handleDuplicateChosen(result: DuplicateCheckResolution) {
+    const changed = new Map(
+      [result.kept, ...result.released].map((item) => [item.id, item]),
+    );
+    setAppointments((current) => current.map((item) => changed.get(item.id) ?? item));
+    void refreshDuplicates();
   }
 
   return (
@@ -116,6 +132,18 @@ export default function MockWhatsAppPage() {
           <Megaphone size={15} aria-hidden />
           Ofertas de vaga
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "duplicidade"}
+          onClick={() => {
+            setTab("duplicidade");
+            void refreshDuplicates();
+          }}
+        >
+          <CopyX size={15} aria-hidden />
+          Confirmação reforçada
+        </button>
       </div>
       {loading ? <p className="muted">Carregando…</p> : null}
       {error ? <p className="error">{error}</p> : null}
@@ -140,6 +168,14 @@ export default function MockWhatsAppPage() {
           onRetry={() => void reloadSlotOffers()}
           onRefresh={() => void refreshSlotOffers()}
           onResponded={handleOfferResponded}
+        />
+      ) : null}
+      {!loading && !error && tab === "duplicidade" ? (
+        <MockDuplicateBookingThread
+          duplicates={duplicates}
+          onRetry={() => void reloadDuplicates()}
+          onRefresh={() => void refreshDuplicates()}
+          onChosen={handleDuplicateChosen}
         />
       ) : null}
     </motion.main>

@@ -50,6 +50,8 @@ export function toAppointmentCreateData(
     procedureName:
       appointment.procedure.type === "exame" ? appointment.procedure.examName : null,
     ...toPreparationColumns(appointment.preparation),
+    unitId: appointment.unit?.id ?? null,
+    returnOfAppointmentId: appointment.returnOfAppointmentId,
   };
 }
 

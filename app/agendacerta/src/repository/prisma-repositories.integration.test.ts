@@ -1,14 +1,17 @@
 import { existsSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
+import { listDuplicateBookings } from "@/application/duplicate-bookings/list-duplicate-bookings";
 import { listOverbookings } from "@/application/overbooking/list-overbookings";
 import { loadPatientDistances } from "@/application/patient-distance";
 import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import { rankCandidates, SLOT_OFFER_TIMEOUT_OPTIONS } from "@/domain/slot-offer";
 import { getPrisma } from "@/lib/database/prisma";
+import { InMemoryAppointmentRepository } from "./in-memory-appointment-repository";
 import { InMemoryExamPreparationRepository } from "./in-memory-exam-preparation-repository";
 import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
+import { PrismaDuplicateCheckRepository } from "./prisma-duplicate-check-repository";
 import { PrismaExamPreparationRepository } from "./prisma-exam-preparation-repository";
 import { PrismaOverbookingRepository } from "./prisma-overbooking-repository";
 import { PrismaPatientRepository } from "./prisma-patient-repository";
@@ -210,5 +213,46 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
       answeredAt: new Date("2026-09-22T18:00:00-03:00").toISOString(),
     });
     expect(unanswered?.preparation).toBeNull();
+  });
+
+  it("mapeia a unidade e o vínculo de retorno como no seed", async () => {
+    const memory = new InMemoryAppointmentRepository();
+
+    for (const id of ["apt-002", "apt-009", "apt-010", "apt-011", "hist-004"]) {
+      const fromDb = await appointments.getById(id);
+      const fromSeed = await memory.getById(id);
+      expect(fromDb?.unit, id).toEqual(fromSeed?.unit);
+      expect(fromDb?.returnOfAppointmentId, id).toBe(fromSeed?.returnOfAppointmentId);
+    }
+    await expect(appointments.getById("apt-011")).resolves.toMatchObject({
+      unit: { id: "unit-jardins", name: "Unidade Jardins" },
+      returnOfAppointmentId: "apt-010",
+    });
+  });
+
+  it("detecta o booking duplo do Bruno a partir do banco e não sinaliza o retorno do Diego", async () => {
+    const overview = await listDuplicateBookings({
+      appointments,
+      duplicateChecks: new PrismaDuplicateCheckRepository(),
+    });
+
+    const bruno = overview.alerts.find((alert) => alert.patientName === "Bruno Lima");
+    expect(bruno?.appointments.map(({ id, unit }) => [id, unit?.name])).toEqual([
+      ["apt-002", "Unidade Jardins"],
+      ["apt-009", "Unidade Centro"],
+    ]);
+    expect(overview.flaggedAppointmentIds).not.toContain("apt-010");
+    expect(overview.flaggedAppointmentIds).not.toContain("apt-011");
+  });
+
+  it("lê as confirmações reforçadas com datas em ISO e o mantido amarrado ao status", async () => {
+    const checks = await new PrismaDuplicateCheckRepository().list();
+
+    expect(Array.isArray(checks)).toBe(true);
+    for (const check of checks) {
+      expect(new Date(check.sentAt).toISOString(), check.id).toBe(check.sentAt);
+      expect(check.appointmentIds.length, check.id).toBeGreaterThanOrEqual(2);
+      expect(check.keptAppointmentId === null, check.id).toBe(check.status === "aguardando");
+    }
   });
 });

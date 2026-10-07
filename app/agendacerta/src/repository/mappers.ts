@@ -1,5 +1,6 @@
 import type { Appointment, PreparationAnswer } from "@/domain/appointment";
 import { createProcedure } from "@/domain/appointment";
+import type { DuplicateCheck } from "@/domain/duplicate-booking";
 import type { ExamPreparation } from "@/domain/exam-preparation";
 import type { Overbooking } from "@/domain/overbooking";
 import type { Neighborhood, PatientLocation } from "@/domain/patient";
@@ -25,7 +26,9 @@ export const appointmentSelect = {
   preparationResult: true,
   preparationAnsweredAt: true,
   preparationMissedItemIds: true,
+  returnOfAppointmentId: true,
   patient: { select: patientSummarySelect },
+  unit: { select: { id: true, name: true } },
 } satisfies Prisma.AppointmentSelect;
 
 export type AppointmentRecord = Prisma.AppointmentGetPayload<{
@@ -68,6 +71,8 @@ export function mapRecordToAppointment(record: AppointmentRecord): Appointment {
     phoneMasked: record.patient.phoneMasked,
     procedure: createProcedure(record.procedureType, record.procedureName),
     preparation: mapPreparationAnswer(record),
+    unit: record.unit ? { id: record.unit.id, name: record.unit.name } : null,
+    returnOfAppointmentId: record.returnOfAppointmentId,
   };
 }
 
@@ -216,6 +221,48 @@ export function mapRecordToOverbooking(record: OverbookingRecord): Overbooking {
     decision: "aceita",
     sequence: record.sequence,
     encaixeAppointmentId: record.encaixeAppointmentId,
+  };
+}
+
+export const duplicateCheckSelect = {
+  id: true,
+  patientId: true,
+  groupKey: true,
+  status: true,
+  keptAppointmentId: true,
+  sentAt: true,
+  resolvedAt: true,
+  items: {
+    select: { appointmentId: true },
+    orderBy: [{ appointment: { scheduledAt: "asc" } }, { appointmentId: "asc" }],
+  },
+} satisfies Prisma.DuplicateBookingCheckSelect;
+
+export type DuplicateCheckRecord = Prisma.DuplicateBookingCheckGetPayload<{
+  select: typeof duplicateCheckSelect;
+}>;
+
+/** Os checks do banco amarram status, horário mantido e data de resposta; aqui o tipo reflete isso. */
+export function mapRecordToDuplicateCheck(record: DuplicateCheckRecord): DuplicateCheck {
+  const base = {
+    id: record.id,
+    patientId: record.patientId,
+    groupKey: record.groupKey,
+    appointmentIds: record.items.map((item) => item.appointmentId),
+    sentAt: record.sentAt.toISOString(),
+  };
+
+  if (record.status === "aguardando") {
+    return { ...base, status: "aguardando", keptAppointmentId: null, resolvedAt: null };
+  }
+  if (record.keptAppointmentId === null || record.resolvedAt === null) {
+    throw new Error(`Confirmação resolvida sem horário mantido ou data: ${record.id}`);
+  }
+  return {
+    ...base,
+    status: "resolvida",
+    keptAppointmentId: record.keptAppointmentId,
+    resolvedAt: record.resolvedAt.toISOString(),
   };
 }
 

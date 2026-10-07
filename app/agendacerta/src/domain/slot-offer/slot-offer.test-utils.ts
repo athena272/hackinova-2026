@@ -16,6 +16,8 @@ export function slotAppointment(overrides: Partial<Appointment> = {}): Appointme
     phoneMasked: "(79) 9****-2211",
     procedure: { type: "consulta" },
     preparation: null,
+    unit: null,
+    returnOfAppointmentId: null,
     ...overrides,
   };
 }

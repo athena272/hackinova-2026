@@ -1,0 +1,4 @@
+[
+  { "id": "unit-jardins", "name": "Unidade Jardins", "neighborhoodId": "nb-jardins" },
+  { "id": "unit-centro", "name": "Unidade Centro", "neighborhoodId": "nb-centro" }
+]

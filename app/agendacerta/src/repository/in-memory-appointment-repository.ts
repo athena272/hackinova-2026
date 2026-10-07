@@ -90,13 +90,14 @@ function save(appointment: Appointment): Appointment {
   return cloneAppointment(saved);
 }
 
-/** Copia também a lista de itens do preparo, para quem chama não alterar o store. */
+/** Copia também a lista de itens do preparo e a unidade, para quem chama não alterar o store. */
 function cloneAppointment(appointment: Appointment): Appointment {
   return {
     ...appointment,
     preparation: appointment.preparation
       ? { ...appointment.preparation, missedItemIds: [...appointment.preparation.missedItemIds] }
       : null,
+    unit: appointment.unit ? { ...appointment.unit } : null,
   };
 }
 

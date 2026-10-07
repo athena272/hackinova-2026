@@ -2,11 +2,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { AppointmentStatus, ProcedureType } from "@/domain/appointment";
+import type { DuplicateCheckStatus } from "@/domain/duplicate-booking";
 import type { OverbookingDecision } from "@/domain/overbooking";
 import type { SlotOfferStatus } from "@/domain/slot-offer";
 import type { WaitlistStatus } from "@/domain/waitlist";
 import {
   appointment_status,
+  duplicate_check_status,
   overbooking_decision,
   procedure_type,
   slot_offer_status,
@@ -45,6 +47,10 @@ const DOMAIN_SLOT_OFFER_STATUSES: Record<SlotOfferStatus, true> = {
 const DOMAIN_OVERBOOKING_DECISIONS: Record<OverbookingDecision, true> = {
   aceita: true,
   recusada: true,
+};
+const DOMAIN_DUPLICATE_CHECK_STATUSES: Record<DuplicateCheckStatus, true> = {
+  aguardando: true,
+  resolvida: true,
 };
 
 const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
@@ -143,6 +149,22 @@ describe("prisma/schema.prisma", () => {
     expect(migrations).toMatch(/create unique index overbookings_sequence_per_block/i);
   });
 
+  it("unidade e retorno são relações opcionais do agendamento; o índice parcial das confirmações fica só na migration", () => {
+    const models = new Map(blocks(schema, "model").map(({ name, body }) => [name, body]));
+    const appointment = models.get("Appointment");
+
+    expect(schemaTables.get("clinic_units")).toBe("ClinicUnit");
+    expect(schemaTables.get("duplicate_booking_checks")).toBe("DuplicateBookingCheck");
+    expect(schemaTables.get("duplicate_booking_check_appointments")).toBe(
+      "DuplicateBookingCheckAppointment",
+    );
+    expect(appointment).toMatch(/unitId\s+String\?\s+@map\("unit_id"\)/);
+    expect(appointment).toMatch(/returnOfAppointmentId\s+String\?\s+@map\("return_of_appointment_id"\)/);
+    expect(appointment).toMatch(/returnOf\s+Appointment\?\s+@relation\("AppointmentReturn"/);
+    expect(models.get("DuplicateBookingCheck")).not.toMatch(/@unique|where:/);
+    expect(migrations).toMatch(/create unique index duplicate_booking_checks_one_open_per_group/i);
+  });
+
   it("acrescenta compareceu e faltou ao enum de status via migration", () => {
     expect(migrationEnums.get("appointment_status")).toEqual(
       expect.arrayContaining(["compareceu", "faltou"]),
@@ -183,6 +205,12 @@ describe("prisma/schema.prisma", () => {
   it("decisões do encaixe do domínio batem com o enum do banco", () => {
     expect(sorted(Object.values(overbooking_decision))).toEqual(
       sorted(Object.keys(DOMAIN_OVERBOOKING_DECISIONS)),
+    );
+  });
+
+  it("status da confirmação reforçada do domínio batem com o enum do banco", () => {
+    expect(sorted(Object.values(duplicate_check_status))).toEqual(
+      sorted(Object.keys(DOMAIN_DUPLICATE_CHECK_STATUSES)),
     );
   });
 });

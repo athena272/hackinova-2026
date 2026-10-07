@@ -299,6 +299,24 @@ describe("createEncaixe e refuseOverbooking", () => {
   });
   const candidate = waitingCandidate();
 
+  it("o encaixe acontece na unidade da âncora e nunca é retorno", () => {
+    const unit = { id: "unit-centro", name: "Unidade Centro" };
+    const result = createEncaixe({
+      opportunity: assertCanOverbook({
+        anchor: appointment({ unit, returnOfAppointmentId: "apt-000" }),
+        risk: risk("apt-001", "alto"),
+        overbookings: [],
+      }),
+      candidate,
+      encaixeId: "apt-enc-1",
+      overbookingId: "ovb-1",
+      decidedAt: DECIDED_AT,
+    });
+
+    expect(result.appointment.unit).toEqual(unit);
+    expect(result.appointment.returnOfAppointmentId).toBeNull();
+  });
+
   it("cria o encaixe pendente no horário da âncora e atribui o candidato", () => {
     const result = createEncaixe({
       opportunity,
@@ -318,6 +336,8 @@ describe("createEncaixe e refuseOverbooking", () => {
       status: "pendente",
       procedure: { type: "exame", examName: "Eletroencefalograma" },
       preparation: null,
+      unit: null,
+      returnOfAppointmentId: null,
     });
     expect(result.candidate.status).toBe("atribuido");
     expect(result.overbooking).toEqual({
