@@ -1,16 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppointmentRepository } from "./create-appointment-repository";
 import { createExamPreparationRepository } from "./create-exam-preparation-repository";
+import { createOverbookingRepository } from "./create-overbooking-repository";
 import { createPatientRepository } from "./create-patient-repository";
 import { createSlotOfferRepository } from "./create-slot-offer-repository";
 import { createWaitlistRepository } from "./create-waitlist-repository";
 import { InMemoryAppointmentRepository } from "./in-memory-appointment-repository";
 import { InMemoryExamPreparationRepository } from "./in-memory-exam-preparation-repository";
+import { InMemoryOverbookingRepository } from "./in-memory-overbooking-repository";
 import { InMemoryPatientRepository } from "./in-memory-patient-repository";
 import { InMemorySlotOfferRepository } from "./in-memory-slot-offer-repository";
 import { InMemoryWaitlistRepository } from "./in-memory-waitlist-repository";
 import { PrismaAppointmentRepository } from "./prisma-appointment-repository";
 import { PrismaExamPreparationRepository } from "./prisma-exam-preparation-repository";
+import { PrismaOverbookingRepository } from "./prisma-overbooking-repository";
 import { PrismaPatientRepository } from "./prisma-patient-repository";
 import { PrismaSlotOfferRepository } from "./prisma-slot-offer-repository";
 import { PrismaWaitlistRepository } from "./prisma-waitlist-repository";
@@ -34,6 +37,7 @@ describe("factories de repositório", () => {
       PrismaExamPreparationRepository,
     );
     expect(createSlotOfferRepository()).toBeInstanceOf(PrismaSlotOfferRepository);
+    expect(createOverbookingRepository()).toBeInstanceOf(PrismaOverbookingRepository);
   });
 
   it("usam memória quando DATABASE_URL não está definida", () => {
@@ -50,5 +54,6 @@ describe("factories de repositório", () => {
       InMemoryExamPreparationRepository,
     );
     expect(createSlotOfferRepository()).toBeInstanceOf(InMemorySlotOfferRepository);
+    expect(createOverbookingRepository()).toBeInstanceOf(InMemoryOverbookingRepository);
   });
 });

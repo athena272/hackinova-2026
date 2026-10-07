@@ -7,7 +7,7 @@ import {
 } from "@/domain/no-show-risk";
 import type { AppointmentRepository } from "@/repository/appointment-repository";
 import type { PatientRepository } from "@/repository/patient-repository";
-import { loadPatientDistances } from "./patient-distance";
+import { loadPatientDistances, type PatientDistanceLookup } from "./patient-distance";
 
 function groupByPatient(
   appointments: readonly Appointment[],
@@ -37,7 +37,14 @@ export async function scoreAppointmentsRisk(
     appointmentRepo.list(),
     loadPatientDistances(patientRepo, clinicNeighborhoodId, "scoreAppointmentsRisk"),
   ]);
+  return scoreRisks(appointments, distanceFor);
+}
 
+/** Mesma conta, para quem já carregou a agenda e as distâncias. */
+export function scoreRisks(
+  appointments: readonly Appointment[],
+  distanceFor: PatientDistanceLookup,
+): NoShowRisk[] {
   const historyByPatient = groupByPatient(appointments);
 
   return appointments

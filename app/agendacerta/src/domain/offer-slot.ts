@@ -23,7 +23,7 @@ export class OfferSlotError extends Error {
  * (vaga de última hora ou agenda de demonstração no passado) conta como
  * marcada no próprio horário, ou seja, antecedência zero.
  */
-function bookingTimeFor(scheduledAt: string, offeredAt: string): string {
+export function bookingTimeFor(scheduledAt: string, offeredAt: string): string {
   return Date.parse(offeredAt) < Date.parse(scheduledAt) ? offeredAt : scheduledAt;
 }
 

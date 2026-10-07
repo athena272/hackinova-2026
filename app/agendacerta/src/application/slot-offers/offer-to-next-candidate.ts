@@ -8,6 +8,7 @@ import {
 import { SlotOfferConflictError } from "@/repository/errors";
 import { loadPatientDistances } from "../patient-distance";
 import type { SlotOfferDeps } from "./deps";
+import { isCoveredByOverbooking } from "./overbooking-coverage";
 
 /**
  * Ordena a fila e grava a oferta para o próximo candidato. Devolve null quando
@@ -45,8 +46,9 @@ export async function offerToNextCandidate(
 
 /**
  * Repasse depois de recusa ou expiração. A vaga pode ter deixado de estar
- * liberada no meio do caminho; e, se outra requisição já repassou ao mesmo
- * tempo, o índice único impede a oferta dupla e aqui só não se faz nada.
+ * liberada no meio do caminho, ou ter passado a ser coberta por um encaixe;
+ * e, se outra requisição já repassou ao mesmo tempo, o índice único impede a
+ * oferta dupla e aqui só não se faz nada.
  */
 export async function passSlotToNextCandidate(
   deps: SlotOfferDeps,
@@ -55,6 +57,9 @@ export async function passSlotToNextCandidate(
 ): Promise<SlotOffer | null> {
   const appointment = await deps.appointments.getById(closedOffer.appointmentId);
   if (!appointment || !isSlotReusable(appointment.status)) {
+    return null;
+  }
+  if (await isCoveredByOverbooking(deps, appointment)) {
     return null;
   }
 

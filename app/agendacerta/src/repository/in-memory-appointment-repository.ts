@@ -42,6 +42,16 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     return found ? { ...found } : null;
   }
 
+  async create(appointment: Appointment): Promise<Appointment> {
+    const { appointments } = getStore();
+    if (appointments.has(appointment.id)) {
+      throw new Error(`Agendamento já existe: ${appointment.id}`);
+    }
+    const saved = cloneAppointment(appointment);
+    appointments.set(appointment.id, saved);
+    return cloneAppointment(saved);
+  }
+
   async confirm(id: string, action: ConfirmationAction): Promise<Appointment> {
     const { appointments } = getStore();
     const current = appointments.get(id);

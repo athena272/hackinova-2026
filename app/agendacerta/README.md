@@ -10,20 +10,23 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Score preditivo de falta explicável: cada consulta pendente ou confirmada mostra a chance de falta e os motivos (veja [Score de falta](#score-de-falta))
 - Checklist de preparo pré-exame: o paciente responde sim ou não no mock, o painel mostra o status do preparo e a clínica libera antes a vaga de quem não vai cumprir (veja [Checklist de preparo](#checklist-de-preparo))
 - Oferta de vaga em cascata: a vaga liberada vai primeiro para quem mora mais perto e espera há mais tempo; com recusa ou sem resposta no prazo, passa para o próximo da fila (veja [Oferta de vaga em cascata](#oferta-de-vaga-em-cascata))
+- Overbooking guiado pelo score: nos horários com risco alto de falta, o painel sugere um encaixe para a lista de espera e a recepção aceita ou recusa (veja [Overbooking guiado pelo score](#overbooking-guiado-pelo-score))
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/appointments/risk`
 - `GET /api/exam-preparations`
 - `GET /api/waitlist?specialty=...`
 - `GET /api/slot-offers` (histórico das ofertas por vaga)
+- `GET /api/overbookings` (sugestões de encaixe e quais vagas já têm encaixe)
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
 - `POST /api/appointments/[id]/preparation` com `{ "answers": { "<id do item>": true | false } }`
 - `POST /api/appointments/[id]/release`
 - `POST /api/appointments/[id]/slot-offers` com `{ "timeoutMinutes": 2 | 5 | 15 | 30 }`
 - `POST /api/slot-offers/[id]/response` com `{ "response": "aceitar" | "recusar" }`
+- `POST /api/appointments/[id]/overbooking` com `{ "decision": "aceitar" | "recusar" }`
 - Páginas `/painel` e `/mock-whatsapp`
 - Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status, da oferta em cascata, do score de falta e das regras de preparo (Vitest)
+- Testes unitários da regra de status, da oferta em cascata, do score de falta, das regras de preparo e do overbooking (Vitest)
 
 ## O que fica de fora
 
@@ -32,6 +35,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Modelo de machine learning treinado com dados reais (o score atual é uma regra com pesos ajustáveis)
 - Oferta que começa sozinha, sem a clínica iniciar, e job em segundo plano para os prazos
 - Uso do score de falta na ordem da fila de espera
+- Tela para mudar o limite de encaixes por horário (hoje é uma constante no código)
 
 ## Requisitos
 
@@ -70,6 +74,7 @@ Modelo de dados do agendamento:
 | `appointments` | Paciente (`patient_id`), especialidade, horário, quando foi marcado (`booked_at`), status, procedimento (`consulta` ou `exame` com nome) e a resposta ao checklist de preparo (`preparation_result`, `preparation_answered_at`, `preparation_missed_item_ids`) |
 | `waitlist` | Paciente (`patient_id`), especialidade, status na lista de espera e quando entrou nela (`requested_at`) |
 | `slot_offers` | Cada oferta de vaga: vaga (`appointment_id`), candidato (`waitlist_id`), status (`pendente`, `aceita`, `recusada`, `expirada`), quando foi oferecida, prazo, quando encerrou e a distância usada na ordem |
+| `overbookings` | Cada decisão da recepção sobre um encaixe: horário (`specialty` + `scheduled_at`), agendamento de risco alto que motivou a sugestão (`anchor_appointment_id`), decisão (`aceita` ou `recusada`), o agendamento criado como encaixe (`encaixe_appointment_id`, só no aceite), a posição do encaixe no horário (`sequence`) e a chance de falta no momento da decisão |
 | `exam_preparations` | Preparo exigido por exame: nome do exame (único) e instruções |
 | `exam_preparation_items` | Itens do checklist de cada preparo, na ordem (`position`), com rótulo e pergunta de sim ou não |
 
@@ -165,6 +170,31 @@ Não existe job em segundo plano (na Vercel não há processo rodando o tempo to
 
 O banco garante as regras mesmo com duas requisições ao mesmo tempo: índices únicos parciais deixam só uma oferta aberta por vaga e por candidato, e encerrar uma oferta só funciona se ela ainda estiver aberta. Assim, a vaga não é repassada em dobro.
 
+## Overbooking guiado pelo score
+
+Quando o score diz que um paciente provavelmente vai faltar, a clínica pode marcar um segundo paciente no mesmo horário. Se o primeiro faltar, a vaga não fica vazia. Se os dois vierem, o atraso é pequeno e foi uma escolha consciente da recepção, não do sistema.
+
+Quando aparece uma sugestão:
+
+1. Um horário é a combinação de especialidade e instante da consulta. Dois agendamentos no mesmo horário e na mesma especialidade estão no mesmo bloco.
+2. Só entra o bloco que tem um agendamento pendente ou confirmado com risco **alto** de falta (a partir de 50%). Risco baixo ou médio nunca gera sugestão. Se houver mais de um, vale o de maior chance de falta.
+3. O bloco precisa estar abaixo do limite de encaixes, que é `MAX_OVERBOOKINGS_PER_BLOCK = 1` em `src/domain/overbooking/overbooking-rules.ts`. Todo encaixe aceito conta para o limite, mesmo que depois tenha sido liberado.
+4. Bloco que a recepção já recusou não volta a aparecer.
+5. Precisa existir alguém na lista de espera da mesma especialidade. O candidato é o primeiro da mesma ordem usada na [oferta em cascata](#oferta-de-vaga-em-cascata) (faixa de distância e tempo de espera), sem contar quem já está agendado no bloco ou tem oferta em aberto.
+
+Como funciona no painel:
+
+1. A seção **Encaixes sugeridos**, acima da agenda, mostra cada horário com a especialidade, quantos encaixes já tem, o paciente de risco alto, a chance de falta com os motivos do score e para quem iria o encaixe.
+2. **Aceitar encaixe** cria um novo agendamento pendente para o candidato no mesmo horário e procedimento, e o tira da lista de espera. Na agenda, ele aparece com o selo **Encaixe**. Como o limite padrão é 1, a sugestão some.
+3. **Recusar** guarda a decisão e esconde a sugestão daquele horário.
+4. Enquanto a decisão é gravada, o botão mostra **Aceitando…** ou **Recusando…** e os dois botões ficam bloqueados. Se der erro, a mensagem aparece no próprio cartão.
+
+Convivência com a oferta em cascata: se o horário já tem um encaixe e alguém cancela, o cancelamento só libera o encaixe e não abre leilão. Na prática, se o paciente de risco alto responde NÃO, quem fica atendido naquele horário é o paciente do encaixe. A vaga liberada aparece como **Vaga coberta pelo encaixe; não abre leilão** e `POST /api/appointments/[id]/slot-offers` responde 400 com o código `SLOT_COVERED_BY_OVERBOOKING`. Uma cascata que já estava rodando também para de repassar a vaga. Se todos os pacientes do bloco cancelarem, a vaga volta a poder ir para a lista de espera.
+
+O banco garante as regras mesmo com duas recepções clicando ao mesmo tempo. Aceitar grava o agendamento do encaixe, a saída do candidato da lista de espera e a decisão em uma única transação. Índices únicos parciais impedem duas decisões para a mesma posição do bloco e mais de uma recusa por bloco. Se o horário recebeu outra decisão ou o candidato saiu da lista de espera nesse meio tempo, nada é gravado, a API responde 409 (`OVERBOOKING_CONFLICT`) e o cartão mostra o aviso.
+
+Erros que a API devolve com código (400): `NOT_HIGH_RISK`, `LIMIT_REACHED`, `ALREADY_REFUSED`, `NO_CANDIDATES`, `ANCHOR_NOT_ACTIVE` e `ANCHOR_IS_ENCAIXE` (um encaixe não motiva outro encaixe).
+
 ## Como rodar o app
 
 ```bash
@@ -206,6 +236,9 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 8. No mock, clique em **Aceitar** na oferta de Elena. No painel, a vaga aparece **Confirmada** para ela e o risco de falta é recalculado.
 9. No mock, abra a aba **Checklist de preparo**, escolha a ultrassonografia de Marina Costa, responda não para **Bexiga cheia** e clique em **Enviar respostas**.
 10. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para iniciar a oferta, que vai para Nelson Araújo, da lista de espera de Ultrassonografia.
+11. Na seção **Encaixes sugeridos**, veja a consulta de Neurologia de Ana Souza (64%, risco alto) com os motivos e a sugestão de encaixe para Helena Dias. Clique em **Aceitar encaixe**: Helena entra na agenda no mesmo horário, com o selo **Encaixe**, e a sugestão some.
+12. No mock WhatsApp, responda **NÃO** na consulta de Ana Souza em Neurologia (se você usou essa consulta no passo 3, comece do zero com o reset abaixo).
+13. Volte ao painel e clique em **Atualizar**. A vaga de Ana fica liberada, mas mostra **Vaga coberta pelo encaixe; não abre leilão**: Helena já ocupa o horário, então nenhuma oferta é iniciada.
 
 Para repetir a demonstração do zero no banco local, rode `npx supabase db reset` na raiz e depois `pnpm auth:create-user`.
 

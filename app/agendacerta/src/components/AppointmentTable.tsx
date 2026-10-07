@@ -17,9 +17,16 @@ export type AppointmentTableSlotOffers = {
   onChanged: () => void;
 };
 
+/** Quando informado, marca os encaixes e as vagas que o encaixe cobre. */
+export type AppointmentTableOverbooking = {
+  encaixeIds: ReadonlySet<string>;
+  coveredIds: ReadonlySet<string>;
+};
+
 type AppointmentTableProps = {
   appointments: Appointment[];
   slotOffers?: AppointmentTableSlotOffers;
+  overbooking?: AppointmentTableOverbooking;
   emptyMessage?: string;
   /** Quando informado, mostra a coluna "Risco de falta". */
   risks?: NoShowRisksState;
@@ -30,6 +37,7 @@ type AppointmentTableProps = {
 export function AppointmentTable({
   appointments,
   slotOffers,
+  overbooking,
   emptyMessage = "Nenhum agendamento encontrado.",
   risks,
   preparationStatusById,
@@ -58,6 +66,9 @@ export function AppointmentTable({
               <tr key={appointment.id}>
                 <td>
                   <strong>{appointment.patientName}</strong>
+                  {overbooking?.encaixeIds.has(appointment.id) ? (
+                    <span className="badge encaixe-badge">Encaixe</span>
+                  ) : null}
                 </td>
                 <td>{appointment.specialty}</td>
                 <td>{formatDateTime(appointment.scheduledAt)}</td>
@@ -81,6 +92,7 @@ export function AppointmentTable({
                           cascade={slotOffers.cascadeByAppointment.get(appointment.id)}
                           loading={slotOffers.loading}
                           onChanged={slotOffers.onChanged}
+                          covered={overbooking?.coveredIds.has(appointment.id) ?? false}
                         />
                       ) : null}
                     </div>

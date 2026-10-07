@@ -23,6 +23,20 @@ export class SlotOfferConflictError extends Error {
   }
 }
 
+/**
+ * Outra decisão chegou antes: o bloco já tem o encaixe de mesmo número ou já
+ * foi recusado (índices únicos parciais), ou o candidato acabou de ser atribuído.
+ */
+export class OverbookingConflictError extends Error {
+  constructor(overbookingId: string, options?: { cause?: unknown }) {
+    super(
+      `Não foi possível registrar a decisão "${overbookingId}": este horário acabou de receber outra decisão.`,
+      options,
+    );
+    this.name = "OverbookingConflictError";
+  }
+}
+
 export class WaitlistNotFoundError extends Error {
   constructor(id: string) {
     super(`Candidato da lista de espera não encontrado: ${id}`);

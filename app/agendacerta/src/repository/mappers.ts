@@ -1,6 +1,7 @@
 import type { Appointment, PreparationAnswer } from "@/domain/appointment";
 import { createProcedure } from "@/domain/appointment";
 import type { ExamPreparation } from "@/domain/exam-preparation";
+import type { Overbooking } from "@/domain/overbooking";
 import type { Neighborhood, PatientLocation } from "@/domain/patient";
 import { assertSlotOfferTimeout, type SlotOffer } from "@/domain/slot-offer";
 import type { WaitlistEntry } from "@/domain/waitlist";
@@ -174,6 +175,47 @@ export function mapRecordToSlotOffer(record: SlotOfferRecord): SlotOffer {
     closedAt: record.closedAt ? record.closedAt.toISOString() : null,
     timeoutMinutes: record.timeoutMinutes,
     distanceKm: record.distanceKm ? record.distanceKm.toNumber() : null,
+  };
+}
+
+export const overbookingSelect = {
+  id: true,
+  anchorAppointmentId: true,
+  specialty: true,
+  scheduledAt: true,
+  decision: true,
+  sequence: true,
+  encaixeAppointmentId: true,
+  riskProbability: true,
+  decidedAt: true,
+} satisfies Prisma.OverbookingSelect;
+
+export type OverbookingRecord = Prisma.OverbookingGetPayload<{
+  select: typeof overbookingSelect;
+}>;
+
+/** Os checks do banco amarram decisão, número e encaixe; aqui o tipo reflete isso. */
+export function mapRecordToOverbooking(record: OverbookingRecord): Overbooking {
+  const base = {
+    id: record.id,
+    anchorAppointmentId: record.anchorAppointmentId,
+    specialty: record.specialty,
+    scheduledAt: record.scheduledAt.toISOString(),
+    riskProbability: record.riskProbability,
+    decidedAt: record.decidedAt.toISOString(),
+  };
+
+  if (record.decision === "recusada") {
+    return { ...base, decision: "recusada", sequence: null, encaixeAppointmentId: null };
+  }
+  if (record.sequence === null || record.encaixeAppointmentId === null) {
+    throw new Error(`Encaixe aceito sem número ou agendamento: ${record.id}`);
+  }
+  return {
+    ...base,
+    decision: "aceita",
+    sequence: record.sequence,
+    encaixeAppointmentId: record.encaixeAppointmentId,
   };
 }
 

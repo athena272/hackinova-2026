@@ -40,6 +40,7 @@ function mockRepo(confirm: AppointmentRepository["confirm"]): AppointmentReposit
   return {
     list: vi.fn(),
     getById: vi.fn(),
+    create: vi.fn(),
     confirm,
     saveOffered: vi.fn(),
     savePreparationAnswer: vi.fn(),
