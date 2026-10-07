@@ -759,6 +759,134 @@ table.appointments tbody tr:last-child td {
   font-weight: 500;
 }
 
+.slot-offer-covered {
+  margin: 0;
+  max-width: 300px;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+/* Encaixe guiado pelo score */
+.encaixe-badge {
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  vertical-align: middle;
+}
+
+.overbooking-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.overbooking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.overbooking-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--rose-soft);
+  border-radius: 12px;
+  background: #fffafa;
+  font-size: 0.88rem;
+}
+
+.overbooking-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.overbooking-count {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sky-soft);
+  color: var(--sky);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.overbooking-anchor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.overbooking-reasons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.overbooking-candidate {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  color: var(--teal);
+}
+
+.overbooking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.overbooking-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--teal);
+  color: #fff;
+  cursor: pointer;
+}
+
+.overbooking-actions button.secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.overbooking-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.overbooking-done {
+  margin: 0;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.overbooking-error {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
 .offer-countdown {
   display: inline-flex;
   align-items: center;

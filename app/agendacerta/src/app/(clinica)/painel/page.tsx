@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   CalendarClock,
   CalendarDays,
+  CalendarPlus,
   CheckCircle2,
   CircleAlert,
   History,
@@ -29,12 +30,15 @@ import {
 import type { SlotOfferCascade } from "@/domain/slot-offer";
 import {
   AppointmentTable,
+  type AppointmentTableOverbooking,
   type AppointmentTableSlotOffers,
 } from "@/components/AppointmentTable";
+import { OverbookingSuggestions } from "@/components/OverbookingSuggestions";
 import { PreparationAlerts } from "@/components/PreparationAlerts";
 import { SlotOfferHistory } from "@/components/SlotOfferHistory";
 import { useExamPreparations } from "@/hooks/use-exam-preparations";
 import { useNoShowRisks } from "@/hooks/use-no-show-risks";
+import { useOverbookings } from "@/hooks/use-overbookings";
 import { acceptedOfferIds, useSlotOffers } from "@/hooks/use-slot-offers";
 import { buildLoginHref } from "@/lib/auth/redirect";
 import { readResponseJson } from "@/lib/http";
@@ -103,11 +107,23 @@ export default function PainelPage() {
     refreshError: slotOffersRefreshError,
   } = useSlotOffers();
 
-  /** Oferta e liberação mudam o paciente ou o status da vaga, e com isso o risco: recarrega os dois. */
+  const {
+    state: overbookings,
+    reload: reloadOverbookings,
+    refresh: refreshOverbookings,
+    refreshing: overbookingsRefreshing,
+    refreshError: overbookingsRefreshError,
+  } = useOverbookings();
+
+  /**
+   * Oferta, liberação e encaixe mudam o paciente ou o status da vaga, e com
+   * isso o risco e as sugestões de encaixe: recarrega tudo isso junto.
+   */
   const reloadAll = useCallback(() => {
     void load();
     void reloadRisks();
-  }, [load, reloadRisks]);
+    void refreshOverbookings();
+  }, [load, reloadRisks, refreshOverbookings]);
 
   const refreshEverything = useCallback(() => {
     reloadAll();
@@ -134,10 +150,22 @@ export default function PainelPage() {
     );
     return {
       cascadeByAppointment,
-      loading: slotOffers.status === "loading",
+      // Sem os encaixes, não dá para saber se a vaga está coberta.
+      loading: slotOffers.status === "loading" || overbookings.status === "loading",
       onChanged: () => void refreshSlotOffers(),
     };
-  }, [slotOffers, refreshSlotOffers]);
+  }, [slotOffers, overbookings.status, refreshSlotOffers]);
+
+  const tableOverbooking = useMemo<AppointmentTableOverbooking>(
+    () =>
+      overbookings.status === "ready"
+        ? {
+            encaixeIds: new Set(overbookings.data.encaixeAppointmentIds),
+            coveredIds: new Set(overbookings.data.coveredAppointmentIds),
+          }
+        : { encaixeIds: new Set(), coveredIds: new Set() },
+    [overbookings],
+  );
 
   const stats = useMemo(() => countByStatus(appointments), [appointments]);
   const { agenda, history } = useMemo(
@@ -190,7 +218,9 @@ export default function PainelPage() {
                 risks.status === "loading" ||
                 preparations.status === "loading" ||
                 slotOffers.status === "loading" ||
-                slotOffersRefreshing
+                slotOffersRefreshing ||
+                overbookings.status === "loading" ||
+                overbookingsRefreshing
                   ? "spin"
                   : undefined
               }
@@ -218,6 +248,23 @@ export default function PainelPage() {
       {error ? <p className="error">{error}</p> : null}
       {!loading && !error ? (
         <>
+          <section className="panel-section" aria-labelledby="overbooking-title">
+            <h2 className="section-title" id="overbooking-title">
+              <CalendarPlus size={18} aria-hidden /> Encaixes sugeridos
+            </h2>
+            <p className="muted section-lead">
+              Só nos horários com paciente de risco alto de falta. Ao aceitar, o
+              encaixe vai para o primeiro da lista de espera, na mesma ordem das
+              ofertas de vaga.
+            </p>
+            <OverbookingSuggestions
+              overbookings={overbookings}
+              refreshError={overbookingsRefreshError}
+              onRetry={() => void reloadOverbookings()}
+              onDecided={reloadAll}
+            />
+          </section>
+
           <section className="panel-section" aria-labelledby="agenda-title">
             <h2 className="section-title" id="agenda-title">
               <CalendarDays size={18} aria-hidden /> Agenda
@@ -258,6 +305,7 @@ export default function PainelPage() {
             <AppointmentTable
               appointments={agenda}
               slotOffers={tableSlotOffers}
+              overbooking={tableOverbooking}
               emptyMessage="Nenhum agendamento na agenda."
               risks={risks}
               preparationStatusById={preparationStatusById}
