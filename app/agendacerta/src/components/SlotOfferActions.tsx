@@ -22,6 +22,8 @@ export type SlotOfferActionsProps = {
   loading?: boolean;
   /** Oferta criada ou prazo zerado: busca o histórico de novo. */
   onChanged: () => void;
+  /** Horário com encaixe: o cancelamento só libera o encaixe e não abre leilão. */
+  covered?: boolean;
 };
 
 export function SlotOfferActions({
@@ -29,6 +31,7 @@ export function SlotOfferActions({
   cascade,
   loading = false,
   onChanged,
+  covered = false,
 }: SlotOfferActionsProps) {
   const selectId = useId();
   const [timeoutMinutes, setTimeoutMinutes] = useState<SlotOfferTimeout>(
@@ -57,6 +60,10 @@ export function SlotOfferActions({
         </p>
       </div>
     );
+  }
+
+  if (covered) {
+    return <p className="slot-offer-covered">Vaga coberta pelo encaixe; não abre leilão</p>;
   }
 
   async function start() {
