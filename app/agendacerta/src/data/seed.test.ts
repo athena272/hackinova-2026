@@ -6,6 +6,7 @@ import rawAppointments from "../../data/appointments.seed.json";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import { isActiveBooking, isAttendanceOutcome } from "@/domain/appointment";
 import { findExamPreparation } from "@/domain/exam-preparation";
+import { loadClinicUnitSeed } from "./clinic-unit-seed";
 import { loadExamPreparationSeed } from "./exam-preparation-seed";
 import { loadNeighborhoodSeed, loadPatientSeed } from "./patient-seed";
 import { loadAppointmentSeed } from "./seed";
@@ -26,6 +27,8 @@ const waitlist = loadWaitlistSeed();
 const patients = loadPatientSeed();
 const neighborhoods = loadNeighborhoodSeed();
 const preparations = loadExamPreparationSeed();
+const clinicUnits = loadClinicUnitSeed();
+const DUPLICATE_DEMO_MIGRATION = "20261010120200_seed_duplicate_booking_demo.sql";
 
 const ids = (items: readonly { id: string }[]) => items.map((item) => item.id);
 const sorted = (values: Iterable<string>) => Array.from(values).sort();
@@ -37,15 +40,21 @@ describe("seed em memória", () => {
     ["pacientes", ids(patients)],
     ["bairros", ids(neighborhoods)],
     ["preparos", ids(preparations)],
+    ["unidades", ids(clinicUnits)],
     ["itens de preparo", preparations.flatMap((preparation) => ids(preparation.items))],
   ])("não repete ids de %s", (_, values) => {
     expect(new Set(values).size).toBe(values.length);
   });
 
-  it("todo paciente aponta para um bairro existente, e a clínica também", () => {
+  it("todo paciente aponta para um bairro existente, e a clínica e as unidades também", () => {
     const neighborhoodIds = new Set(ids(neighborhoods));
 
     expect(neighborhoodIds.has(CLINIC_NEIGHBORHOOD_ID)).toBe(true);
+    for (const unit of clinicUnits) {
+      if (unit.neighborhoodId !== null) {
+        expect(neighborhoodIds.has(unit.neighborhoodId), unit.id).toBe(true);
+      }
+    }
     for (const patient of patients) {
       if (patient.neighborhoodId !== null) {
         expect(neighborhoodIds.has(patient.neighborhoodId), patient.id).toBe(true);
@@ -206,11 +215,10 @@ describe("seed em memória x migrations", () => {
     expect(sqlNeighborhoods).toEqual(neighborhoods);
   });
 
-  it("antecedência de cada agendamento é a mesma no JSON e na migration de booked_at", () => {
-    const bookedAtSql = readFileSync(
-      join(migrationsDir, "20261006130000_appointments_booked_at.sql"),
-      "utf8",
-    );
+  it("antecedência de cada agendamento é a mesma no JSON e nas migrations de booked_at", () => {
+    const bookedAtSql = ["20261006130000_appointments_booked_at.sql", DUPLICATE_DEMO_MIGRATION]
+      .map((file) => readFileSync(join(migrationsDir, file), "utf8"))
+      .join("\n");
     const sqlLeadDays = Object.fromEntries(
       Array.from(
         bookedAtSql.matchAll(/\('((?:apt|hist)-\d+)', (\d+)\)/g),
@@ -243,6 +251,60 @@ describe("seed em memória x migrations", () => {
     );
 
     expect(jsonRequestedAt).toEqual(sqlRequestedAt);
+  });
+
+  describe("booking duplo", () => {
+    const duplicateSql = readFileSync(join(migrationsDir, DUPLICATE_DEMO_MIGRATION), "utf8");
+
+    it("unidades têm os mesmos dados nos dois seeds", () => {
+      const sqlUnits = Array.from(
+        duplicateSql.matchAll(/\('(unit-[\w-]+)', '([^']+)', '(nb-[\w-]+)'\)/g),
+        ([, id, name, neighborhoodId]) => ({ id, name, neighborhoodId }),
+      );
+
+      expect(sqlUnits).toEqual(clinicUnits);
+    });
+
+    it("unidade de cada agendamento é a mesma no JSON e na migration", () => {
+      const sqlUnitById = Object.fromEntries(
+        Array.from(
+          duplicateSql.matchAll(/\('((?:apt|hist)-\d+)', '(unit-[\w-]+)'\)/g),
+          ([, id, unitId]) => [id, unitId],
+        ),
+      );
+      const jsonUnitById = Object.fromEntries(
+        appointments.filter((item) => item.unit).map((item) => [item.id, item.unit!.id]),
+      );
+
+      expect(Object.keys(jsonUnitById).length).toBeGreaterThan(0);
+      expect(jsonUnitById).toEqual(sqlUnitById);
+    });
+
+    it("vínculos de retorno são os mesmos no JSON e na migration", () => {
+      const sqlReturns = Array.from(
+        duplicateSql.matchAll(
+          /set return_of_appointment_id = '((?:apt|hist)-\d+)'\s+where id = '((?:apt|hist)-\d+)'/g,
+        ),
+        ([, originId, id]) => ({ id, originId }),
+      );
+      const jsonReturns = appointments
+        .filter((item) => item.returnOfAppointmentId)
+        .map((item) => ({ id: item.id, originId: item.returnOfAppointmentId! }));
+
+      expect(jsonReturns.length).toBeGreaterThan(0);
+      expect(jsonReturns).toEqual(sqlReturns);
+    });
+
+    it("todo retorno aponta para outro agendamento do mesmo paciente e especialidade", () => {
+      const byId = new Map(appointments.map((item) => [item.id, item]));
+      for (const item of appointments.filter((appointment) => appointment.returnOfAppointmentId)) {
+        const origin = byId.get(item.returnOfAppointmentId!);
+        expect(origin, item.id).toBeDefined();
+        expect(origin!.id, item.id).not.toBe(item.id);
+        expect(origin!.patientId, item.id).toBe(item.patientId);
+        expect(origin!.specialty, item.id).toBe(item.specialty);
+      }
+    });
   });
 
   describe("preparo de exames", () => {

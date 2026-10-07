@@ -6,6 +6,7 @@ import {
   isPreparationResult,
   isProcedureType,
 } from "@/domain/appointment";
+import { createSeedClinicUnitLookup } from "./clinic-unit-seed";
 import { createSeedPatientLookup } from "./patient-seed";
 import { SeedIntegrityError } from "./seed-integrity-error";
 
@@ -30,8 +31,15 @@ function toPreparationAnswer(
 
 export function loadAppointmentSeed(): Appointment[] {
   const findPatient = createSeedPatientLookup();
+  const findUnit = createSeedClinicUnitLookup();
+  const seedIds = new Set(seedData.map((item) => item.id));
 
   return seedData.map((item) => {
+    if (item.returnOfAppointmentId !== null && !seedIds.has(item.returnOfAppointmentId)) {
+      throw new SeedIntegrityError(
+        `Retorno "${item.id}" aponta para o agendamento inexistente "${item.returnOfAppointmentId}".`,
+      );
+    }
     if (!isAppointmentStatus(item.status)) {
       throw new SeedIntegrityError(
         `Status "${item.status}" inválido no agendamento "${item.id}".`,
@@ -55,6 +63,8 @@ export function loadAppointmentSeed(): Appointment[] {
       phoneMasked: patient.phoneMasked,
       procedure: createProcedure(item.procedureType, item.procedureName),
       preparation: toPreparationAnswer(item.id, item.preparation),
+      unit: findUnit(item.unitId),
+      returnOfAppointmentId: item.returnOfAppointmentId,
     };
   });
 }
