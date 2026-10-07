@@ -18,6 +18,8 @@ function appointment(
     phoneMasked: "(79) 9****-0000",
     procedure: { type: "consulta" },
     preparation: null,
+    unit: null,
+    returnOfAppointmentId: null,
   };
 }
 

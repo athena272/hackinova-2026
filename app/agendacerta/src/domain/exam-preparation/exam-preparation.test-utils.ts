@@ -36,6 +36,8 @@ export function examAppointment(overrides: Partial<Appointment> = {}): Appointme
     phoneMasked: "(82) 9****-2222",
     procedure: { type: "exame", examName: ULTRASSOM.examName },
     preparation: null,
+    unit: null,
+    returnOfAppointmentId: null,
     ...overrides,
   };
 }

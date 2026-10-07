@@ -16,6 +16,8 @@ const baseAppointment: Appointment = {
   phoneMasked: "(79) 9****-1234",
   procedure: { type: "consulta" },
   preparation: null,
+  unit: null,
+  returnOfAppointmentId: null,
 };
 
 const baseCandidate: WaitlistEntry = {
