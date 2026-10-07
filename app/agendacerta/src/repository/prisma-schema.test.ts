@@ -2,10 +2,12 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { AppointmentStatus, ProcedureType } from "@/domain/appointment";
+import type { OverbookingDecision } from "@/domain/overbooking";
 import type { SlotOfferStatus } from "@/domain/slot-offer";
 import type { WaitlistStatus } from "@/domain/waitlist";
 import {
   appointment_status,
+  overbooking_decision,
   procedure_type,
   slot_offer_status,
   waitlist_status,
@@ -39,6 +41,10 @@ const DOMAIN_SLOT_OFFER_STATUSES: Record<SlotOfferStatus, true> = {
   aceita: true,
   recusada: true,
   expirada: true,
+};
+const DOMAIN_OVERBOOKING_DECISIONS: Record<OverbookingDecision, true> = {
+  aceita: true,
+  recusada: true,
 };
 
 const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
@@ -124,6 +130,19 @@ describe("prisma/schema.prisma", () => {
     expect(migrations).toMatch(/create unique index slot_offers_one_pending_per_appointment/i);
   });
 
+  it("Overbooking tem âncora 1:N e encaixe 1:1 com Appointment, sem os índices parciais no schema", () => {
+    const models = new Map(blocks(schema, "model").map(({ name, body }) => [name, body]));
+    const overbooking = models.get("Overbooking");
+
+    expect(schemaTables.get("overbookings")).toBe("Overbooking");
+    expect(overbooking).toMatch(/encaixeAppointmentId\s+String\?\s+@unique/);
+    expect(overbooking).not.toMatch(/@@unique|where:/);
+    expect(models.get("Appointment")).toMatch(/anchoredOverbookings\s+Overbooking\[\]\s+@relation\("OverbookingAnchor"\)/);
+    expect(models.get("Appointment")).toMatch(/encaixeOverbooking\s+Overbooking\?\s+@relation\("OverbookingEncaixe"\)/);
+    expect(schema).not.toMatch(/previewFeatures/);
+    expect(migrations).toMatch(/create unique index overbookings_sequence_per_block/i);
+  });
+
   it("acrescenta compareceu e faltou ao enum de status via migration", () => {
     expect(migrationEnums.get("appointment_status")).toEqual(
       expect.arrayContaining(["compareceu", "faltou"]),
@@ -158,6 +177,12 @@ describe("prisma/schema.prisma", () => {
   it("status da oferta de vaga do domínio batem com o enum do banco", () => {
     expect(sorted(Object.values(slot_offer_status))).toEqual(
       sorted(Object.keys(DOMAIN_SLOT_OFFER_STATUSES)),
+    );
+  });
+
+  it("decisões do encaixe do domínio batem com o enum do banco", () => {
+    expect(sorted(Object.values(overbooking_decision))).toEqual(
+      sorted(Object.keys(DOMAIN_OVERBOOKING_DECISIONS)),
     );
   });
 });
