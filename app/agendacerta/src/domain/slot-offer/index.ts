@@ -26,6 +26,11 @@ export {
   type SlotOfferTimeout,
 } from "./offer-rules";
 export { distanceBandFor, rankCandidates, type RankingContext } from "./ranking";
+export {
+  slotReleaseReasonOf,
+  type SlotReleaseReason,
+  type SlotReleaseReasonInput,
+} from "./release-reason";
 export type {
   DistanceBand,
   RankableCandidate,
