@@ -338,6 +338,153 @@ h2,
   color: var(--ink);
 }
 
+/* Indicadores de vagas recuperadas */
+.metrics-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 18px;
+}
+
+.metrics-kind,
+.metrics-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metrics-kind button,
+.metrics-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.metrics-nav button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+.metrics-kind button:hover,
+.metrics-nav button:hover {
+  background: var(--teal-soft);
+}
+
+.metrics-kind button.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.metrics-period-label {
+  min-width: 13ch;
+  text-align: center;
+  font-weight: 700;
+}
+
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 0 0 22px;
+}
+
+@media (max-width: 860px) {
+  .metrics-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.metrics-stat-note {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+}
+
+.metrics-origins {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.metrics-origin-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 0.92rem;
+}
+
+.metrics-origin-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.metrics-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--teal-soft);
+  overflow: hidden;
+}
+
+.metrics-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--sky));
+}
+
+.metrics-empty {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+}
+
+.metrics-empty strong {
+  color: var(--ink);
+}
+
+.metrics-empty p {
+  margin: 4px 0 0;
+}
+
+.metrics-empty-line {
+  margin: 0;
+}
+
+.metrics-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metrics-prices {
+  margin: 22px 0 0;
+  font-size: 0.85rem;
+}
+
+.toolbar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--line);
