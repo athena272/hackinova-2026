@@ -52,6 +52,7 @@ export function pendingOffer(overrides: Partial<SlotOffer> = {}): SlotOffer {
     closedAt: null,
     timeoutMinutes: 15,
     distanceKm: 3.7,
+    releaseReason: "cancelamento",
     ...overrides,
   };
 }

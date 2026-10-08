@@ -16,9 +16,11 @@ import {
   respondToOffer,
   SLOT_OFFER_TIMEOUT_OPTIONS,
   SlotOfferError,
+  slotReleaseReasonOf,
   type RankingContext,
   type SlotOffer,
 } from ".";
+import type { DuplicateCheck, ResolvedDuplicateCheck } from "../duplicate-booking";
 import {
   candidate,
   NOW,
@@ -145,6 +147,7 @@ describe("createOffer e pickNextOffer", () => {
       candidate: { ...candidate(), band: "perto" },
       offeredAt: NOW,
       timeoutMinutes: 2,
+      releaseReason: "preparo",
     });
 
     expect(offer).toEqual({
@@ -157,6 +160,7 @@ describe("createOffer e pickNextOffer", () => {
       closedAt: null,
       timeoutMinutes: 2,
       distanceKm: 3.7,
+      releaseReason: "preparo",
     });
   });
 
@@ -169,6 +173,7 @@ describe("createOffer e pickNextOffer", () => {
           candidate: { ...candidate(), band: "perto" },
           offeredAt: NOW,
           timeoutMinutes: 7 as never,
+          releaseReason: "cancelamento",
         }),
       "INVALID_TIMEOUT",
     );
@@ -184,10 +189,14 @@ describe("createOffer e pickNextOffer", () => {
       pendingOffers,
       offeredAt: NOW,
       timeoutMinutes: 15,
+      releaseReason: "booking_duplo",
     });
 
-  it("oferece ao primeiro da fila", () => {
-    expect(next([])?.candidate.waitlistId).toBe("wl-002");
+  it("oferece ao primeiro da fila, com o motivo da liberação", () => {
+    expect(next([])).toMatchObject({
+      candidate: { waitlistId: "wl-002" },
+      releaseReason: "booking_duplo",
+    });
   });
 
   it("depois de uma recusa ou expiração, passa ao próximo que ainda não recebeu esta vaga", () => {
@@ -223,8 +232,77 @@ describe("createOffer e pickNextOffer", () => {
         pendingOffers: [],
         offeredAt: NOW,
         timeoutMinutes: 15,
+        releaseReason: "cancelamento",
       }),
     ).toBeNull();
+  });
+});
+
+describe("slotReleaseReasonOf", () => {
+  const RESOLVED_AT = "2026-10-06T14:00:00.000Z";
+  const duplicateResolved = (overrides: Partial<ResolvedDuplicateCheck> = {}): ResolvedDuplicateCheck => ({
+    id: "dup-1",
+    patientId: "pat-fabio",
+    groupKey: "apt-005,apt-006",
+    appointmentIds: ["apt-005", "apt-006"],
+    status: "resolvida",
+    sentAt: "2026-10-06T13:00:00.000Z",
+    keptAppointmentId: "apt-005",
+    resolvedAt: RESOLVED_AT,
+    ...overrides,
+  });
+  const reasonFor = (input: Partial<Parameters<typeof slotReleaseReasonOf>[0]> = {}) =>
+    slotReleaseReasonOf({
+      appointment: slotAppointment(),
+      duplicateChecks: [],
+      offersOfAppointment: [],
+      ...input,
+    });
+
+  it("cancelamento comum quando nada explica a liberação", () => {
+    expect(reasonFor()).toBe("cancelamento");
+  });
+
+  it("preparo quando o paciente avisou que não cumpre o preparo", () => {
+    const appointment = slotAppointment({
+      procedure: { type: "exame", examName: "Ultrassonografia de abdome total" },
+      preparation: { result: "nao_cumprido", missedItemIds: ["bexiga"], answeredAt: NOW },
+    });
+
+    expect(reasonFor({ appointment })).toBe("preparo");
+  });
+
+  it("booking duplo quando a vaga foi a descartada na confirmação reforçada", () => {
+    expect(reasonFor({ duplicateChecks: [duplicateResolved()] })).toBe("booking_duplo");
+  });
+
+  it("não é booking duplo quando a vaga foi a mantida ou a confirmação ainda aguarda", () => {
+    expect(reasonFor({ duplicateChecks: [duplicateResolved({ keptAppointmentId: "apt-006" })] })).toBe(
+      "cancelamento",
+    );
+    const open: DuplicateCheck = {
+      ...duplicateResolved(),
+      status: "aguardando",
+      keptAppointmentId: null,
+      resolvedAt: null,
+    };
+    expect(reasonFor({ duplicateChecks: [open] })).toBe("cancelamento");
+  });
+
+  it("depois que a vaga do booking duplo foi preenchida, um novo cancelamento é comum", () => {
+    const refilled = pendingOffer({ status: "aceita", closedAt: "2026-10-06T14:30:00.000Z" });
+
+    expect(reasonFor({ duplicateChecks: [duplicateResolved()], offersOfAppointment: [refilled] })).toBe(
+      "cancelamento",
+    );
+  });
+
+  it("recusas e expirações não contam como preenchimento", () => {
+    const refused = pendingOffer({ status: "recusada", closedAt: "2026-10-06T14:30:00.000Z" });
+
+    expect(reasonFor({ duplicateChecks: [duplicateResolved()], offersOfAppointment: [refused] })).toBe(
+      "booking_duplo",
+    );
   });
 });
 
