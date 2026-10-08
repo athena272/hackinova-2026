@@ -43,6 +43,19 @@ export class PrismaSlotOfferRepository implements SlotOfferRepository {
     }
   }
 
+  async listAccepted(): Promise<SlotOffer[]> {
+    try {
+      const records = await this.getClient().slotOffer.findMany({
+        where: { status: "aceita" },
+        select: slotOfferSelect,
+        orderBy: [{ closedAt: "asc" }, { id: "asc" }],
+      });
+      return records.map(mapRecordToSlotOffer);
+    } catch (error) {
+      throw describeDatabaseError("Falha ao listar ofertas aceitas", error);
+    }
+  }
+
   async listByAppointment(appointmentId: string): Promise<SlotOffer[]> {
     try {
       const records = await this.getClient().slotOffer.findMany({
@@ -81,6 +94,7 @@ export class PrismaSlotOfferRepository implements SlotOfferRepository {
           closedAt: offer.closedAt ? new Date(offer.closedAt) : null,
           timeoutMinutes: offer.timeoutMinutes,
           distanceKm: offer.distanceKm,
+          releaseReason: offer.releaseReason,
         },
         select: slotOfferSelect,
       });
