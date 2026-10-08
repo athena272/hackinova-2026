@@ -12,6 +12,7 @@ import {
   InMemoryAppointmentRepository,
   resetAppointmentStoreForTests,
 } from "@/repository/in-memory-appointment-repository";
+import { InMemoryDuplicateCheckRepository } from "@/repository/in-memory-duplicate-check-repository";
 import {
   InMemoryOverbookingRepository,
   resetOverbookingStoreForTests,
@@ -46,6 +47,7 @@ function setup() {
     patients: new InMemoryPatientRepository(),
     offers: new InMemorySlotOfferRepository(),
     overbookings: new InMemoryOverbookingRepository(),
+    duplicateChecks: new InMemoryDuplicateCheckRepository(),
     now: () => new Date(NOW),
     newOfferId: () => `offer-${++ids}`,
     newEncaixeId: () => `apt-enc-${++ids}`,

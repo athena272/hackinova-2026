@@ -1,12 +1,36 @@
 import { describe, expect, it } from "vitest";
 import {
   formatCountdown,
+  formatCurrency,
   formatDateTime,
   formatDistance,
+  formatPercent,
   formatTime,
   initials,
   remainingMs,
 } from "./format";
+
+// Intl separa "R$" do valor com espaço não separável.
+const plain = (text: string) => text.replace(/\u00a0/g, " ");
+
+describe("formatCurrency", () => {
+  it("mostra reais sem centavos quando o valor é inteiro", () => {
+    expect(plain(formatCurrency(750))).toBe("R$ 750");
+    expect(plain(formatCurrency(0))).toBe("R$ 0");
+  });
+
+  it("usa separador de milhar e centavos quando existem", () => {
+    expect(plain(formatCurrency(1250.5))).toBe("R$ 1.250,50");
+  });
+});
+
+describe("formatPercent", () => {
+  it("converte a fração em porcentagem com até uma casa", () => {
+    expect(plain(formatPercent(0.5))).toBe("50%");
+    expect(plain(formatPercent(1 / 3))).toBe("33,3%");
+    expect(plain(formatPercent(0))).toBe("0%");
+  });
+});
 
 describe("formatTime", () => {
   it("formata só a hora em pt-BR", () => {

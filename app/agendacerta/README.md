@@ -12,6 +12,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Oferta de vaga em cascata: a vaga liberada vai primeiro para quem mora mais perto e espera há mais tempo; com recusa ou sem resposta no prazo, passa para o próximo da fila (veja [Oferta de vaga em cascata](#oferta-de-vaga-em-cascata))
 - Overbooking guiado pelo score: nos horários com risco alto de falta, o painel sugere um encaixe para a lista de espera e a recepção aceita ou recusa (veja [Overbooking guiado pelo score](#overbooking-guiado-pelo-score))
 - Detecção de booking duplo: o painel avisa quando o mesmo paciente tem dois horários do mesmo serviço em datas próximas, mesmo em unidades diferentes da rede; a confirmação reforçada pelo mock pergunta qual manter e o outro vira vaga reaproveitável (veja [Detecção de booking duplo](#detecção-de-booking-duplo))
+- Indicadores de vagas recuperadas: por semana ou mês, quantas vagas voltaram a ter paciente e por qual motivo estavam livres, o valor estimado, a taxa de faltas e quantos pacientes da lista de espera foram atendidos (veja [Indicadores de vagas recuperadas](#indicadores-de-vagas-recuperadas))
 - Repositório em memória **ou** Postgres do Supabase via Prisma (se `DATABASE_URL` estiver configurada)
 - `GET /api/appointments`
 - `GET /api/appointments/risk`
@@ -20,6 +21,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - `GET /api/slot-offers` (histórico das ofertas por vaga)
 - `GET /api/overbookings` (sugestões de encaixe e quais vagas já têm encaixe)
 - `GET /api/duplicate-bookings` (possíveis duplicidades e confirmações reforçadas em andamento)
+- `GET /api/recovery-metrics?period=semana|mes&reference=AAAA-MM-DD` (indicadores do período; sem `reference`, vale hoje)
 - `POST /api/appointments/[id]/confirm` com `{ "action": "SIM" | "NAO" | "REMARCAR" }`
 - `POST /api/appointments/[id]/preparation` com `{ "answers": { "<id do item>": true | false } }`
 - `POST /api/appointments/[id]/release`
@@ -28,9 +30,9 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - `POST /api/appointments/[id]/overbooking` com `{ "decision": "aceitar" | "recusar" }`
 - `POST /api/duplicate-bookings` com `{ "appointmentIds": ["<id>", "<id>"] }` (envia a confirmação reforçada)
 - `POST /api/duplicate-bookings/[id]/choice` com `{ "keepAppointmentId": "<id>" }`
-- Páginas `/painel` e `/mock-whatsapp`
-- Login da clínica (`/login`) com Better Auth: painel, mock e APIs exigem sessão
-- Testes unitários da regra de status, da oferta em cascata, do score de falta, das regras de preparo, do overbooking e da detecção de booking duplo (Vitest)
+- Páginas `/painel`, `/indicadores` e `/mock-whatsapp`
+- Login da clínica (`/login`) com Better Auth: painel, indicadores, mock e APIs exigem sessão
+- Testes unitários da regra de status, da oferta em cascata, do score de falta, das regras de preparo, do overbooking, da detecção de booking duplo e do cálculo dos indicadores (Vitest)
 
 ## O que fica de fora
 
@@ -42,6 +44,7 @@ Protótipo da InnovaPair: confirmação de agenda (mock WhatsApp) + painel para 
 - Tela para mudar o limite de encaixes por horário (hoje é uma constante no código)
 - Detecção de booking duplo entre clínicas diferentes (só olha a clínica e as unidades da rede dela)
 - Opção "não vou a nenhum" na confirmação reforçada (o paciente ainda pode responder NÃO na confirmação de presença de cada horário)
+- Preço médio editável na tela e preço por especialidade ou convênio (hoje o valor estimado usa um preço por consulta e outro por exame, fixos no código)
 
 ## Requisitos
 
@@ -82,7 +85,7 @@ Modelo de dados do agendamento:
 | `duplicate_booking_checks` | Cada confirmação reforçada: paciente, grupo de horários (`group_key`), status (`aguardando` ou `resolvida`), quando foi enviada, o horário que o paciente manteve (`kept_appointment_id`) e quando respondeu |
 | `duplicate_booking_check_appointments` | Os horários perguntados em cada confirmação reforçada |
 | `waitlist` | Paciente (`patient_id`), especialidade, status na lista de espera e quando entrou nela (`requested_at`) |
-| `slot_offers` | Cada oferta de vaga: vaga (`appointment_id`), candidato (`waitlist_id`), status (`pendente`, `aceita`, `recusada`, `expirada`), quando foi oferecida, prazo, quando encerrou e a distância usada na ordem |
+| `slot_offers` | Cada oferta de vaga: vaga (`appointment_id`), candidato (`waitlist_id`), status (`pendente`, `aceita`, `recusada`, `expirada`), quando foi oferecida, prazo, quando encerrou, a distância usada na ordem e o motivo de a vaga estar livre (`release_reason`: `cancelamento`, `preparo` ou `booking_duplo`) |
 | `overbookings` | Cada decisão da recepção sobre um encaixe: horário (`specialty` + `scheduled_at`), agendamento de risco alto que motivou a sugestão (`anchor_appointment_id`), decisão (`aceita` ou `recusada`), o agendamento criado como encaixe (`encaixe_appointment_id`, só no aceite), a posição do encaixe no horário (`sequence`) e a chance de falta no momento da decisão |
 | `exam_preparations` | Preparo exigido por exame: nome do exame (único) e instruções |
 | `exam_preparation_items` | Itens do checklist de cada preparo, na ordem (`position`), com rótulo e pergunta de sim ou não |
@@ -232,6 +235,33 @@ O banco garante as regras mesmo com cliques ao mesmo tempo. Um índice único pa
 
 Erros que a API devolve com código (400): `NOT_A_DUPLICATE_GROUP` (os horários não formam mais uma duplicidade), `ALREADY_SENT`, `CHECK_NOT_OPEN` (o paciente já escolheu), `APPOINTMENT_NOT_IN_CHECK`, `APPOINTMENT_NOT_ACTIVE` e `GROUP_DISSOLVED`.
 
+## Indicadores de vagas recuperadas
+
+A página `/indicadores` mostra, em números, quanto o AgendaCerta recuperou: vagas que ficariam vazias e voltaram a ter paciente, quanto isso vale e como anda a taxa de faltas.
+
+Uma vaga conta como recuperada quando volta a ter paciente: um aceite na [oferta em cascata](#oferta-de-vaga-em-cascata) ou um [encaixe](#overbooking-guiado-pelo-score) aceito. Cada aceite conta uma vez. Se o novo paciente também cancelar e a vaga for preenchida de novo, são duas recuperações. A origem é o motivo de a vaga ter ficado livre:
+
+| Origem | Quando conta |
+| --- | --- |
+| Leilão | Cancelamento comum (o paciente respondeu NÃO ou pediu remarcação) preenchido pela cascata |
+| Preparo | Vaga liberada porque o paciente não ia cumprir o [preparo do exame](#checklist-de-preparo), preenchida pela cascata |
+| Booking duplo | Horário descartado na [confirmação reforçada](#detecção-de-booking-duplo), preenchido pela cascata |
+| Overbooking | Encaixe aceito num horário de risco alto |
+
+Os outros números:
+
+- **Lista de espera atendida:** quantos pacientes diferentes da fila ganharam horário, somando cascata e encaixe.
+- **Taxa de faltas:** faltas divididas por faltas mais comparecimentos dos atendimentos do período. Sem nenhum atendimento encerrado, o cartão mostra "Sem comparecimentos registrados no período" em vez de 0%.
+- **Valor estimado:** soma do preço médio de cada vaga recuperada, R$ 200 por consulta e R$ 150 por exame. São valores de referência para a demonstração, não tabela de convênio, e ficam em `AVERAGE_PRICE_BRL`, em `src/domain/recovery-metrics/recovery-rules.ts`. A página mostra os valores usados.
+
+Período: tudo conta pela data do horário recuperado (ou da consulta, na taxa de faltas), no fuso da clínica (`America/Maceio`). A semana vai de segunda a domingo e o mês é o do calendário. A página abre no período atual e as setas levam ao anterior ou ao próximo. Ao trocar entre semana e mês, se o período na tela inclui hoje, a página vai para o período de hoje; senão, para o que contém o início do período mostrado.
+
+Estados da tela: **Calculando indicadores…** enquanto busca, aviso com **Tentar de novo** se a busca falhar e "Ainda não há dados neste período" quando não há recuperação nem atendimento encerrado. Com faltas mas sem recuperação, os cartões aparecem zerados com "Nenhuma vaga recuperada neste período".
+
+Como a origem fica guardada: quando a cascata preenche a vaga, o agendamento passa a ser do novo paciente e a resposta do preparo é apagada, então o motivo se perderia. Por isso cada oferta grava o motivo no momento em que é criada, na coluna `slot_offers.release_reason` (padrão `cancelamento`, o que mantém válidas as ofertas antigas). A vaga só conta como booking duplo se a confirmação reforçada foi resolvida depois do último aceite daquela vaga: se o novo paciente cancelar depois, é um cancelamento comum. O cálculo é feito por funções puras em `src/domain/recovery-metrics/`, com testes para os limites da semana e do mês, a virada do ano e horários perto da meia-noite.
+
+`GET /api/recovery-metrics` aceita `period` (`semana` ou `mes`, padrão `semana`) e `reference` (uma data `AAAA-MM-DD` dentro do período, padrão hoje). Período inválido responde 400 com o código `INVALID_PERIOD` e data inválida, com `INVALID_REFERENCE_DATE`.
+
 ## Como rodar o app
 
 ```bash
@@ -272,7 +302,7 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 7. Deixe o prazo de Lucas acabar. No painel, a seção **Ofertas de vaga** mostra que ele não respondeu a tempo e que a vaga foi para Elena.
 8. No mock, clique em **Aceitar** na oferta de Elena. No painel, a vaga aparece **Confirmada** para ela e o risco de falta é recalculado.
 9. No mock, abra a aba **Checklist de preparo**, escolha a ultrassonografia de Marina Costa, responda não para **Bexiga cheia** e clique em **Enviar respostas**.
-10. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para iniciar a oferta, que vai para Nelson Araújo, da lista de espera de Ultrassonografia.
+10. No painel, clique em **Atualizar**: o alerta de preparo não cumprido aparece acima da agenda. Clique em **Liberar vaga**; a vaga vira reaproveitável e dá para iniciar a oferta, que vai para Nelson Araújo, da lista de espera de Ultrassonografia. No mock, clique em **Aceitar** na oferta de Nelson.
 11. Na seção **Encaixes sugeridos**, veja a consulta de Neurologia de Ana Souza (64%, risco alto) com os motivos e a sugestão de encaixe para Helena Dias. Clique em **Aceitar encaixe**: Helena entra na agenda no mesmo horário, com o selo **Encaixe**, e a sugestão some.
 12. No mock WhatsApp, responda **NÃO** na consulta de Ana Souza em Neurologia (se você usou essa consulta no passo 3, comece do zero com o reset abaixo).
 13. Volte ao painel e clique em **Atualizar**. A vaga de Ana fica liberada, mas mostra **Vaga coberta pelo encaixe; não abre leilão**: Helena já ocupa o horário, então nenhuma oferta é iniciada.
@@ -280,6 +310,9 @@ CI em `.github/workflows/ci.yml` (lint + test + build) com Node 24 e pnpm.
 15. Clique em **Enviar confirmação reforçada**. O alerta passa a mostrar que aguarda a escolha do paciente.
 16. No mock WhatsApp, abra a aba **Confirmação reforçada** e clique em **Manter** no horário de 22/09.
 17. No painel, clique em **Atualizar**. A consulta de 22/09 fica **Confirmada**, a de 24/09 fica **Liberada** com o selo **Liberado por duplicidade** e já dá para iniciar a oferta em cascata para a lista de espera de Endocrinologia.
+18. Inicie a oferta dessa vaga de 24/09 e, no mock, clique em **Aceitar** na oferta do próximo paciente da fila de Endocrinologia.
+19. Abra `/indicadores`. A página abre na semana atual; use a seta da esquerda até a semana de 21/09 a 27/09/2026. Ela mostra 4 vagas recuperadas, uma de cada origem (leilão, preparo, booking duplo e overbooking), R$ 750 de valor estimado (3 consultas e 1 exame) e 4 pacientes da lista de espera atendidos. A taxa de faltas mostra que ainda não há atendimento encerrado nessa semana.
+20. Clique em **Mês**: setembro de 2026 mostra as mesmas 4 vagas e taxa de faltas de 50% (2 faltas em 4 atendimentos do histórico).
 
 Para repetir a demonstração do zero no banco local, rode `npx supabase db reset` na raiz e depois `pnpm auth:create-user`.
 

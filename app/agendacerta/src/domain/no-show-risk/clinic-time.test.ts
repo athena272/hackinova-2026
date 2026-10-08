@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { formatClinicTime, getClinicDateTime, weekdayName } from "./clinic-time";
+import { formatClinicTime, getClinicDate, getClinicDateTime, weekdayName } from "./clinic-time";
+
+describe("getClinicDate", () => {
+  it("devolve a data local da clínica, mesmo quando em UTC já é o dia seguinte", () => {
+    expect(getClinicDate("2026-09-22T12:00:00.000Z")).toBe("2026-09-22");
+    expect(getClinicDate("2026-10-01T02:30:00.000Z")).toBe("2026-09-30");
+    expect(getClinicDate("2026-09-24T07:30:00-03:00")).toBe("2026-09-24");
+  });
+
+  it("rejeita data inválida", () => {
+    expect(() => getClinicDate("ontem")).toThrow(RangeError);
+  });
+});
 
 describe("getClinicDateTime", () => {
   it("converte UTC para o fuso de Maceió (UTC-3)", () => {

@@ -7,6 +7,8 @@ export interface SlotOfferRepository {
   listRecent(limit?: number): Promise<SlotOffer[]>;
   /** Ofertas aguardando resposta, de todas as vagas. */
   listPending(): Promise<SlotOffer[]>;
+  /** Todas as ofertas aceitas, sem limite, pela ordem do aceite. Base dos indicadores. */
+  listAccepted(): Promise<SlotOffer[]>;
   /** Todas as ofertas da vaga, da primeira para a última. */
   listByAppointment(appointmentId: string): Promise<SlotOffer[]>;
   getById(id: string): Promise<SlotOffer | null>;

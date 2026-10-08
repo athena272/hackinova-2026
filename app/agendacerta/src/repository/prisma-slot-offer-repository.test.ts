@@ -16,6 +16,7 @@ const record = {
   closedAt: null,
   timeoutMinutes: 15,
   distanceKm: new Prisma.Decimal("3.7"),
+  releaseReason: "cancelamento" as const,
   candidate: { id: "wl-002", patient: { id: "pat-igor", fullName: "Igor Santos" } },
 };
 
@@ -106,8 +107,32 @@ describe("PrismaSlotOfferRepository", () => {
         closedAt: null,
         timeoutMinutes: 15,
         distanceKm: 3.7,
+        releaseReason: "cancelamento",
       },
       select: slotOfferSelect,
+    });
+  });
+
+  it("create grava o motivo da liberação e a leitura devolve o mesmo motivo", async () => {
+    const { slotOffer, repo } = setup();
+    slotOffer.create.mockResolvedValue({ ...record, releaseReason: "preparo" });
+
+    await expect(repo.create({ ...offer, releaseReason: "preparo" })).resolves.toMatchObject({
+      releaseReason: "preparo",
+    });
+    expect(slotOffer.create.mock.calls[0][0].data.releaseReason).toBe("preparo");
+  });
+
+  it("listAccepted traz todas as aceitas, sem limite, na ordem do aceite", async () => {
+    const { slotOffer, repo } = setup();
+    slotOffer.findMany.mockResolvedValue([]);
+
+    await repo.listAccepted();
+
+    expect(slotOffer.findMany).toHaveBeenCalledWith({
+      where: { status: "aceita" },
+      select: slotOfferSelect,
+      orderBy: [{ closedAt: "asc" }, { id: "asc" }],
     });
   });
 

@@ -154,6 +154,7 @@ export const slotOfferSelect = {
   closedAt: true,
   timeoutMinutes: true,
   distanceKm: true,
+  releaseReason: true,
   candidate: {
     select: { id: true, patient: { select: { id: true, fullName: true } } },
   },
@@ -180,6 +181,7 @@ export function mapRecordToSlotOffer(record: SlotOfferRecord): SlotOffer {
     closedAt: record.closedAt ? record.closedAt.toISOString() : null,
     timeoutMinutes: record.timeoutMinutes,
     distanceKm: record.distanceKm ? record.distanceKm.toNumber() : null,
+    releaseReason: record.releaseReason,
   };
 }
 

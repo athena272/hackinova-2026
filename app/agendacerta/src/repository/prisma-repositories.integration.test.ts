@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { listDuplicateBookings } from "@/application/duplicate-bookings/list-duplicate-bookings";
 import { listOverbookings } from "@/application/overbooking/list-overbookings";
 import { loadPatientDistances } from "@/application/patient-distance";
+import { getRecoveryMetrics } from "@/application/recovery-metrics/get-recovery-metrics";
 import { scoreAppointmentsRisk } from "@/application/score-appointments-risk";
 import { CLINIC_NEIGHBORHOOD_ID } from "@/domain/clinic";
 import { rankCandidates, SLOT_OFFER_TIMEOUT_OPTIONS } from "@/domain/slot-offer";
@@ -254,5 +255,36 @@ describe.runIf(runDbTests)("repositórios Prisma no Postgres local", () => {
       expect(check.appointmentIds.length, check.id).toBeGreaterThanOrEqual(2);
       expect(check.keptAppointmentId === null, check.id).toBe(check.status === "aguardando");
     }
+  });
+
+  it("lê as ofertas aceitas com o motivo da liberação da vaga", async () => {
+    const accepted = await new PrismaSlotOfferRepository().listAccepted();
+
+    expect(Array.isArray(accepted)).toBe(true);
+    for (const offer of accepted) {
+      expect(offer.status, offer.id).toBe("aceita");
+      expect(["cancelamento", "preparo", "booking_duplo"], offer.id).toContain(offer.releaseReason);
+    }
+  });
+
+  it("calcula os indicadores de setembro a partir do banco: 50% de faltas, como no seed", async () => {
+    const metrics = await getRecoveryMetrics(
+      {
+        appointments,
+        offers: new PrismaSlotOfferRepository(),
+        overbookings: new PrismaOverbookingRepository(),
+        now: () => new Date(),
+      },
+      { kind: "mes", referenceDate: "2026-09-24" },
+    );
+
+    expect(metrics.period).toEqual({ kind: "mes", start: "2026-09-01", end: "2026-09-30" });
+    expect(metrics.noShow).toEqual({ noShows: 2, attended: 2, rate: 0.5 });
+    expect(Object.keys(metrics.recovered.byOrigin)).toEqual([
+      "leilao",
+      "preparo",
+      "booking_duplo",
+      "overbooking",
+    ]);
   });
 });

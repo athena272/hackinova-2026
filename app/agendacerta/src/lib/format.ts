@@ -32,6 +32,29 @@ export function formatDistance(km: number | null): string {
   return `${km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`;
 }
 
+const wholeCurrencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+const percentFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "percent",
+  maximumFractionDigits: 1,
+});
+
+/** "R$ 750" ou "R$ 1.250,50": centavos só quando existem. */
+export function formatCurrency(value: number): string {
+  return (Number.isInteger(value) ? wholeCurrencyFormatter : currencyFormatter).format(value);
+}
+
+/** Fração de 0 a 1 como "50%" ou "33,3%". */
+export function formatPercent(fraction: number): string {
+  return percentFormatter.format(fraction);
+}
+
 /** Até duas iniciais do nome, para o avatar do mock de WhatsApp. */
 export function initials(name: string): string {
   return name

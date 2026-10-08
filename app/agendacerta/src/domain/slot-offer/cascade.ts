@@ -2,6 +2,7 @@ import { isSlotReusable, type Appointment } from "../appointment";
 import { SlotOfferError } from "./errors";
 import { isSlotOfferTimeout, type SlotOfferTimeout } from "./offer-rules";
 import { rankCandidates } from "./ranking";
+import type { SlotReleaseReason } from "./release-reason";
 import type {
   RankableCandidate,
   RankedCandidate,
@@ -45,6 +46,7 @@ export type CreateOfferInput = {
   candidate: RankedCandidate;
   offeredAt: string;
   timeoutMinutes: SlotOfferTimeout;
+  releaseReason: SlotReleaseReason;
 };
 
 export function createOffer({
@@ -53,6 +55,7 @@ export function createOffer({
   candidate,
   offeredAt,
   timeoutMinutes,
+  releaseReason,
 }: CreateOfferInput): SlotOffer {
   assertSlotOfferTimeout(timeoutMinutes);
   return {
@@ -69,6 +72,7 @@ export function createOffer({
     closedAt: null,
     timeoutMinutes,
     distanceKm: candidate.distanceKm === null ? null : roundToCents(candidate.distanceKm),
+    releaseReason,
   };
 }
 
@@ -87,6 +91,7 @@ export type NextOfferInput = {
   pendingOffers: readonly SlotOffer[];
   offeredAt: string;
   timeoutMinutes: SlotOfferTimeout;
+  releaseReason: SlotReleaseReason;
 };
 
 /** Oferta para o próximo da fila, ou null quando a fila acabou. Função pura. */
@@ -106,6 +111,7 @@ export function pickNextOffer(input: NextOfferInput): SlotOffer | null {
     candidate: next,
     offeredAt: input.offeredAt,
     timeoutMinutes: input.timeoutMinutes,
+    releaseReason: input.releaseReason,
   });
 }
 

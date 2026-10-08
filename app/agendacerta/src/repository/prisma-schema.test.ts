@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { AppointmentStatus, ProcedureType } from "@/domain/appointment";
 import type { DuplicateCheckStatus } from "@/domain/duplicate-booking";
 import type { OverbookingDecision } from "@/domain/overbooking";
-import type { SlotOfferStatus } from "@/domain/slot-offer";
+import type { SlotOfferStatus, SlotReleaseReason } from "@/domain/slot-offer";
 import type { WaitlistStatus } from "@/domain/waitlist";
 import {
   appointment_status,
@@ -12,6 +12,7 @@ import {
   overbooking_decision,
   procedure_type,
   slot_offer_status,
+  slot_release_reason,
   waitlist_status,
 } from "@/generated/prisma/enums";
 import { AUTH_TABLES } from "@/lib/auth/server";
@@ -43,6 +44,11 @@ const DOMAIN_SLOT_OFFER_STATUSES: Record<SlotOfferStatus, true> = {
   aceita: true,
   recusada: true,
   expirada: true,
+};
+const DOMAIN_SLOT_RELEASE_REASONS: Record<SlotReleaseReason, true> = {
+  cancelamento: true,
+  preparo: true,
+  booking_duplo: true,
 };
 const DOMAIN_OVERBOOKING_DECISIONS: Record<OverbookingDecision, true> = {
   aceita: true,
@@ -199,6 +205,12 @@ describe("prisma/schema.prisma", () => {
   it("status da oferta de vaga do domínio batem com o enum do banco", () => {
     expect(sorted(Object.values(slot_offer_status))).toEqual(
       sorted(Object.keys(DOMAIN_SLOT_OFFER_STATUSES)),
+    );
+  });
+
+  it("motivos de liberação da vaga do domínio batem com o enum do banco", () => {
+    expect(sorted(Object.values(slot_release_reason))).toEqual(
+      sorted(Object.keys(DOMAIN_SLOT_RELEASE_REASONS)),
     );
   });
 

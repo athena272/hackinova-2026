@@ -46,6 +46,17 @@ export class InMemorySlotOfferRepository implements SlotOfferRepository {
       .map(copy);
   }
 
+  async listAccepted(): Promise<SlotOffer[]> {
+    return Array.from(getStore().offers.values())
+      .filter((offer) => offer.status === "aceita")
+      .sort(
+        (a, b) =>
+          Date.parse(a.closedAt ?? a.offeredAt) - Date.parse(b.closedAt ?? b.offeredAt) ||
+          a.id.localeCompare(b.id),
+      )
+      .map(copy);
+  }
+
   async listByAppointment(appointmentId: string): Promise<SlotOffer[]> {
     return Array.from(getStore().offers.values())
       .filter((offer) => offer.appointmentId === appointmentId)

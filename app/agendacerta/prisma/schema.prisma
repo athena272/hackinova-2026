@@ -205,6 +205,7 @@ model SlotOffer {
   closedAt       DateTime?         @map("closed_at") @db.Timestamptz(6)
   timeoutMinutes Int               @map("timeout_minutes") @db.SmallInt
   distanceKm     Decimal?          @map("distance_km") @db.Decimal(6, 2)
+  releaseReason  slot_release_reason @default(cancelamento) @map("release_reason")
   createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
   appointment    Appointment       @relation(fields: [appointmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -316,6 +317,12 @@ enum slot_offer_status {
   aceita
   recusada
   expirada
+}
+
+enum slot_release_reason {
+  cancelamento
+  preparo
+  booking_duplo
 }
 
 enum overbooking_decision {

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck2, Home, LayoutDashboard, MessageCircle } from "lucide-react";
+import { CalendarCheck2, Home, LayoutDashboard, MessageCircle, TrendingUp } from "lucide-react";
 import { SessionMenu } from "@/components/SessionMenu";
 
 type AppShellProps = {
@@ -13,6 +13,7 @@ type AppShellProps = {
 const LINKS = [
   { href: "/", label: "Início", icon: Home },
   { href: "/painel", label: "Painel", icon: LayoutDashboard },
+  { href: "/indicadores", label: "Indicadores", icon: TrendingUp },
   { href: "/mock-whatsapp", label: "Mock WhatsApp", icon: MessageCircle },
 ] as const;
 

@@ -61,6 +61,24 @@ describe("InMemorySlotOfferRepository", () => {
     await expect(repo.close(pendingOffer({ id: "offer-999" }))).resolves.toBe(false);
   });
 
+  it("listAccepted traz só as aceitas, na ordem do aceite, com o motivo da liberação", async () => {
+    const repo = new InMemorySlotOfferRepository();
+    await repo.create(
+      pendingOffer({ id: "offer-late", status: "aceita", closedAt: "2026-10-06T16:00:00.000Z", releaseReason: "preparo" }),
+    );
+    await repo.create(
+      pendingOffer({ id: "offer-early", appointmentId: "apt-099", status: "aceita", closedAt: "2026-10-06T15:05:00.000Z" }),
+    );
+    await repo.create(pendingOffer({ id: "offer-refused", status: "recusada", closedAt: "2026-10-06T15:02:00.000Z" }));
+
+    const accepted = await repo.listAccepted();
+
+    expect(accepted.map(({ id, releaseReason }) => [id, releaseReason])).toEqual([
+      ["offer-early", "cancelamento"],
+      ["offer-late", "preparo"],
+    ]);
+  });
+
   it("devolve cópias: alterar o retorno não muda o store", async () => {
     const repo = new InMemorySlotOfferRepository();
     const created = await repo.create(pendingOffer());

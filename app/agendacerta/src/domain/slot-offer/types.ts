@@ -1,5 +1,6 @@
 import type { WaitlistEntry } from "../waitlist";
 import type { SlotOfferResponse, SlotOfferTimeout } from "./offer-rules";
+import type { SlotReleaseReason } from "./release-reason";
 
 export type { SlotOfferResponse };
 
@@ -23,6 +24,8 @@ export type SlotOffer = {
   timeoutMinutes: SlotOfferTimeout;
   /** Distância até a clínica no momento da oferta; explica a ordem no histórico. */
   distanceKm: number | null;
+  /** Por que a vaga estava livre: define a origem da vaga recuperada nos indicadores. */
+  releaseReason: SlotReleaseReason;
 };
 
 export type DistanceBand = "perto" | "medio" | "longe" | "desconhecida";

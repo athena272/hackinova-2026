@@ -8,6 +8,10 @@ import {
   resetAppointmentStoreForTests,
 } from "@/repository/in-memory-appointment-repository";
 import {
+  InMemoryDuplicateCheckRepository,
+  resetDuplicateCheckStoreForTests,
+} from "@/repository/in-memory-duplicate-check-repository";
+import {
   InMemoryOverbookingRepository,
   resetOverbookingStoreForTests,
 } from "@/repository/in-memory-overbooking-repository";
@@ -20,6 +24,8 @@ import {
   InMemoryWaitlistRepository,
   resetWaitlistStoreForTests,
 } from "@/repository/in-memory-waitlist-repository";
+import { chooseDuplicateBooking } from "../duplicate-bookings/choose-duplicate-booking";
+import { sendDuplicateCheck } from "../duplicate-bookings/send-duplicate-check";
 import type { SlotOfferDeps } from "./deps";
 import { listSlotOffers } from "./list-slot-offers";
 import { respondSlotOffer } from "./respond-slot-offer";
@@ -40,6 +46,7 @@ function setup() {
     patients: new InMemoryPatientRepository(),
     offers: new InMemorySlotOfferRepository(),
     overbookings: new InMemoryOverbookingRepository(),
+    duplicateChecks: new InMemoryDuplicateCheckRepository(),
     now: () => current,
     newOfferId: () => `offer-${++sequence}`,
     clinicNeighborhoodId: CLINIC_NEIGHBORHOOD_ID,
@@ -66,9 +73,48 @@ describe("casos de uso da oferta em cascata", () => {
     resetWaitlistStoreForTests();
     resetSlotOfferStoreForTests();
     resetOverbookingStoreForTests();
+    resetDuplicateCheckStoreForTests();
   });
 
   describe("startSlotOffer", () => {
+    it("grava cancelamento comum como motivo da vaga liberada pelo paciente", async () => {
+      const { deps } = setup();
+
+      await expect(startSlotOffer(deps, "apt-006", 15)).resolves.toMatchObject({
+        releaseReason: "cancelamento",
+      });
+    });
+
+    it("grava preparo quando a vaga foi liberada por preparo não cumprido", async () => {
+      const { deps } = setup();
+      const slot = (await deps.appointments.getById("apt-006"))!;
+      await deps.appointments.create({
+        ...slot,
+        id: "apt-prep",
+        preparation: { result: "nao_cumprido", missedItemIds: ["jejum"], answeredAt: START },
+      });
+
+      await expect(startSlotOffer(deps, "apt-prep", 15)).resolves.toMatchObject({
+        releaseReason: "preparo",
+      });
+    });
+
+    it("grava booking duplo na vaga descartada pelo paciente, também no repasse", async () => {
+      const { deps, advanceMinutes } = setup();
+      const duplicateDeps = { ...deps, newCheckId: () => "dup-1" };
+      const check = await sendDuplicateCheck(duplicateDeps, ["apt-002", "apt-009"]);
+      await chooseDuplicateBooking(duplicateDeps, check.id, "apt-002");
+
+      const first = await startSlotOffer(deps, "apt-009", 2);
+      advanceMinutes(3);
+      const [cascade] = await listSlotOffers(deps);
+
+      expect(first.releaseReason).toBe("booking_duplo");
+      expect(cascade.offers.map((offer) => offer.releaseReason)).toEqual([
+        "booking_duplo",
+        "booking_duplo",
+      ]);
+    });
     it("oferece primeiro a quem está perto e espera há mais tempo, com o prazo escolhido", async () => {
       const { deps } = setup();
 

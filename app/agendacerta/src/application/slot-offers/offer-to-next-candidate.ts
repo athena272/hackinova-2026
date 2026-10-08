@@ -2,6 +2,7 @@ import type { Appointment } from "@/domain/appointment";
 import { isSlotReusable } from "@/domain/appointment";
 import {
   pickNextOffer,
+  slotReleaseReasonOf,
   type SlotOffer,
   type SlotOfferTimeout,
 } from "@/domain/slot-offer";
@@ -21,12 +22,14 @@ export async function offerToNextCandidate(
   timeoutMinutes: SlotOfferTimeout,
   offeredAt: string,
 ): Promise<SlotOffer | null> {
-  const [offersOfAppointment, pendingOffers, waiting, distanceFor] = await Promise.all([
-    deps.offers.listByAppointment(appointment.id),
-    deps.offers.listPending(),
-    deps.waitlist.listBySpecialty(appointment.specialty),
-    loadPatientDistances(deps.patients, deps.clinicNeighborhoodId, "slotOffers"),
-  ]);
+  const [offersOfAppointment, pendingOffers, waiting, distanceFor, duplicateChecks] =
+    await Promise.all([
+      deps.offers.listByAppointment(appointment.id),
+      deps.offers.listPending(),
+      deps.waitlist.listBySpecialty(appointment.specialty),
+      loadPatientDistances(deps.patients, deps.clinicNeighborhoodId, "slotOffers"),
+      deps.duplicateChecks.list(),
+    ]);
 
   const next = pickNextOffer({
     id: deps.newOfferId(),
@@ -39,6 +42,7 @@ export async function offerToNextCandidate(
     pendingOffers,
     offeredAt,
     timeoutMinutes,
+    releaseReason: slotReleaseReasonOf({ appointment, duplicateChecks, offersOfAppointment }),
   });
 
   return next ? deps.offers.create(next) : null;
